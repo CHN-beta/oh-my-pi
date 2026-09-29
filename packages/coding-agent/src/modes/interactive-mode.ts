@@ -276,6 +276,7 @@ import { createSessionTeardown, type SessionTeardown } from "./session-teardown"
 import { sanitizeStatusText } from "@oh-my-pi/pi-tui/chrome/shared";
 import { invokeSkillCommandFromText, isKnownSkillCommand } from "./skill-command";
 import { clearMermaidCache } from "@oh-my-pi/pi-tui/theme/mermaid-cache";
+import { clearMathGraphicsCache } from "@oh-my-pi/pi-tui/theme/math-cache";
 import { type ShimmerPalette, shimmerEnabled, shimmerText } from "@oh-my-pi/pi-tui/theme/shimmer";
 import type { Theme } from "@oh-my-pi/pi-tui/theme";
 import {
@@ -283,6 +284,7 @@ import {
 	getMarkdownTheme,
 	onTerminalAppearanceChange,
 	onThemeChange,
+	setMarkdownMathGraphics,
 	setMarkdownMermaidRendering,
 	setSymbolPreset,
 	startMacOSAppearanceReprobeFallback,
@@ -340,6 +342,7 @@ import {
 	cfgTuiImeSafeCursor,
 	cfgTuiMaxInlineImages,
 	cfgTuiMouse,
+	cfgTuiRenderMath,
 	cfgTuiRenderMermaid,
 	cfgTuiResizeScrollback,
 	cfgTuiTextSizing,
@@ -401,6 +404,7 @@ const cfgLiveUiSettings = combine({
 	"display.showTokenUsage": cfgDisplayShowTokenUsage,
 	"display.showTurnTime": cfgDisplayShowTurnTime,
 	"tui.renderMermaid": cfgTuiRenderMermaid,
+	"tui.renderMath": cfgTuiRenderMath,
 	"tui.textSizing": cfgTuiTextSizing,
 	"tui.tight": cfgTuiTight,
 	"tui.hyperlinks": cfgTuiHyperlinks,
@@ -1380,6 +1384,7 @@ export class InteractiveMode implements InteractiveModeContext {
 
 		setTuiTight(cfgTuiTight.get(settings));
 		setMarkdownMermaidRendering(cfgTuiRenderMermaid.get(settings));
+		setMarkdownMathGraphics(cfgTuiRenderMath.get(settings));
 		this.#applyTextSizingSetting();
 		// Keep generic pi-tui renderers aligned with the coding-agent setting.
 		applyHyperlinkSetting();
@@ -1950,6 +1955,8 @@ export class InteractiveMode implements InteractiveModeContext {
 				this.#clearWorkingMessageAccentCache();
 				clearRenderCache();
 				clearMermaidCache();
+				// Math rasters bake the theme's text colour into the PNG.
+				clearMathGraphicsCache();
 				this.statusLine.invalidate();
 				this.ui.invalidate();
 				this.updateEditorBorderColor();
@@ -3008,6 +3015,10 @@ export class InteractiveMode implements InteractiveModeContext {
 		}
 		if (any("tui.renderMermaid")) {
 			setMarkdownMermaidRendering(cfgTuiRenderMermaid.get(this.settings));
+			rebuildChat = true;
+		}
+		if (any("tui.renderMath")) {
+			setMarkdownMathGraphics(cfgTuiRenderMath.get(this.settings));
 			rebuildChat = true;
 		}
 		if (any("tui.textSizing")) {

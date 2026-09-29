@@ -30,6 +30,7 @@ export {
 	getSettingsListTheme,
 	getSymbolTheme,
 	highlightCode,
+	setMarkdownMathGraphics,
 	setMarkdownMermaidRendering,
 	warmHighlighter,
 } from "./tui-adapters";

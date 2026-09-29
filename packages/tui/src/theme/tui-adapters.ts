@@ -6,12 +6,13 @@ import {
 	warmHighlighter as nativeWarmHighlighter,
 } from "@oh-my-pi/pi-natives";
 import type { EditorTheme } from "../components/editor";
-import type { MarkdownTheme } from "../components/markdown";
+import { bumpMarkdownRenderEpoch, type MarkdownTheme } from "../components/markdown";
 import type { SelectListTheme } from "../components/select-list";
 import type { SettingsListTheme } from "../components/settings-list";
 import type { SymbolTheme } from "../symbols";
 import chalk from "@oh-my-pi/pi-utils/chalk";
 import { LRUCache } from "@oh-my-pi/pi-utils/lru";
+import { clearMathGraphicsCache, resolveMathGraphics } from "./math-cache";
 import { resolveMermaidAscii } from "./mermaid-cache";
 import type { SlashCommandIconName } from "./symbols";
 import { ensureThemeSync, theme } from "./theme";
@@ -184,11 +185,25 @@ export function getSymbolTheme(): SymbolTheme {
 let cachedMarkdownTheme: MarkdownTheme | undefined;
 let cachedMarkdownThemeRef: Theme | undefined;
 let markdownMermaidRendering = true;
+let markdownMathGraphics = true;
 
 export function setMarkdownMermaidRendering(enabled: boolean): void {
 	if (markdownMermaidRendering === enabled) return;
 	markdownMermaidRendering = enabled;
 	cachedMarkdownTheme = undefined;
+}
+
+/**
+ * Toggle terminal-graphics rendering of display math. Flips the theme hook and
+ * drops both the cached theme and every rendered row, because rows already
+ * drawn with the Unicode layout are indistinguishable from current ones.
+ */
+export function setMarkdownMathGraphics(enabled: boolean): void {
+	if (markdownMathGraphics === enabled) return;
+	markdownMathGraphics = enabled;
+	cachedMarkdownTheme = undefined;
+	clearMathGraphicsCache();
+	bumpMarkdownRenderEpoch();
 }
 
 export function getMarkdownTheme(): MarkdownTheme {
@@ -236,6 +251,13 @@ export function getMarkdownTheme(): MarkdownTheme {
 						theme: mermaid.mermaidTheme,
 						colorMode: mermaid.mermaidColorMode,
 					})
+			: undefined,
+		// Resolved against the theme at call time rather than baked in here: the
+		// raster colour is part of the cache key, so a live theme switch must be
+		// visible to the very next formula.
+		resolveMathGraphics: markdownMathGraphics
+			? (latex, display, maxWidthCells) =>
+					resolveMathGraphics(latex, display, maxWidthCells, theme.getColorHex("text"))
 			: undefined,
 		highlightCode: (code: string, lang?: string): string[] => {
 			const validLang = lang && nativeSupportsLanguage(lang) ? lang : undefined;

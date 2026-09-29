@@ -1,7 +1,18 @@
 import { describe, expect, it } from "bun:test";
 import { stripVTControlCharacters } from "node:util";
-import { Markdown, renderInlineMarkdown } from "../src/components/markdown";
+import {
+	bumpMarkdownRenderEpoch,
+	Markdown,
+	type MarkdownTheme,
+	renderInlineMarkdown,
+} from "../src/components/markdown";
+import { KITTY_PLACEHOLDER } from "../src/kitty-graphics";
+import { ImageProtocol, setTerminalImageProtocol, TERMINAL } from "../src/terminal-capabilities";
 import { defaultMarkdownTheme } from "./test-themes.js";
+
+// Image rows are only special-cased when a graphics protocol is active; without
+// one the renderer would treat the placeholder cells as ordinary text.
+setTerminalImageProtocol(ImageProtocol.Kitty);
 
 /** Render markdown and return non-empty, ANSI-stripped, right-trimmed lines. */
 function renderLines(md: string, width = 100): string[] {
@@ -111,5 +122,76 @@ describe("Markdown math rendering", () => {
 		expect(lines[barRow]).toContain("x =");
 		expect(lines[barRow - 1]).toContain("a+b");
 		expect(lines[barRow + 1]).toContain("c");
+	});
+});
+
+describe("Markdown math graphics hook", () => {
+	// A stand-in for a real raster: Kitap placeholder cells are ordinary text, so
+	// the renderer must treat these rows as image rows — no wrapping, no margin,
+	// no background padding — and centre them inside the content width.
+	const graphic = (columns: number, rows: number) => ({
+		columns,
+		lines: Array.from({ length: rows }, () => KITTY_PLACEHOLDER.repeat(columns)),
+	});
+
+	const themeWith = (resolveMathGraphics: MarkdownTheme["resolveMathGraphics"]): MarkdownTheme => ({
+		...defaultMarkdownTheme,
+		resolveMathGraphics,
+	});
+
+	it("renders display math through the hook, centred and unwrapped", () => {
+		const seen: Array<[string, boolean, number]> = [];
+		const theme = themeWith((latex, display, maxWidthCells) => {
+			seen.push([latex, display, maxWidthCells]);
+			return graphic(4, 2);
+		});
+		const lines = new Markdown("$$\nE = mc^2\n$$", 0, 0, theme).render(40);
+		expect(seen.length).toBe(1);
+		expect(seen[0]?.[0]).toContain("E = mc^2");
+		expect(seen[0]?.[1]).toBe(true);
+		expect(seen[0]?.[2]).toBe(40);
+
+		const imageRows = lines.filter(line => TERMINAL.isImageLine(line));
+		expect(imageRows.length).toBe(2);
+		// (40 - 4) / 2 = 18 leading cells on every row, so the rows stay aligned.
+		for (const row of imageRows) expect(row.startsWith(" ".repeat(18))).toBe(true);
+		// Placeholder rows must survive verbatim: no margin padding appended.
+		for (const row of imageRows) expect(row.endsWith(KITTY_PLACEHOLDER)).toBe(true);
+	});
+
+	it("falls back to the Unicode layout when the hook declines", () => {
+		const lines = new Markdown(
+			"$$\n\\frac{a+b}{c}\n$$",
+			0,
+			0,
+			themeWith(() => null),
+		).render(60);
+		const barRow = lines.findIndex(line => stripVTControlCharacters(line).includes("─"));
+		expect(barRow).toBeGreaterThan(0);
+	});
+
+	it("keeps a graphic inside a list item unindented so its rows stay aligned", () => {
+		const theme = themeWith(() => graphic(3, 2));
+		const lines = new Markdown("$$\nx\n$$", 0, 0, theme);
+		const rows = lines.render(30).filter(line => TERMINAL.isImageLine(line));
+		expect(rows.length).toBe(2);
+		expect(rows[0]?.length).toBe(rows[1]?.length);
+	});
+
+	it("re-renders cached rows after the render epoch is bumped", () => {
+		let columns = 2;
+		const theme = themeWith(() => graphic(columns, 1));
+		const md = new Markdown("$$\nx\n$$", 0, 0, theme);
+		const first = md.render(20);
+		expect(first.filter(line => TERMINAL.isImageLine(line))[0]?.length).toBeGreaterThan(0);
+
+		// Simulate a raster landing: the hook now answers differently, so cached
+		// rows must be dropped rather than replayed.
+		columns = 6;
+		bumpMarkdownRenderEpoch();
+		const second = md.render(20);
+		const before = first.find(line => TERMINAL.isImageLine(line))?.length ?? 0;
+		const after = second.find(line => TERMINAL.isImageLine(line))?.length ?? 0;
+		expect(after).toBeGreaterThan(before);
 	});
 });

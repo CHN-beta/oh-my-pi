@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Display (`$$…$$`, `\[…\]`) and inline (`$…$`, `\(…\)`) math can now be typeset as terminal graphics: `MarkdownTheme.resolveMathGraphics` lets a host supply Kitty Unicode-placeholder rows for a formula, `bumpMarkdownRenderEpoch()` invalidates every cached render when one becomes available asynchronously, and `theme/math-cache` bridges the synchronous renderer to an asynchronous rasterizer. An inline run is emitted only when it provably fits on the row it starts on (a wrap through a placeholder run would split the formula), and only when its natural size is close enough to one row to stay legible; otherwise the Unicode form is kept.
+
 ## [18.4.3] - 2026-09-28
 
 ### Changed

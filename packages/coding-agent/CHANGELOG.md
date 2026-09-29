@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Display (`$$…$$`, `\[…\]`) and inline (`$…$`, `\(…\)`) math is now typeset with MathJax and shown as a real terminal image on Kitty-compatible terminals with Unicode placeholder support. Formulas are rasterized in-process (MathJax → SVG → the native `rasterizeSvg`), cached per source/colour/width, and rendered in the theme's text colour. Inline math stays inline: it is placed inside the surrounding row, falls back to the Unicode form when it does not fit or would have to be shrunk below legibility, and is left alone inside table cells. Terminals without placeholder support, and formulas MathJax cannot typeset, keep the existing Unicode layout. Toggle with `tui.renderMath` (default on).
+
 ## [18.4.3] - 2026-09-28
 
 ### Added

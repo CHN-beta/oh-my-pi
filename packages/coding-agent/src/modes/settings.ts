@@ -424,6 +424,19 @@ export const cfgTuiRenderMermaid = register({
 	},
 });
 
+export const cfgTuiRenderMath = register({
+	id: "tui.renderMath",
+	type: "boolean",
+	default: true,
+	ui: {
+		tab: "appearance",
+		group: "Display",
+		label: "Render Math as Images",
+		description:
+			"Typeset math ($$…$$ / \\[…\\], and inline $…$ / \\(…\\)) with MathJax and show it as a terminal image. Requires a Kitty-compatible terminal with Unicode placeholder support; everywhere else math keeps the built-in Unicode layout.",
+	},
+});
+
 export const cfgTuiReactions = register({
 	id: "tui.reactions",
 	type: "boolean",

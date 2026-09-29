@@ -8,8 +8,10 @@ import {
 	type Tokens,
 } from "@oh-my-pi/pi-utils/marked";
 import { mathBlockAt, mathSpanAt, mathStartIndex } from "@oh-my-pi/pi-utils/math-delimiters";
+import { getKittyGraphics } from "../kitty-graphics";
 import { latexToBlock } from "../latex-block";
 import { isBareMathEnvironment, latexToUnicode } from "../latex-to-unicode";
+import type { MathGraphics } from "../render/math-image";
 import type { SymbolTheme } from "../symbols";
 import { TERMINAL } from "../terminal-capabilities";
 import type { Component } from "../tui";
@@ -886,6 +888,14 @@ const RENDER_CACHE_MAX_SIZE = 4 * 1024 * 1024;
 const RENDER_CACHE_MAX_ENTRY_SIZE = 512 * 1024;
 const EMPTY_RENDER_LINES: readonly string[] = [];
 
+/**
+ * Monotonic counter folded into every cache-validity check. Bumped when global
+ * state *outside* the `(text, width, theme)` render key changes — today, when
+ * an asynchronously rasterized math graphic becomes available — so instances
+ * that already answered with the Unicode fallback re-render.
+ */
+let renderEpoch = 0;
+
 interface RenderedLine {
 	text: string;
 	literalCode?: true;
@@ -905,6 +915,25 @@ const renderCache = new LRUCache<string, readonly string[]>({
 	maxEntrySize: RENDER_CACHE_MAX_ENTRY_SIZE,
 	sizeCalculation: (lines, key) => renderedLinesCacheSize(lines) + key.length,
 });
+
+/**
+ * Invalidate every cached render, in every live instance and in the module LRU.
+ * Callers must also schedule a repaint; without one the stale frame stays on
+ * screen until the next natural redraw.
+ */
+export function bumpMarkdownRenderEpoch(): void {
+	renderEpoch++;
+	renderCache.clear();
+}
+
+/**
+ * Current render epoch. Callers that memoize Markdown output under their own key
+ * (see the chat transcript's stable-row caches) fold this in so a global
+ * invalidation reaches them too.
+ */
+export function markdownRenderEpoch(): number {
+	return renderEpoch;
+}
 
 function renderedLinesCacheSize(lines: readonly string[]): number {
 	let size = lines.length;
@@ -1392,12 +1421,27 @@ export interface MarkdownTheme {
 	 * Return null to fall back to fenced code rendering.
 	 */
 	resolveMermaidAscii?: (source: string, maxWidth?: number) => string | null;
+	/**
+	 * Render a display-math (`$$…$$` / `\[…\]`) formula as terminal graphics.
+	 * Return null to fall back to the built-in `latexToBlock` text layout — the
+	 * expected answer while a raster is still being produced.
+	 */
+	resolveMathGraphics?: (latex: string, display: boolean, maxWidthCells: number) => MathGraphics | null;
 	symbols: SymbolTheme;
 }
 
 interface InlineStyleContext {
 	applyText: (text: string) => string;
 	stylePrefix: string;
+	/**
+	 * Columns available on the first output row of this inline run, when the
+	 * caller knows them. Inline math graphics are only emitted when they
+	 * provably fit: a placeholder run is made of plain text cells, so a wrap
+	 * through the middle of one would draw half a formula on each row.
+	 */
+	availableWidth?: number;
+	/** Columns already used on that first row before this run starts. */
+	startColumn?: number;
 }
 
 type ListToken = Token & { items: Array<{ tokens?: Token[] }>; ordered: boolean; start?: number };
@@ -1451,6 +1495,25 @@ const MATH_NEWLINES = /\n+/g;
 /** True for the custom inline `math` token produced by the math extension. */
 function isMathToken(token: Token): token is Token & { text: string; display: boolean } {
 	return (token as { type: string }).type === "math";
+}
+
+/**
+ * Anything that is neither blank nor part of a Kitty placeholder cell — the
+ * base character itself or one of its row/column combining diacritics.
+ */
+const NON_PLACEHOLDER_TEXT = /[^\s\u{10EEEE}\p{M}]/u;
+
+/**
+ * A row that is nothing but a terminal graphic (plus its own indentation): no
+ * text to wrap and no margins to add, so it must reach the terminal row for row.
+ *
+ * A row that merely *contains* an inline graphic is an ordinary text row and
+ * takes the normal wrap/pad path — the placeholder cells measure one column
+ * each, so wrapping and padding stay correct around them.
+ */
+function isPureImageRow(line: string): boolean {
+	if (!TERMINAL.isImageLine(line)) return false;
+	return !NON_PLACEHOLDER_TEXT.test(Bun.stripANSI(line));
 }
 
 /** Convert a `math` token's LaTeX to single-line Unicode for inline rendering. */
@@ -1664,6 +1727,12 @@ interface RenderSignature {
 	themeId: number;
 	defaultTextStyleId: number;
 	imageProtocol: string;
+	/**
+	 * Kitty Unicode-placeholder support. Capability detection can finish after
+	 * the first renders, and the flag decides whether a formula becomes a
+	 * graphic, so it has to key the cache alongside the protocol itself.
+	 */
+	kittyPlaceholders: boolean;
 	hyperlinks: boolean;
 	textSizing: boolean;
 	bgColorProbe: string;
@@ -1766,6 +1835,10 @@ export class Markdown implements Component {
 	#cachedText?: string;
 	#cachedWidth?: number;
 	#cachedLines?: readonly string[];
+	// Render epoch the L1/stream caches above were filled under. A mismatch means
+	// global render input changed outside the `(text, width, theme)` key (see
+	// `bumpMarkdownRenderEpoch`) and every derived row must be rebuilt.
+	#cachedEpoch = -1;
 	#transientRenderCache = false;
 
 	// Streaming-lex cache: the largest blank-line-bounded prefix of #text whose
@@ -1911,6 +1984,39 @@ export class Markdown implements Component {
 		this.#cachedText = undefined;
 		this.#cachedWidth = undefined;
 		this.#cachedLines = undefined;
+	}
+
+	/**
+	 * Drop every row cache that could hold a formula rendered before its terminal
+	 * graphic existed. Tokenization is unaffected (graphics depend on the theme
+	 * and the cell box, never on the source), so the frozen lex prefix survives
+	 * and only rendered rows are rebuilt.
+	 */
+	#syncRenderEpoch(): void {
+		if (this.#cachedEpoch === renderEpoch) return;
+		this.#cachedEpoch = renderEpoch;
+		this.invalidate();
+		this.#fastTail = undefined;
+		this.#streamPrefixLineCache = undefined;
+		this.#tailRowCache = undefined;
+		this.#streamingHighlightCache = undefined;
+	}
+
+	/**
+	 * Rows for a display-math token: a terminal graphic when the theme can supply
+	 * one, otherwise the built-in 2-D text layout. `graphic` tells the call sites
+	 * to skip text styling — graphic rows carry their own SGR state and are
+	 * already centred.
+	 */
+	#displayMathLines(latex: string, width: number): { lines: readonly string[]; graphic: boolean } {
+		const graphics = this.#theme.resolveMathGraphics?.(latex, true, Math.max(1, width));
+		if (graphics && graphics.lines.length > 0) {
+			const indent = Math.max(0, Math.floor((width - graphics.columns) / 2));
+			if (indent === 0) return { lines: graphics.lines, graphic: true };
+			const pad = " ".repeat(indent);
+			return { lines: graphics.lines.map(line => pad + line), graphic: true };
+		}
+		return { lines: latexToBlock(latex), graphic: false };
 	}
 
 	/**
@@ -2072,6 +2178,7 @@ export class Markdown implements Component {
 	}
 
 	render(width: number): readonly string[] {
+		this.#syncRenderEpoch();
 		// L1: per-instance cache — fastest path for repeated renders of the same
 		// instance at the same width (e.g. resize debounce, repeated redraws).
 		// Returning the cached reference is load-bearing: parents memoize their
@@ -2342,6 +2449,7 @@ export class Markdown implements Component {
 			themeId: objectId(this.#theme),
 			defaultTextStyleId: this.#defaultTextStyle ? objectId(this.#defaultTextStyle) : -1,
 			imageProtocol: TERMINAL.imageProtocol ?? "",
+			kittyPlaceholders: getKittyGraphics().unicodePlaceholders,
 			hyperlinks: TERMINAL.hyperlinks,
 			textSizing: TERMINAL.textSizing,
 			bgColorProbe,
@@ -2354,7 +2462,7 @@ export class Markdown implements Component {
 	}
 
 	#renderCacheKey(normalizedText: string, signature: RenderSignature): string {
-		return `${normalizedText}\x00${signature.width}\x00${signature.paddingX}\x00${signature.paddingY}\x00${signature.codeBlockIndent}\x00${signature.themeId}\x00${signature.defaultTextStyleId}\x00${signature.imageProtocol}\x00${signature.hyperlinks ? 1 : 0}\x00${signature.textSizing ? 1 : 0}\x00${signature.bgColorProbe}\x00${signature.headingProbe}`;
+		return `${normalizedText}\x00${signature.width}\x00${signature.paddingX}\x00${signature.paddingY}\x00${signature.codeBlockIndent}\x00${signature.themeId}\x00${signature.defaultTextStyleId}\x00${signature.imageProtocol}\x00${signature.kittyPlaceholders ? 1 : 0}\x00${signature.hyperlinks ? 1 : 0}\x00${signature.textSizing ? 1 : 0}\x00${signature.bgColorProbe}\x00${signature.headingProbe}`;
 	}
 
 	#renderStreamingContentLines(
@@ -2552,7 +2660,7 @@ export class Markdown implements Component {
 				// Lists wrap while their structural prefixes are still available, so
 				// continuation rows retain the correct hanging indent. Re-wrapping the
 				// flattened rows here would discard that structure.
-				if (token.type === "list" || TERMINAL.isImageLine(renderedRow.text) || isOsc66Line(renderedRow.text)) {
+				if (token.type === "list" || isPureImageRow(renderedRow.text) || isOsc66Line(renderedRow.text)) {
 					wrappedLines.push(renderedRow);
 				} else {
 					const wrappedRows = wrapTextWithAnsi(renderedRow.text, contentWidth);
@@ -2617,8 +2725,10 @@ export class Markdown implements Component {
 				continue;
 			}
 
-			// Image lines and OSC 66 sized headings must be output raw - no margins or background
-			if (TERMINAL.isImageLine(line) || isOsc66Line(line)) {
+			// Rows that are nothing but a graphic, and OSC 66 sized headings, must be
+			// output raw - no margins or background. Text rows that merely embed an
+			// inline graphic still get their margins and trailing padding.
+			if (isPureImageRow(line) || isOsc66Line(line)) {
 				contentLines.push(line);
 				previousLineWasOsc66 = isOsc66Line(line);
 				continue;
@@ -2952,10 +3062,14 @@ export class Markdown implements Component {
 	): RenderedLine[] {
 		const lines: RenderedLine[] = [];
 
-		// Display math block (own-line `$$…$$` / `\[…\]`): stack `\frac` vertically
-		// and keep `\\` row breaks, so fractions and matrices span multiple lines.
+		// Display math block (own-line `$$…$$` / `\[…\]`): a terminal graphic when
+		// the theme can supply one, otherwise stack `\frac` vertically and keep
+		// `\\` row breaks so fractions and matrices span multiple lines.
 		if (isMathToken(token)) {
-			for (const mathLine of latexToBlock(token.text)) lines.push(renderedLine(this.#applyDefaultStyle(mathLine)));
+			const math = this.#displayMathLines(token.text, width);
+			for (const mathLine of math.lines) {
+				lines.push(renderedLine(math.graphic ? mathLine : this.#applyDefaultStyle(mathLine)));
+			}
 			if (nextTokenType && nextTokenType !== "space") lines.push(renderedLine(""));
 			return lines;
 		}
@@ -2964,7 +3078,11 @@ export class Markdown implements Component {
 			case "heading": {
 				const headingLevel = token.depth;
 				const headingPrefix = `${"#".repeat(headingLevel)} `;
-				const headingText = this.#renderInlineTokens(token.tokens || [], styleContext);
+				const headingText = this.#renderInlineTokens(token.tokens || [], {
+					...(styleContext ?? this.#getDefaultInlineStyleContext()),
+					availableWidth: undefined,
+					startColumn: undefined,
+				});
 				const headingPlainText = plainInlineTokens(token.tokens || []);
 				let styledHeading: string;
 				if (headingLevel === 1 && TERMINAL.textSizing) {
@@ -2996,12 +3114,17 @@ export class Markdown implements Component {
 			case "paragraph": {
 				const displayMath = soleDisplayMath(token.tokens);
 				if (displayMath) {
-					for (const mathLine of latexToBlock(displayMath.text))
-						lines.push(renderedLine(this.#applyDefaultStyle(mathLine)));
+					const math = this.#displayMathLines(displayMath.text, width);
+					for (const mathLine of math.lines) {
+						lines.push(renderedLine(math.graphic ? mathLine : this.#applyDefaultStyle(mathLine)));
+					}
 					if (nextTokenType && nextTokenType !== "list" && nextTokenType !== "space") lines.push(renderedLine(""));
 					break;
 				}
-				const paragraphText = this.#renderInlineTokens(token.tokens || [], styleContext);
+				const paragraphText = this.#renderInlineTokens(
+					token.tokens || [],
+					this.#inlineStyleContext(styleContext, width),
+				);
 				for (const paragraphLine of hangWrapTreeGuideLines(paragraphText, width) ?? [paragraphText]) {
 					lines.push(renderedLine(paragraphLine));
 				}
@@ -3064,11 +3187,15 @@ export class Markdown implements Component {
 			}
 
 			case "blockquote": {
+				const quoteContentWidth = Math.max(1, width - 2);
 				const quoteInlineStyleContext: InlineStyleContext = {
 					applyText: (text: string) => text,
 					stylePrefix: this.#getQuoteStylePrefix(),
+					// The two-cell border is added after wrapping, so the inline
+					// content itself still has the full quote width.
+					availableWidth: quoteContentWidth,
+					startColumn: 0,
 				};
-				const quoteContentWidth = Math.max(1, width - 2);
 				const quoteTokens = token.tokens || [];
 				const renderedQuoteLines: RenderedLine[] = [];
 				for (let i = 0; i < quoteTokens.length; i++) {
@@ -3212,6 +3339,54 @@ export class Markdown implements Component {
 		return this.#applyQuoteBorder(innerLines, width);
 	}
 
+	/**
+	 * Columns `result` currently occupies on the row it ends on. A newline inside
+	 * the run restarts the count, and `startColumn` only applies to the first row
+	 * (callers set it to the bullet/heading/quote prefix that precedes the run).
+	 */
+	#inlineColumn(result: string, styleContext: InlineStyleContext): number {
+		const newline = result.lastIndexOf("\n");
+		return newline < 0
+			? (styleContext.startColumn ?? 0) + visibleWidth(result)
+			: visibleWidth(result.slice(newline + 1));
+	}
+
+	/** Style context for a nested inline run that starts at the end of `result`. */
+	#childStyleContext(parent: InlineStyleContext, result: string): InlineStyleContext {
+		return { ...parent, startColumn: this.#inlineColumn(result, parent) };
+	}
+
+	/** Inline style context carrying the first-row budget of a known inline slot. */
+	#inlineStyleContext(styleContext: InlineStyleContext | undefined, availableWidth: number): InlineStyleContext {
+		const base = styleContext ?? this.#getDefaultInlineStyleContext();
+		return { ...base, availableWidth, startColumn: 0 };
+	}
+
+	/**
+	 * One-row terminal graphic for an inline formula, or null to keep the Unicode
+	 * form. Emitted only when it provably fits on the row it starts on, because
+	 * the placeholder cells are ordinary text and a wrap through the run would
+	 * split the formula across two rows.
+	 *
+	 * The raster is sized to the whole row, not to the space left after the text
+	 * that precedes it: the remaining space changes on every streamed delta, and
+	 * keying a raster on it would typeset the formula again on every frame.
+	 */
+	#inlineMathGraphic(latex: string, result: string, styleContext: InlineStyleContext): string | null {
+		const availableWidth = styleContext.availableWidth;
+		const resolve = this.#theme.resolveMathGraphics;
+		if (availableWidth === undefined || resolve === undefined) return null;
+		// Only the first row of the run has a known prefix. Past a soft break the
+		// caller may add an indent this code cannot see, so those rows keep Unicode.
+		if (result.includes("\n")) return null;
+
+		const room = availableWidth - this.#inlineColumn(result, styleContext);
+		if (room < 2) return null;
+		const graphics = resolve(latex, false, availableWidth);
+		if (!graphics || graphics.lines.length !== 1 || graphics.columns > room) return null;
+		return graphics.lines[0]!;
+	}
+
 	#renderInlineTokens(tokens: Token[], styleContext?: InlineStyleContext): string {
 		let result = "";
 		const resolvedStyleContext = styleContext ?? this.#getDefaultInlineStyleContext();
@@ -3230,7 +3405,9 @@ export class Markdown implements Component {
 		for (const token of collapseInlineHtml(tokens)) {
 			if (isMathToken(token)) {
 				markHtmlItemWhenContent(token.text);
-				result += applyTextWithNewlines(renderMathToken(token.text));
+				result +=
+					this.#inlineMathGraphic(token.text, result, resolvedStyleContext) ??
+					applyTextWithNewlines(renderMathToken(token.text));
 				continue;
 			}
 			switch (token.type) {
@@ -3242,7 +3419,10 @@ export class Markdown implements Component {
 					if (token.tokens) markHtmlItemWhenContent(plainInlineTokens(token.tokens));
 					// Text tokens in list items can have nested tokens for inline formatting
 					if (token.tokens && token.tokens.length > 0) {
-						result += this.#renderInlineTokens(token.tokens, resolvedStyleContext);
+						result += this.#renderInlineTokens(
+							token.tokens,
+							this.#childStyleContext(resolvedStyleContext, result),
+						);
 					} else {
 						result += renderTextWithSwatches(text, applyTextWithNewlines, swatchGlyph);
 					}
@@ -3252,18 +3432,27 @@ export class Markdown implements Component {
 				case "paragraph":
 					// Paragraph tokens contain nested inline tokens
 					markHtmlItemWhenContent(plainInlineTokens(token.tokens || []));
-					result += this.#renderInlineTokens(token.tokens || [], resolvedStyleContext);
+					result += this.#renderInlineTokens(
+						token.tokens || [],
+						this.#childStyleContext(resolvedStyleContext, result),
+					);
 					break;
 
 				case "strong": {
 					markHtmlItemWhenContent(plainInlineTokens(token.tokens || []));
-					const boldContent = this.#renderInlineTokens(token.tokens || [], resolvedStyleContext);
+					const boldContent = this.#renderInlineTokens(
+						token.tokens || [],
+						this.#childStyleContext(resolvedStyleContext, result),
+					);
 					result += this.#theme.bold(boldContent) + stylePrefix;
 					break;
 				}
 
 				case "em": {
-					const italicContent = this.#renderInlineTokens(token.tokens || [], resolvedStyleContext);
+					const italicContent = this.#renderInlineTokens(
+						token.tokens || [],
+						this.#childStyleContext(resolvedStyleContext, result),
+					);
 					markHtmlItemWhenContent(plainInlineTokens(token.tokens || []));
 					result += this.#theme.italic(italicContent) + stylePrefix;
 					break;
@@ -3278,7 +3467,10 @@ export class Markdown implements Component {
 
 				case "link": {
 					markHtmlItemWhenContent(token.text);
-					const linkText = this.#renderInlineTokens(token.tokens || [], resolvedStyleContext);
+					const linkText = this.#renderInlineTokens(
+						token.tokens || [],
+						this.#childStyleContext(resolvedStyleContext, result),
+					);
 					const styledLinkText = this.#theme.link(this.#theme.underline(linkText));
 					const href = typeof token.href === "string" ? token.href : "";
 					const target = (href && this.#theme.resolveLink?.(href)) || href;
@@ -3306,7 +3498,10 @@ export class Markdown implements Component {
 					break;
 
 				case "del": {
-					const delContent = this.#renderInlineTokens(token.tokens || [], resolvedStyleContext);
+					const delContent = this.#renderInlineTokens(
+						token.tokens || [],
+						this.#childStyleContext(resolvedStyleContext, result),
+					);
 					markHtmlItemWhenContent(plainInlineTokens(token.tokens || []));
 					result += this.#theme.strikethrough(delContent) + stylePrefix;
 					break;
@@ -3393,12 +3588,19 @@ export class Markdown implements Component {
 			const bullet = token.ordered ? `${startNumber + i}. ` : "- ";
 			const firstPrefix = indent + this.#theme.listBullet(bullet);
 			// Continuation rows align under the item text, so the hang matches the
-			// actual bullet width (`10. ` is 4 cells, not 2).
+			// actual bullet width (`10. ` is 4 cells, not 2). The bullet is added
+			// after rendering, so inline math inside the item only has what remains.
+			const bulletWidth = visibleWidth(firstPrefix);
 			const continuationIndent = indent + padding(visibleWidth(bullet));
+			const itemStyleContext: InlineStyleContext = {
+				...(styleContext ?? this.#getDefaultInlineStyleContext()),
+				availableWidth: Math.max(0, width - bulletWidth),
+				startColumn: 0,
+			};
 
 			// Process item tokens; nested-list lines arrive structurally tagged and
 			// already carry their own full indent.
-			const itemLines = this.#renderListItem(item.tokens || [], depth, width, styleContext);
+			const itemLines = this.#renderListItem(item.tokens || [], depth, width, itemStyleContext);
 
 			if (itemLines.length > 0) {
 				const firstLine = itemLines[0]!;
@@ -3451,8 +3653,12 @@ export class Markdown implements Component {
 				const displayMath = soleDisplayMath(token.tokens);
 				if (displayMath) {
 					const apply = styleContext?.applyText ?? ((t: string) => this.#applyDefaultStyle(t));
-					for (const mathLine of latexToBlock(displayMath.text))
-						lines.push({ text: apply(mathLine), nested: false });
+					const math = this.#displayMathLines(displayMath.text, width);
+					for (const mathLine of math.lines) {
+						// A graphic row is a whole image block: tag it as pass-through so the
+						// list bullet/indent does not shift the first row relative to the rest.
+						lines.push({ text: math.graphic ? mathLine : apply(mathLine), nested: math.graphic });
+					}
 				} else {
 					const text =
 						token.tokens && token.tokens.length > 0
@@ -3465,8 +3671,12 @@ export class Markdown implements Component {
 				const apply = styleContext?.applyText ?? ((t: string) => this.#applyDefaultStyle(t));
 				const displayMath = soleDisplayMath(token.tokens);
 				if (displayMath) {
-					for (const mathLine of latexToBlock(displayMath.text))
-						lines.push({ text: apply(mathLine), nested: false });
+					const math = this.#displayMathLines(displayMath.text, width);
+					for (const mathLine of math.lines) {
+						// A graphic row is a whole image block: tag it as pass-through so the
+						// list bullet/indent does not shift the first row relative to the rest.
+						lines.push({ text: math.graphic ? mathLine : apply(mathLine), nested: math.graphic });
+					}
 				} else {
 					lines.push({ text: this.#renderInlineTokens(token.tokens || [], styleContext), nested: false });
 				}
@@ -3479,9 +3689,13 @@ export class Markdown implements Component {
 				}
 				lines.push({ text: this.#theme.codeBlockBorder("```"), nested: false });
 			} else if (isMathToken(token)) {
-				// Display math block inside a list item: stack fractions / matrix rows.
+				// Display math block inside a list item: graphic, else stacked
+				// fractions / matrix rows.
 				const apply = styleContext?.applyText ?? ((t: string) => this.#applyDefaultStyle(t));
-				for (const mathLine of latexToBlock(token.text)) lines.push({ text: apply(mathLine), nested: false });
+				const math = this.#displayMathLines(token.text, width);
+				for (const mathLine of math.lines) {
+					lines.push({ text: math.graphic ? mathLine : apply(mathLine), nested: math.graphic });
+				}
 			} else {
 				// Other token types - try to render as inline
 				const text = this.#renderInlineTokens([token], styleContext);
@@ -3548,6 +3762,12 @@ export class Markdown implements Component {
 		styleContext?: InlineStyleContext,
 	): string[] {
 		const lines: string[] = [];
+		// Cell text is measured for column widths and then padded/truncated to the
+		// chosen width, so an inline graphic inside a cell could be sliced by the
+		// table's own layout. Cells keep the Unicode form.
+		const cellStyleContext: InlineStyleContext | undefined = styleContext
+			? { ...styleContext, availableWidth: undefined, startColumn: undefined }
+			: undefined;
 		const numCols = token.header.length;
 
 		if (numCols === 0) {
@@ -3573,14 +3793,14 @@ export class Markdown implements Component {
 		const naturalWidths: number[] = [];
 		const minWordWidths: number[] = [];
 		for (let i = 0; i < numCols; i++) {
-			const headerText = this.#renderInlineTokens(token.header[i].tokens || [], styleContext);
+			const headerText = this.#renderInlineTokens(token.header[i].tokens || [], cellStyleContext);
 			const headerLineWidths = this.#terminalLineWidths(headerText);
 			naturalWidths[i] = Math.max(...headerLineWidths, 0);
 			minWordWidths[i] = Math.max(1, this.#getLongestWordWidth(headerText, maxUnbrokenWordWidth));
 		}
 		for (const row of token.rows) {
 			for (let i = 0; i < row.length; i++) {
-				const cellText = this.#renderInlineTokens(row[i].tokens || [], styleContext);
+				const cellText = this.#renderInlineTokens(row[i].tokens || [], cellStyleContext);
 				const cellLineWidths = this.#terminalLineWidths(cellText);
 				naturalWidths[i] = Math.max(naturalWidths[i] || 0, ...cellLineWidths);
 				minWordWidths[i] = Math.max(
@@ -3671,7 +3891,7 @@ export class Markdown implements Component {
 
 		// Render header with wrapping
 		const headerCellLines: string[][] = token.header.map((cell, i) => {
-			const text = this.#renderInlineTokens(cell.tokens || [], styleContext);
+			const text = this.#renderInlineTokens(cell.tokens || [], cellStyleContext);
 			return this.#wrapCellText(text, columnWidths[i]);
 		});
 		const headerLineCount = Math.max(...headerCellLines.map(c => c.length));
@@ -3694,7 +3914,7 @@ export class Markdown implements Component {
 		for (let rowIndex = 0; rowIndex < token.rows.length; rowIndex++) {
 			const row = token.rows[rowIndex];
 			const rowCellLines: string[][] = row.map((cell, i) => {
-				const text = this.#renderInlineTokens(cell.tokens || [], styleContext);
+				const text = this.#renderInlineTokens(cell.tokens || [], cellStyleContext);
 				return this.#wrapCellText(text, columnWidths[i]);
 			});
 			const rowLineCount = Math.max(...rowCellLines.map(c => c.length));

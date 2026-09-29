@@ -19,11 +19,13 @@ import { $flag } from "@oh-my-pi/pi-utils/env";
 import * as logger from "@oh-my-pi/pi-utils/logger";
 import * as postmortem from "@oh-my-pi/pi-utils/postmortem";
 import { DEFAULT_MAX_INLINE_IMAGES, ImageBudget } from "./components/image";
+import { bumpMarkdownRenderEpoch } from "./components/markdown";
 import { TuiDebugServer } from "./debug-server";
 import { isKeyRelease, matchesKey } from "./keys";
 import { KITTY_PLACEHOLDER } from "./kitty-graphics";
 import { LoopWatchdog } from "./loop-watchdog";
 import { STDOUT_BACKLOG_CLEAR_BYTES, setAltScreenActive, type Terminal } from "./terminal";
+import { setMathGraphicsReadyHandler } from "./theme/math-cache";
 import {
 	encodeKittyDeleteAllImages,
 	encodeKittyDeleteImage,
@@ -930,6 +932,13 @@ export class TUI extends Container {
 		if (options?.onPaint) this.#paintListeners.add(options.onPaint);
 		this.#showHardwareCursor = showHardwareCursor === undefined ? this.#showHardwareCursor : showHardwareCursor;
 		this.#watchdog = new LoopWatchdog();
+		// A math formula rasterizes off-thread and is only then drawable, so rows
+		// already painted with the Unicode fallback must be rebuilt. Last TUI wins;
+		// a second instance in the same process simply does not drive the redraw.
+		setMathGraphicsReadyHandler(() => {
+			bumpMarkdownRenderEpoch();
+			this.requestRender();
+		});
 	}
 	static #initialResizeScrollbackMode(): ResizeScrollbackMode {
 		const mode = Bun.env.PI_TUI_RESIZE_SCROLLBACK;

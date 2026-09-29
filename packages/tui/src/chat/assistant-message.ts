@@ -2,7 +2,7 @@ import type { AssistantMessage, ImageContent, TextContent } from "@oh-my-pi/pi-a
 import { type Component, Container } from "../tui";
 import { Image, type ImageBudget } from "../components/image";
 import { ImageProtocol, TERMINAL } from "../terminal-capabilities";
-import { Markdown, type MarkdownTheme } from "../components/markdown";
+import { Markdown, type MarkdownTheme, markdownRenderEpoch } from "../components/markdown";
 import { Spacer } from "../components/spacer";
 import { Text } from "../components/text";
 import { formatNumber } from "@oh-my-pi/pi-utils";
@@ -77,6 +77,12 @@ interface StableRenderInputs {
 	readonly prose: MarkdownTheme;
 	readonly markdown: MarkdownTheme;
 	readonly color: ((text: string) => string) | undefined;
+	/**
+	 * Global Markdown render epoch. Rows cached here are keyed on the source
+	 * text, so a formula that gained a terminal graphic between two renders
+	 * would otherwise keep serving its Unicode fallback.
+	 */
+	readonly markdownEpoch: number;
 }
 
 function isSnapshotExtension(previous: readonly StablePart[], current: readonly StablePart[]): boolean {
@@ -896,10 +902,17 @@ export class AssistantMessageComponent extends Container {
 		const prose = this.#getProseTheme();
 		const markdown = getMarkdownTheme();
 		const color = this.#textColorTransform;
+		const markdownEpoch = markdownRenderEpoch();
 		const inputs = this.#stableRenderInputs;
-		if (inputs?.prose === prose && inputs.markdown === markdown && inputs.color === color) return;
+		if (
+			inputs?.prose === prose &&
+			inputs.markdown === markdown &&
+			inputs.color === color &&
+			inputs.markdownEpoch === markdownEpoch
+		)
+			return;
 		this.#dropStableRenders();
-		this.#stableRenderInputs = { prose, markdown, color };
+		this.#stableRenderInputs = { prose, markdown, color, markdownEpoch };
 	}
 
 	#dropStableRenders(): void {
