@@ -76,6 +76,7 @@ export function buildHotkeysMarkdown(bindings: HotkeysMarkdownBindings): string 
 		`| \`${hotkeyLabel(bindings, "app.model.selectTemporary")}\` | Select model (temporary) |`,
 		`| \`${hotkeyLabel(bindings, "app.model.select")}\` | Select model (set roles) |`,
 		`| \`${hotkeyLabel(bindings, "app.plan.toggle")}\` | Toggle plan mode |`,
+		`| \`${hotkeyLabel(bindings, "app.approvalMode.cycle")}\` | Cycle approval mode |`,
 		`| \`${hotkeyLabel(bindings, "app.history.search")}\` | Search prompt history |`,
 		`| \`${hotkeyLabel(bindings, "app.tools.expand")}\` | Toggle tool output expansion |`,
 		`| \`${hotkeyLabel(bindings, "app.tools.toggleVisibility")}\` | Toggle tool activity visibility |`,

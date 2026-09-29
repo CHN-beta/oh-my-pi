@@ -480,7 +480,9 @@ import {
 	cfgDevAutoqaConsent,
 	cfgTodoEnabled,
 	cfgToolsApproval,
+	cfgToolsApprovalMode,
 } from "../tools/settings";
+import type { ApprovalMode } from "../tools/approval";
 import { cfgTtsrJudge } from "../export/ttsr-settings";
 
 /** Advisor settings whose edit toggles or rebuilds a running advisor. */
@@ -716,6 +718,7 @@ export class AgentSession implements SettingsScope {
 	/** Construction skipped fallback-chain validation; {@link validateRetryFallbackChains} still owes it. */
 	#fallbackChainValidationDeferred = false;
 
+	#autoApprove = false;
 	readonly #models: ModelControls;
 	readonly #tools: SessionTools;
 	readonly #prewalk: PrewalkCoordinator;
@@ -1571,6 +1574,7 @@ export class AgentSession implements SettingsScope {
 		this.#getEvalPreludes = config.getEvalPreludes;
 		this.#reconcileBrowserMcpFilter = config.reconcileBrowserMcpFilter;
 		this.#customCommands = config.customCommands ?? [];
+		this.#autoApprove = config.autoApprove === true;
 		const recoveryHost: TurnRecoveryHost = {
 			agent: this.agent,
 			sessionManager: this.sessionManager,
@@ -9245,6 +9249,17 @@ export class AgentSession implements SettingsScope {
 	/** Advances through the thinking selectors supported by the active model. */
 	cycleThinkingLevel(): ConfiguredThinkingLevel | undefined {
 		return this.#models.cycleThinkingLevel();
+	}
+
+	/** Reports whether the current session was explicitly started or set in yolo mode. */
+	getRuntimeAutoApprove(): boolean {
+		return this.#autoApprove;
+	}
+
+	/** Sets the runtime approval mode in memory for this session only. */
+	setRuntimeApprovalMode(mode: ApprovalMode): void {
+		cfgToolsApprovalMode.override(this.settings, mode);
+		this.#autoApprove = mode === "yolo";
 	}
 
 	/** Reports whether `/fast` is enabled for the active model family. */

@@ -3260,7 +3260,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			},
 			settings,
 			localProtocolOptions,
-			autoApprove: options.autoApprove ?? false,
+			autoApprove: session.getRuntimeAutoApprove(),
 		});
 		const toolContextStore = new ToolContextStore(getSessionContext);
 		toolSession.getToolContext = () => toolContextStore.getContext();

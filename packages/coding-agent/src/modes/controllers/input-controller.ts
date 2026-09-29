@@ -9,7 +9,7 @@ import {
 	type SlashCommand,
 } from "@oh-my-pi/pi-tui";
 import { isEnoent, logger, postmortem, sanitizeText } from "@oh-my-pi/pi-utils";
-import { formatDoubleTap } from "@oh-my-pi/pi-tui/app-keybindings";
+import { formatDoubleTap, type AppKeybinding } from "@oh-my-pi/pi-tui/app-keybindings";
 import { appKey, editorKey } from "@oh-my-pi/pi-tui/chrome/keybinding-hints";
 import { formatModelRoleAlias, roleCandidatePool } from "../../config/model-roles";
 import { resolveModelRoleValue } from "../../config/model-resolver";
@@ -44,6 +44,8 @@ import { parseSlashCommand, parseSubcommand } from "../../slash-commands/helpers
 import { isTinyLocalModelKey } from "../../tiny/models";
 import { tinyTitleClient } from "../../tiny/title-client";
 import { resolveReadPath } from "../../tools/path-utils";
+import { cfgToolsApprovalMode } from "../../tools/settings";
+import type { ApprovalMode } from "../../tools/approval";
 import { shortenPath, TRUNCATE_LENGTHS, truncateToWidth } from "@oh-my-pi/pi-tui/render/render-utils";
 import { vocalizer } from "../../tts/vocalizer";
 import {
@@ -125,6 +127,13 @@ interface PasteTarget {
 function hasPasteText(value: unknown): value is PasteTarget {
 	return typeof value === "object" && value !== null && typeof (value as PasteTarget).pasteText === "function";
 }
+
+const APPROVAL_MODE_SEQUENCE = ["always-ask", "write", "yolo"] as const satisfies readonly ApprovalMode[];
+const APPROVAL_MODE_ACTIONS = [
+	["app.approvalMode.alwaysAsk", "always-ask"],
+	["app.approvalMode.write", "write"],
+	["app.approvalMode.yolo", "yolo"],
+] as const satisfies readonly (readonly [AppKeybinding, ApprovalMode])[];
 
 const SHELL_PROMPT_COMMAND_RE =
 	/^(?:\.{0,2}\/|~\/|cd(?:\s|$)|sudo(?:\s|$)|git(?:\s|$)|bun(?:\s|$)|npm(?:\s|$)|pnpm(?:\s|$)|yarn(?:\s|$)|node(?:\s|$)|python\d*(?:\s|$)|cargo(?:\s|$)|go(?:\s|$)|make(?:\s|$)|docker(?:\s|$)|kubectl(?:\s|$))/;
@@ -615,6 +624,14 @@ export class InputController {
 		const planModeKeys = this.ctx.keybindings.getKeys("app.plan.toggle");
 		for (const key of planModeKeys) {
 			this.ctx.editor.setCustomKeyHandler(key, () => void this.ctx.handlePlanModeCommand());
+		}
+		for (const key of this.ctx.keybindings.getKeys("app.approvalMode.cycle")) {
+			this.ctx.editor.setCustomKeyHandler(key, () => this.cycleApprovalMode());
+		}
+		for (const [action, mode] of APPROVAL_MODE_ACTIONS) {
+			for (const key of this.ctx.keybindings.getKeys(action)) {
+				this.ctx.editor.setCustomKeyHandler(key, () => this.setApprovalMode(mode));
+			}
 		}
 
 		for (const key of this.ctx.keybindings.getKeys("app.session.new")) {
@@ -2384,6 +2401,32 @@ export class InputController {
 			this.ctx.statusLine.invalidate();
 			this.ctx.updateEditorBorderColor();
 		}
+	}
+
+	cycleApprovalMode(): void {
+		if (this.ctx.focusedAgentId) {
+			this.ctx.showStatus(
+				`Approval mode applies to the main session — press ${formatDoubleTap("left")} to return first`,
+			);
+			return;
+		}
+		const current = cfgToolsApprovalMode.get(this.ctx.settings);
+		const currentIndex = APPROVAL_MODE_SEQUENCE.indexOf(current as ApprovalMode);
+		const next = APPROVAL_MODE_SEQUENCE[(currentIndex + 1) % APPROVAL_MODE_SEQUENCE.length] ?? "always-ask";
+		this.setApprovalMode(next);
+	}
+
+	setApprovalMode(mode: ApprovalMode): void {
+		if (this.ctx.focusedAgentId) {
+			this.ctx.showStatus(
+				`Approval mode applies to the main session — press ${formatDoubleTap("left")} to return first`,
+			);
+			return;
+		}
+		this.ctx.session.setRuntimeApprovalMode(mode);
+		this.ctx.statusLine.invalidate();
+		this.ctx.showStatus(`Approval mode: ${mode}`);
+		this.ctx.ui.requestRender();
 	}
 
 	async cycleRoleModel(direction: "forward" | "backward" = "forward"): Promise<void> {
