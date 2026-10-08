@@ -1,6 +1,11 @@
 import { type Component, Container, type HistoryBatch } from "../tui";
 import * as logger from "@oh-my-pi/pi-utils/logger";
 import { popLoopPhase, pushLoopPhase } from "@oh-my-pi/pi-utils";
+import { renderForScrollback } from "../components/image";
+import { col } from "../native/describe";
+import type { NativeNode } from "../native/node";
+import { isNativeSettled, settleNative } from "../native/settle";
+import { isUsageRowBlock } from "../overlays/usage-row";
 import { isToolActivityComponent } from "./tool-activity";
 
 /** Shared animation time supplied by the constrained transcript root. */
@@ -52,6 +57,12 @@ export interface AppendOnlyTranscriptBlock {
 
 interface FinalizableBlock {
 	isTranscriptBlockFinalized?(): boolean;
+	/**
+	 * A finalized block whose rows still wait on async work (an SVG figure's
+	 * raster). Retirement holds until it lands: committed rows can never be
+	 * repainted, so retiring early would freeze a placeholder into scrollback.
+	 */
+	isTranscriptBlockPending?(): boolean;
 	/** Render the row that must remain represented under emergency viewport pressure. */
 	renderTranscriptBlockEmergencyRow?(width: number): string | undefined;
 }
@@ -116,7 +127,7 @@ const EMPTY_STABLE_ROWS: readonly TranscriptStableRow[] = [];
 
 function isFinalized(component: Component): boolean {
 	const block = component as Component & FinalizableBlock;
-	return block.isTranscriptBlockFinalized?.() ?? true;
+	return (block.isTranscriptBlockFinalized?.() ?? true) && block.isTranscriptBlockPending?.() !== true;
 }
 
 function blockMode(component: Component): TranscriptBlockMode {
@@ -199,6 +210,9 @@ export class TranscriptContainer extends Container {
 	#syncedChildren: Component[] | undefined;
 	/** Forces the next {@link #syncEntries} to compare every entry, not just the live tail. */
 	#entriesUnverified = false;
+	/** Block list handed to the native frame provider, reused while the children are unchanged. */
+	#nativeBlocks: readonly Component[] = [];
+	#nativeNode: NativeNode | undefined;
 	override addChild(component: Component): void {
 		if (isToolActivityComponent(component)) component.setToolActivityVisible(this.#toolActivityVisible);
 		super.addChild(component);
@@ -283,6 +297,18 @@ export class TranscriptContainer extends Container {
 		if (this.#offered?.kind === "commit" && index < this.#offered.end) return false;
 		if (this.#offered?.kind === "append" && index === this.#offered.entry) return false;
 		return true;
+	}
+
+	/**
+	 * Whether a superseded snapshot block (a repeated `wait` poll) may be
+	 * replaced by its successor. Beyond {@link canRemoveBlock}, a block directly
+	 * above a usage row stays: that row describes the turn the block belongs to,
+	 * and removing the block would leave a usage-only turn (#12248).
+	 */
+	canDisplaceBlock(component: Component): boolean {
+		if (!this.canRemoveBlock(component)) return false;
+		const next = this.children[this.children.indexOf(component) + 1];
+		return next === undefined || !isUsageRowBlock(next);
 	}
 
 	/** Lifecycle state per block in transcript order (diagnostics and tests). */
@@ -748,6 +774,37 @@ export class TranscriptContainer extends Container {
 		return rows.length > cap ? rows.slice(rows.length - cap) : rows;
 	}
 
+	/**
+	 * The transcript's blocks for a native (TSP) surface, one component per
+	 * `main` child in transcript order; ids follow component identity, so
+	 * inserts, removals (rewind, displacement) and reorders become targeted ops.
+	 * Finalized blocks are settled as a hint; they stay editable, so a later
+	 * expansion, late result or reaction still reaches them wherever they sit.
+	 * No retirement happens on this path: the whole transcript is one document.
+	 * Returns the same array while the block list is unchanged.
+	 */
+	nativeBlocks(): readonly Component[] {
+		this.#syncEntries();
+		const children = this.children;
+		for (const child of children) {
+			if (!isNativeSettled(child) && isFinalized(child)) settleNative(child);
+		}
+		const previous = this.#nativeBlocks;
+		if (previous.length === children.length && previous.every((child, index) => child === children[index])) {
+			return previous;
+		}
+		this.#nativeBlocks = children.slice();
+		this.#nativeNode = undefined;
+		return this.#nativeBlocks;
+	}
+
+	/** Embedded as a child (transcript viewers): a stack of the {@link nativeBlocks}. */
+	override describe(): NativeNode {
+		const blocks = this.nativeBlocks();
+		this.#nativeNode ??= col(blocks, { role: "omp.transcript" });
+		return this.#nativeNode;
+	}
+
 	/** Full semantic render used by exports and non-terminal commands. */
 	override render(width: number): readonly string[] {
 		this.#syncEntries();
@@ -950,9 +1007,11 @@ export class TranscriptContainer extends Container {
 			// Only the range head is sliced by its emitted stable prefix; every other
 			// entry renders whole, so the append-only verification pass (a second
 			// full render of the block's stable prefix) is skipped for them. This
-			// keeps a complete-ledger replay at one render per block.
-			const rendered =
-				index === start ? this.#renderEntry(entry, width) : trimBlankEdges(entry.component.render(width));
+			// keeps a complete-ledger replay at one render per block. These rows go
+			// to native scrollback, where nothing can repaint them.
+			const rendered = renderForScrollback(() =>
+				index === start ? this.#renderEntry(entry, width) : trimBlankEdges(entry.component.render(width)),
+			);
 			const emittedRows = index === start ? this.#renderStablePrefix(entry, entry.emitted, width).length : 0;
 			const block = rendered.slice(emittedRows);
 			reached = index + 1;

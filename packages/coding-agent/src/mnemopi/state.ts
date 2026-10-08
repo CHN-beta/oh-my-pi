@@ -13,7 +13,7 @@ import {
 	stripRetentionProtocolMarkers,
 	truncateRecallQuery,
 } from "../hindsight/content";
-import { extractMessages } from "../hindsight/transcript";
+import { countUserTurns, extractMessages } from "../hindsight/transcript";
 import type { MemoryPromptPreparation } from "../memory-backend/types";
 import { redactMemorySecrets, redactRememberWrite } from "../memory-backend/redact";
 import type { AgentSession, AgentSessionEvent } from "../session/agent-session";
@@ -532,10 +532,11 @@ export class MnemopiSessionState {
 
 	async maybeRetainOnAgentEnd(_messages: AgentMessage[]): Promise<void> {
 		if (!this.config.autoRetain || this.aliasOf) return;
-		const flat = extractMessages(this.session.sessionManager);
 		this.#restoreRetainedTurnCursor();
-		const userTurns = flat.filter(message => message.role === "user").length;
+		// Cheap gate first: most agent_end events are not retain turns, so skip text extraction.
+		const userTurns = countUserTurns(this.session.sessionManager);
 		if (userTurns - this.lastRetainedTurn < this.config.retainEveryNTurns) return;
+		const flat = extractMessages(this.session.sessionManager);
 		await this.retainMessages(
 			sliceUnretainedMessages(flat, this.lastRetainedTurn),
 			`${this.sessionId}-${Date.now()}`,
@@ -827,13 +828,9 @@ export class MnemopiSessionState {
 // `per-project-tagged` is implemented by opening both the project bank and the
 // shared bank, then merging recall results while keeping writes project-local by default.
 function createScopedResources(config: MnemopiBackendConfig): MnemopiScopedResources {
-	// Env vars (MNEMOPI_POLYPHONIC_RECALL / MNEMOPI_ENHANCED_RECALL) still override
-	// these config-driven defaults inside the core gates. Proactive linking is
-	// per-memory instance below so concurrent sessions cannot clobber each other.
-	requireMnemopi().configureRecallFeatures({
-		polyphonicRecall: config.polyphonicRecall,
-		enhancedRecall: config.enhancedRecall,
-	});
+	// Recall feature flags are per memory instance (see `createMemory`) so concurrent
+	// sessions with different settings cannot clobber each other through process-wide
+	// defaults. MNEMOPI_POLYPHONIC_RECALL / MNEMOPI_ENHANCED_RECALL still override them.
 	const banks = resolveScopedBanks(config);
 	const memories = new Map<string, MnemopiScopedMemory>();
 	const open = (bank: string): MnemopiScopedMemory => {
@@ -956,6 +953,8 @@ function createMemory(config: MnemopiBackendConfig, bank: string): Mnemopi {
 		channelId: bank,
 		...providerOptions,
 		proactiveLinking: config.proactiveLinking,
+		polyphonicRecall: config.polyphonicRecall,
+		enhancedRecall: config.enhancedRecall,
 	} as ConstructorParameters<typeof Mnemopi>[0]);
 }
 
