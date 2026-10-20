@@ -26,7 +26,7 @@ Configure with `tools.approvalMode`:
 
 `--approval-mode <mode>` overrides the configured mode for the session. `--auto-approve` and `--yolo` force yolo execution even when an explicit `--approval-mode` is also supplied; tool/user denies and explicit tool prompt policies still apply.
 
-In an interactive TUI session, press `Alt+Shift+A` (`app.approvalMode.cycle`) to cycle the active mode in memory: `always-ask` → `write` → `yolo` → `always-ask`. The direct actions `app.approvalMode.alwaysAsk`, `app.approvalMode.write`, and `app.approvalMode.yolo` are unbound by default and can be mapped in `~/.omp/agent/keybindings.yml`.
+In an interactive TUI session, press `Alt+Shift+A` (`app.approvalMode.cycle`) to cycle the active mode in memory: `always-ask` → `always-ask-cached` → `write` → `yolo` → `always-ask`. The direct actions `app.approvalMode.alwaysAsk`, `app.approvalMode.write`, and `app.approvalMode.yolo` are unbound by default and can be mapped in `~/.omp/agent/keybindings.yml`.
 
 
 ### Ask and remember (`always-ask-cached`)

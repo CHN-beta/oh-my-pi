@@ -13,6 +13,7 @@ import { AgentRegistry } from "@oh-my-pi/pi-coding-agent/registry/agent-registry
 import type { AgentSession } from "@oh-my-pi/pi-coding-agent/session/agent-session";
 import type { ExecutorOptions } from "@oh-my-pi/pi-coding-agent/task/executor";
 import * as executorModule from "@oh-my-pi/pi-coding-agent/task/executor";
+import * as discoveryModule from "@oh-my-pi/pi-coding-agent/task/discovery";
 import type { SingleResult } from "@oh-my-pi/pi-tui/tools/task";
 import type { ToolSession } from "@oh-my-pi/pi-coding-agent/tools";
 import { VibeSessionRegistry } from "@oh-my-pi/pi-coding-agent/vibe/runtime";
@@ -42,6 +43,18 @@ describe("vibe_send attribution", () => {
 
 	beforeEach(() => {
 		manager = new AsyncJobManager({ onJobComplete: () => {} });
+		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({
+			agents: [
+				{
+					name: "code",
+					description: "code worker",
+					systemPrompt: "You are the code worker.",
+					source: "user",
+				},
+			],
+			projectAgentsDir: null,
+			searchedDirs: ["<stubbed>"],
+		});
 		parent = {
 			cwd: "/tmp",
 			settings: Settings.isolated(),
@@ -69,7 +82,7 @@ describe("vibe_send attribution", () => {
 			return resultFor(options);
 		});
 		const registry = VibeSessionRegistry.global();
-		const spawned = await registry.spawn(parent, { cli: "fast", prompt: "initial work" });
+		const spawned = await registry.spawn(parent, { cli: "code", prompt: "initial work" });
 		const steer = vi.fn(async () => {});
 		const live = { isStreaming: true, steer } as unknown as AgentSession;
 		AgentRegistry.global().register({
@@ -96,7 +109,7 @@ describe("vibe_send attribution", () => {
 			return resultFor(options);
 		});
 		const registry = VibeSessionRegistry.global();
-		const spawned = await registry.spawn(parent, { cli: "fast", prompt: "initial work" });
+		const spawned = await registry.spawn(parent, { cli: "code", prompt: "initial work" });
 		const steer = vi.fn(async () => {});
 		const live = { isStreaming: false, steer } as unknown as AgentSession;
 		AgentRegistry.global().register({

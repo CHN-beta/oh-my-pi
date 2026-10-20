@@ -11,6 +11,7 @@ import * as sdk from "@oh-my-pi/pi-coding-agent/sdk";
 import type { AgentSession } from "@oh-my-pi/pi-coding-agent/session/agent-session";
 import { AuthStorage } from "@oh-my-pi/pi-coding-agent/session/auth-storage";
 import * as settingsStream from "@oh-my-pi/pi-coding-agent/session/settings-stream-fn";
+import * as discoveryModule from "@oh-my-pi/pi-coding-agent/task/discovery";
 import type { ToolSession } from "@oh-my-pi/pi-coding-agent/tools";
 import { VibeSessionRegistry } from "@oh-my-pi/pi-coding-agent/vibe/runtime";
 import { TempDir } from "@oh-my-pi/pi-utils";
@@ -87,11 +88,31 @@ it("shares Vibe sibling cache routing by worker type while keeping conversations
 		),
 	);
 	try {
+		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({
+			agents: [
+				{
+					name: "doc",
+					description: "doc worker",
+					systemPrompt: "You are the doc worker.",
+					model: ["@smol"],
+					source: "user",
+				},
+				{
+					name: "code",
+					description: "code worker",
+					systemPrompt: "You are the code worker.",
+					model: ["@task"],
+					source: "user",
+				},
+			],
+			projectAgentsDir: null,
+			searchedDirs: ["<stubbed>"],
+		});
 		const registry = VibeSessionRegistry.global();
 		for (const [name, cli] of [
-			["GoodA", "good"],
-			["GoodB", "good"],
-			["FastA", "fast"],
+			["CodeA", "code"],
+			["CodeB", "code"],
+			["DocA", "doc"],
 		] as const) {
 			const spawned = await registry.spawn(parent, { name, cli, prompt: "Review the supplied code." });
 			const job = manager.getJob(spawned.jobId);
@@ -100,9 +121,9 @@ it("shares Vibe sibling cache routing by worker type while keeping conversations
 			expect(job.status, job.errorText ?? job.resultText).toBe("completed");
 		}
 		expect(requests.map(request => request.key)).toEqual([
-			"parent-cache-lineage:task",
-			"parent-cache-lineage:task",
-			"parent-cache-lineage:sonic",
+			"parent-cache-lineage:code",
+			"parent-cache-lineage:code",
+			"parent-cache-lineage:doc",
 		]);
 		expect(new Set(requests.map(request => request.sessionId)).size).toBe(3);
 	} finally {

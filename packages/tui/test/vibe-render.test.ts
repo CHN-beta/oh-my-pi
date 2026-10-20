@@ -23,7 +23,7 @@ const strip = (lines: readonly string[]): string[] =>
 function makeScreen(overrides: Partial<VibeScreenSnapshot> = {}): VibeScreenSnapshot {
 	return {
 		id: "Anna",
-		cli: "fast",
+		cli: "doc",
 		state: "running",
 		turns: 1,
 		queued: 0,
@@ -132,7 +132,7 @@ describe("vibe tool renderers", () => {
 			screens: [
 				makeScreen({
 					id: "Anna",
-					cli: "fast",
+					cli: "doc",
 					state: "running",
 					turnStartedAt: Date.now() - 5000,
 					turnMessage: "Build the widget",
@@ -140,9 +140,9 @@ describe("vibe tool renderers", () => {
 					currentTool: "edit",
 					lastIntent: "Fixing the parser",
 					outputTail: ["The parser now accepts nested arrays"],
-					model: "prov/fast-model",
+					model: "prov/doc-model",
 				}),
-				makeScreen({ id: "Bob", cli: "good", state: "idle", turns: 2, lastActivity: "turn 2 completed" }),
+				makeScreen({ id: "Bob", cli: "code", state: "idle", turns: 2, lastActivity: "turn 2 completed" }),
 			],
 			wait: {
 				settled: [{ id: "Bob", jobId: "Bob-t2", status: "completed" }],
@@ -165,13 +165,13 @@ describe("vibe tool renderers", () => {
 		// Live screen: header, typed turn message, trace, current tool, streamed tail.
 		expect(text).toContain("Anna");
 		// Badge glyphs are theme-driven (⟦fast⟧ on dark); assert the flavor label itself.
-		expect(text).toMatch(/fast.\s*Anna/u);
+		expect(text).toMatch(/doc.\s*Anna/u);
 		expect(text).toContain("> Build the widget");
 		expect(text).toContain("read(src/foo.ts)");
 		expect(text).toContain("bash(bun test)");
 		expect(text).toContain("edit: Fixing the parser");
 		expect(text).toContain("The parser now accepts nested arrays");
-		expect(text).toContain("prov/fast-model");
+		expect(text).toContain("prov/doc-model");
 		// Idle screen + settled footer.
 		expect(text).toContain("Bob");
 		expect(text).toContain("turn 2 completed");

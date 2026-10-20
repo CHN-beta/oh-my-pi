@@ -4793,9 +4793,15 @@ export class InteractiveMode implements InteractiveModeContext {
 			sessionManager: this.sessionManager,
 			asyncJobManager: this.session.asyncJobManager,
 			settings: this.session.settings,
+			// Worker agents (doc/code/math) are discovered like `task` agents, so a
+			// restored or switched-to session must resolve them against its own cwd,
+			// extension roots and session agents, not a launch-time snapshot.
+			cwd: this.sessionManager.getCwd(),
+			effectiveExtensionRoots: () => this.session.effectiveExtensionRoots,
+			getSessionAgents: () => this.session.getSessionAgents(),
 			// Resolve restored/switched-to workers against this session's active model
 			// (same as the spawn-path ToolSession), not the settings default. This is
-			// the primary fallback in resolveAgentModelPatterns, so the `good` worker's
+			// the primary fallback in resolveAgentModelPatterns, so a worker's
 			// pi/task inheritance tracks the reopened session's model.
 			getActiveModelString: () => (this.session.model ? formatModelString(this.session.model) : undefined),
 		};
@@ -6336,7 +6342,7 @@ export class InteractiveMode implements InteractiveModeContext {
 			this.#updateVibeModeStatus();
 			if (options?.persistModeChange !== false) this.sessionManager.appendModeChange("vibe", { previousTools });
 			this.showStatus(
-				"Vibe mode enabled. You direct fast/good worker sessions; toolset is read + optional parent Todo + vibe tools.",
+				"Vibe mode enabled. You direct doc/code/math worker sessions; toolset is read + optional parent Todo + vibe tools.",
 			);
 		})();
 		this.#vibeModeEntry = entry;

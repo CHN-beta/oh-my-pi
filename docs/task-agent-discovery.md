@@ -108,23 +108,31 @@ Session definitions are appended after discovered agents, so an existing agent w
 
 After dispatch, press `Alt+A` to open [Agent Hub](./agent-hub.md). Its live roster shows each task agent's status, current activity, model, age, and usage. Select an agent to read its transcript and steer it directly; parked agents can be revived from the same view. Enable `tui.mouse` to click live task cards and jump-list rows instead, or watch the pinned `Subagents` block above the editor.
 
-### `vibe_spawn` tier routing
+### `vibe_spawn` slot routing
 
-`vibe_spawn` maps `fast` to bundled `sonic` and `good` to bundled `task`. Both resolve through `task.agentModelOverrides` before their bundled agent model defaults (`src/vibe/runtime.ts`, `src/task/agents.ts`).
+`vibe_spawn`'s `cli` names a domain slot, and each slot resolves the agent definition of the same name through normal discovery — project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots, session agents, then bundled (`resolveVibeWorkerAgent` in `src/vibe/runtime.ts`). The fork ships no bundled `doc`/`code`/`math` definitions, so define them:
 
-Route these tiers through roles by keeping aliases in `task.agentModelOverrides` and concrete selectors only in `modelRoles`:
+```text
+~/.omp/agent/agents/doc.md    # model: <writing / research model>
+~/.omp/agent/agents/code.md   # model: <coding model>
+~/.omp/agent/agents/math.md   # model: <reasoning / math model>
+```
+
+Each definition carries its own model, prompt, tool list and spawn policy, so the three slots are independent specializations rather than a fixed tier pair. `task.agentModelOverrides.<agent>` still wins over the definition's `model:`; route through roles by keeping aliases there and concrete selectors only in `modelRoles`:
 
 ```yaml
 task:
   agentModelOverrides:
-    sonic: "@fast_worker"
-    task: "@good_worker"
+    doc: "@doc_worker"
+    code: "@code_worker"
+    math: "@math_worker"
 modelRoles:
-  fast_worker: openai/gpt-5-mini
-  good_worker: openai/gpt-5.4:high
+  doc_worker: openai/gpt-5.4:high
+  code_worker: openai/gpt-5-mini
+  math_worker: openai/gpt-5.4:high
 ```
 
-The `vibe_spawn` `cli` remains `fast` or `good`; update `modelRoles` to change the worker model.
+A missing definition fails the spawn with both config paths and the searched directories in the error.
 
 ## Bundled agents
 

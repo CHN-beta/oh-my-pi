@@ -3,7 +3,7 @@ import { type VibeToolDetails } from "@oh-my-pi/pi-tui/tools/vibe";
  * Vibe mode tools — the director's entire non-read surface.
  *
  * Five thin tools over {@link VibeSessionRegistry}: spawn/send/wait/kill/list
- * persistent worker sessions ("fast"/"good" CLIs). Spawns and sends return
+ * persistent worker sessions ("doc"/"code"/"math" slots). Spawns and sends return
  * immediately; turn results self-deliver through the async job manager.
  *
  * The TUI renderers lean into the "you are driving little CLIs" fiction:
@@ -30,8 +30,8 @@ import type { Tool, ToolSession } from "./index";
 export const VIBE_TOOL_NAMES = ["vibe_spawn", "vibe_send", "vibe_wait", "vibe_kill", "vibe_list"] as const;
 
 const vibeSpawnSchema = type({
-	cli: type("'fast' | 'good'").describe(
-		"worker flavor: fast = low-latency model for mechanical work; good = strong model for hard work",
+	cli: type("'doc' | 'code' | 'math'").describe(
+		"worker domain: doc = writing, documentation, research and language work; code = implementation, debugging and refactors; math = derivations, formal and numerical reasoning",
 	),
 	"name?": type("string <= 48").describe("optional session name; generated when omitted"),
 	prompt: type("string > 0").describe("first instruction; the worker starts with no other context"),
@@ -87,7 +87,7 @@ export class VibeSpawnTool implements AgentTool<typeof vibeSpawnSchema, VibeTool
 	readonly name = "vibe_spawn";
 	readonly approval = "exec" as const;
 	readonly label = "Vibe Spawn";
-	readonly summary = "Start a persistent fast/good worker session";
+	readonly summary = "Start a persistent doc/code/math worker session";
 	readonly description: string;
 	readonly parameters = vibeSpawnSchema;
 	readonly strict = true;

@@ -45,7 +45,7 @@ describe("vibe wall hides director-killed sessions", () => {
 
 		expect(result.details?.screens.map(screen => screen.id)).toEqual(["Live", "Crashed"]);
 		expect(result.details?.hiddenKilled).toEqual(["Killed1", "Killed2"]);
-		expect(text).toContain("- `Crashed` [fast] dead");
+		expect(text).toContain("- `Crashed` [code] dead");
 		expect(text).not.toContain("- `Killed1`");
 		expect(text).toContain("Killed (2, transcripts at history://<id>): `Killed1`, `Killed2`");
 	});

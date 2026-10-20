@@ -25,7 +25,8 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { logger, prompt, Snowflake } from "@oh-my-pi/pi-utils";
-import type { AsyncJob, AsyncJobManager } from "../async/job-manager";
+import { type AsyncJob, type AsyncJobManager } from "../async/job-manager";
+import type { EffectiveExtensionRoots } from "../capability/types";
 import { validateAgentAccountPools } from "../config/account-pools";
 import { resolveAgentModelSelection } from "../config/model-resolver";
 import { sessionLocalProtocolOptions } from "../internal-urls/context";
@@ -36,13 +37,14 @@ import { AgentLifecycleManager } from "../registry/agent-lifecycle";
 import { type AgentRef, AgentRegistry, MAIN_AGENT_ID } from "../registry/agent-registry";
 import { SessionManager, SessionPersistenceIndeterminateError } from "../session/session-manager";
 import { getBundledAgent } from "../task/agents";
+import { discoverAgents, getAgent } from "../task/discovery";
 import { type ExecutorOptions, runSubagentFollowUpTurn, runSubprocess } from "../task/executor";
 import { generateTaskName, sanitizeAgentId } from "../task/name-generator";
 import { AgentOutputManager } from "../task/output-manager";
 import { type AgentDefinition } from "../task/types";
 import { type AgentProgress, oneLineLabel, type SingleResult } from "@oh-my-pi/pi-tui/tools/task";
 import type { ToolSession } from "../tools";
-import { formatDuration } from "@oh-my-pi/pi-tui/render/render-utils";
+import { formatDuration, shortenPath } from "@oh-my-pi/pi-tui/render/render-utils";
 import { ToolError } from "@oh-my-pi/pi-tui/tools/tool-errors";
 import { calculateTokensPerSecond } from "../utils/token-rate";
 
@@ -59,15 +61,18 @@ import { type VibeCli } from "@oh-my-pi/pi-tui/tools/vibe";
 
 import { cfgTaskAgentAccountPools, cfgTaskAgentModelOverrides, cfgTaskEnableLsp } from "../task/settings";
 /**
- * CLI flavor → bundled agent type. This IS the model-tier mapping: `sonic`
- * carries `model: "@smol"` (the configured fast/low-latency role) and `task`
- * carries `model: "@task"` (inherits the session's strong model).
- * Resolution goes through {@link resolveAgentModelSelection} exactly like a
- * `task` spawn, so `task.agentModelOverrides` and model-role settings apply.
+ * Slot → agent name. Each slot runs a full agent definition resolved through
+ * normal agent discovery (project `.omp/agents`, user `~/.omp/agent/agents`,
+ * extension/plugin roots, then bundled), so a slot carries its own model,
+ * prompt, tools and spawn policy. This fork ships no bundled `doc`/`code`/`math`
+ * agents: define them locally (or per project) and the three slots bind to
+ * whatever model each definition selects. `task.agentModelOverrides[agentName]`
+ * and `modelRoles` still override the definition's `model:`.
  */
 export const VIBE_CLI_AGENT: Record<VibeCli, string> = {
-	fast: "sonic",
-	good: "task",
+	doc: "doc",
+	code: "code",
+	math: "math",
 };
 
 /** One completed tool call in the per-turn activity trace. */
@@ -98,6 +103,12 @@ export interface VibeParentSession {
 	getAgentId?: () => string | null;
 	getSessionId?: () => string | null;
 	getSessionFile: () => string | null;
+	/** Working directory for agent discovery; defaults to the process cwd. */
+	cwd?: string;
+	/** Session-local extension roots for post-startup agent discovery. */
+	effectiveExtensionRoots?: () => EffectiveExtensionRoots | undefined;
+	/** Session-scoped agent definitions merged after discovered agents. */
+	getSessionAgents?: () => readonly AgentDefinition[];
 	sessionManager?: ToolSession["sessionManager"] &
 		Partial<
 			Pick<SessionManager, "appendModeChange" | "appendEntriesAtomically" | "recoverPersistenceFromCurrentState">
@@ -121,6 +132,29 @@ interface ResolvedVibeWorker {
 	modelOverride?: string | string[];
 	/** Pre-expansion role alias behind {@link modelOverride}, when the worker agent named one. */
 	modelRole?: string;
+}
+
+/**
+ * Resolve a slot's agent through the same discovery the `task` tool uses:
+ * project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots,
+ * session-scoped agents, then bundled definitions (first exact name wins).
+ * Exported for the vibe tests, which stub discovery instead of touching the FS.
+ */
+export async function resolveVibeWorkerAgent(
+	session: VibeParentSession,
+	cli: VibeCli,
+	agentName: string,
+): Promise<AgentDefinition> {
+	const discovery = await discoverAgents(session.cwd ?? process.cwd(), undefined, session.effectiveExtensionRoots?.());
+	const agents = [...discovery.agents, ...(session.getSessionAgents?.() ?? [])];
+	const agent = getAgent(agents, agentName);
+	if (agent) return agent;
+	const searched = discovery.searchedDirs?.map(dir => shortenPath(dir)).join(", ") || "none";
+	throw new ToolError(
+		`Vibe slot "${cli}" needs an agent named "${agentName}", but none was discovered. ` +
+			`Create .omp/agents/${agentName}.md (project) or ~/.omp/agent/agents/${agentName}.md (user). ` +
+			`Searched: ${searched}`,
+	);
 }
 
 interface VibeTurn {
@@ -288,11 +322,11 @@ export class VibeSessionRegistry {
 		};
 		this.#records.set(scopeKey(scope, record.id), {
 			id: record.id,
-			cli: record.cli ?? "fast",
+			cli: record.cli ?? "code",
 			ownerId: record.ownerId,
 			parentSessionId: scope.parentSessionId,
 			parentSessionFile: scope.parentSessionFile,
-			agent: getBundledAgent("sonic")!,
+			agent: getBundledAgent("task")!,
 			state: record.state ?? "running",
 			createdAt: now,
 			lastActivityAt: now,
@@ -350,12 +384,9 @@ export class VibeSessionRegistry {
 		}
 	}
 
-	#resolveWorker(session: VibeParentSession, cli: VibeCli): ResolvedVibeWorker {
+	async #resolveWorker(session: VibeParentSession, cli: VibeCli): Promise<ResolvedVibeWorker> {
 		const agentName = VIBE_CLI_AGENT[cli];
-		const agent = getBundledAgent(agentName);
-		if (!agent) {
-			throw new ToolError(`Bundled agent "${agentName}" for vibe cli "${cli}" is unavailable.`);
-		}
+		const agent = await resolveVibeWorkerAgent(session, cli, agentName);
 		const agentModelOverrides = cfgTaskAgentModelOverrides.get(session.settings);
 		// Same contract as the task spawn path: the expansion discards the role
 		// alias (`@task`, `@smol`), so patterns and role identity come from one
@@ -759,7 +790,22 @@ export class VibeSessionRegistry {
 				existing.sessionFile === childSessionFile &&
 				(existing.status === "idle" || existing.status === "parked");
 			const blockedByCollision = Boolean(existing && !existingIsResumable);
-			const { agent, modelOverride, modelRole } = this.#resolveWorker(session, spawn.cli);
+			let resolved: ResolvedVibeWorker;
+			try {
+				resolved = await this.#resolveWorker(session, spawn.cli);
+			} catch (error) {
+				// A deleted or renamed worker definition must not break resume: the
+				// persisted conversation is unreachable, but the rest of the scope
+				// (and the director's session) still restores.
+				logger.warn("vibe: skipping a persisted worker whose agent no longer resolves", {
+					id: spawn.id,
+					cli: spawn.cli,
+					agent: spawn.agent,
+					error: error instanceof Error ? error.message : String(error),
+				});
+				continue;
+			}
+			const { agent, modelOverride, modelRole } = resolved;
 			if (!existing) {
 				AgentRegistry.global().register({
 					id: spawn.id,
@@ -815,7 +861,7 @@ export class VibeSessionRegistry {
 			throw new ToolError("Vibe mode has exited; enter Vibe mode again before spawning a worker.");
 		}
 		const manager = this.#manager(session);
-		const { agent, modelOverride, modelRole } = this.#resolveWorker(session, args.cli);
+		const { agent, modelOverride, modelRole } = await this.#resolveWorker(session, args.cli);
 		if (!session.agentOutputManager) {
 			session.agentOutputManager = new AgentOutputManager(session.getArtifactsDir ?? (() => null));
 		}

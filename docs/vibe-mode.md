@@ -23,28 +23,29 @@ Toggle it with the `/vibe` slash command:
 
 Switching to a saved session suspends the source scope: running worker turns are cancelled and queued directives are cleared, but the persisted child conversations are not tombstoned. Returning to that parent can rehydrate them; this differs from deliberately exiting `/vibe`.
 
-## The two worker tiers
+## The three worker slots
 
-Every worker is a real, keep-alive task-executor subagent with the normal coding tool surface and its own persisted child transcript. Choose a tier when spawning:
+Every worker is a real, keep-alive task-executor subagent with the normal coding tool surface and its own persisted child transcript. Choose a slot by the domain of the work when spawning — the slots are specializations, not capability tiers:
 
-| Tier   | Bundled agent | Default role | Use for                                             |
-| ------ | ------------- | ------------ | --------------------------------------------------- |
-| `fast` | `sonic`       | `@smol`      | Mechanical execution, drafts, high-volume work      |
-| `good` | `task`        | `@task`      | Design, judgment calls, and reviewing `fast` output |
+| Slot   | Agent    | Use for                                                                         |
+| ------ | -------- | ------------------------------------------------------------------------------- |
+| `doc`  | `doc`    | Research, documentation, reports, specifications, correspondence, summarizing    |
+| `code` | `code`   | Implementation, refactors, debugging, build/test plumbing                        |
+| `math` | `math`   | Derivations, proofs, dimensional/unit checks, numerical verification, modeling   |
 
-The tier always selects the bundled `sonic` or `task` definition, not a same-named discovered custom agent. Model resolution otherwise matches task-agent routing: `task.agentModelOverrides.sonic` / `.task` wins over the bundled agent model, and role aliases resolve through `modelRoles`, with the parent active/default model as fallback.
+Each slot runs the agent definition named after it, resolved through normal task-agent discovery (project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots, then bundled). This fork ships no bundled `doc`/`code`/`math` definitions, so create them; each definition carries its own `model:`, prompt, tool list and spawn policy. Model resolution otherwise matches task-agent routing: `task.agentModelOverrides.doc` / `.code` / `.math` wins over the definition's model, and role aliases resolve through `modelRoles`, with the parent active/default model as fallback. A missing definition fails the spawn with a message naming both config paths and the directories searched.
 
 ## Worker-control tools
 
 | Tool         | Input and behavior                                                                                                                                                                                   |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vibe_spawn` | `{ cli: "fast" \| "good", prompt, name? }`. Starts a blank worker with a complete, self-contained first brief. `name` is sanitized/capped at 48 characters; an id is generated when omitted.         |
+| `vibe_spawn` | `{ cli: "doc" \| "code" \| "math", prompt, name? }`. Starts a blank worker with a complete, self-contained first brief. `name` is sanitized/capped at 48 characters; an id is generated when omitted.         |
 | `vibe_send`  | `{ session, message }`. Steers a streaming turn at its next step; if a turn exists but cannot be steered, queues an automatic next turn; if idle/parked, starts the next turn immediately.           |
 | `vibe_wait`  | `{ sessions?, timeout? }`. Waits for the first watched turn to settle (all in-flight workers when omitted), default 30 seconds. It acknowledges settled jobs so their result is not delivered twice. |
 | `vibe_kill`  | `{ session }`. Cancels an in-flight turn, clears queued messages, releases the worker, and retains any initialized transcript at `history://<id>`.                                                   |
-| `vibe_list`  | `{}`. Lists sessions in spawn order with tier, state, turn/queue counts, resolved model, and recent activity.                                                                                        |
+| `vibe_list`  | `{}`. Lists sessions in spawn order with slot, state, turn/queue counts, resolved model, and recent activity.                                                                                        |
 
-Spawn and send return immediately. Each worker-turn result self-delivers into the director conversation through the async job manager; long response text is preview-capped there, with full output available at `agent://<id>`. Running `fast` and `good` workers on independent workstreams concurrently is the normal shape.
+Spawn and send return immediately. Each worker-turn result self-delivers into the director conversation through the async job manager; long response text is preview-capped there, with full output available at `agent://<id>`. Running different slots on independent workstreams concurrently is the normal shape.
 
 Several messages queued while one worker turn cannot be steered are joined into one automatic next-turn directive. `vibe_list` omits explicitly killed workers from its live wall and reports their ids separately; `vibe_wait` can still watch an explicitly named settled worker.
 
@@ -54,12 +55,12 @@ Worker ids are scoped to the owning agent and parent session; a worker from anot
 
 ## Workflow
 
-1. Split the request into independent workstreams — one persistent worker per workstream so each accumulates useful conversation context.
+1. Split the request into independent workstreams and assign each to the slot that owns its domain — one persistent worker per workstream so each accumulates useful conversation context.
 2. Call `vibe_spawn` with a self-contained brief: files, constraints, and observable acceptance criteria. Workers start blank and never see the director's conversation.
 3. Keep directing other workers while turns are in flight. Use `vibe_wait` only when blocked; a timed-out wait can be reissued.
 4. Use `vibe_send` naturally for corrections and next steps. A mid-turn send steers when possible; otherwise it becomes the worker's next turn automatically.
 5. When a result arrives, `read` touched files and inspect full output when the preview is insufficient. Reconcile verified work through the optional parent `todo`.
-6. Route by difficulty: draft with `fast`, escalate to `good` when mechanical execution stalls or judgment is required.
+6. Hand artifacts across domains deliberately: a `math` derivation becomes a `doc` input, a `code` diff becomes a `doc` subject; never have one slot redo another's domain.
 7. Use `vibe_kill` for a finished/stuck worker. Exiting the mode kills the entire remaining scope.
 
 The director remains responsible for the final outcome: worker completion means the turn settled, not that its claims are correct.

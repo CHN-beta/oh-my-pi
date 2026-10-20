@@ -161,7 +161,12 @@ function hasPasteText(value: unknown): value is PasteTarget {
 	return typeof value === "object" && value !== null && typeof (value as PasteTarget).pasteText === "function";
 }
 
-const APPROVAL_MODE_SEQUENCE = ["always-ask", "write", "yolo"] as const satisfies readonly ApprovalMode[];
+const APPROVAL_MODE_SEQUENCE = [
+	"always-ask",
+	"always-ask-cached",
+	"write",
+	"yolo",
+] as const satisfies readonly ApprovalMode[];
 const APPROVAL_MODE_ACTIONS = [
 	["app.approvalMode.alwaysAsk", "always-ask"],
 	["app.approvalMode.write", "write"],
