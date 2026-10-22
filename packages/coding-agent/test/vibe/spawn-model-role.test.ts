@@ -50,6 +50,8 @@ function stubDiscovery(agents: AgentDefinition[]): void {
 const DEFAULT_AGENTS = [
 	workerAgent("doc", ["@smol"]),
 	workerAgent("code", ["@task"]),
+	workerAgent("debug", ["provider/debug-model"]),
+	workerAgent("design", ["provider/design-model"]),
 	workerAgent("math", ["provider/math-model"]),
 ];
 

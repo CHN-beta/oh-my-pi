@@ -71,7 +71,14 @@ export function parseLifecycleEvent(value: unknown): VibeLifecycleEvent | undefi
 		parentSessionId: data.parentSessionId,
 	};
 	if (data.action === "spawn") {
-		const cli = data.cli === "doc" || data.cli === "code" || data.cli === "math" ? data.cli : undefined;
+		const cli =
+			data.cli === "doc" ||
+			data.cli === "code" ||
+			data.cli === "debug" ||
+			data.cli === "design" ||
+			data.cli === "math"
+				? data.cli
+				: undefined;
 		if (!cli || typeof data.agent !== "string" || typeof data.childSessionFile !== "string") return undefined;
 		if (typeof data.createdAt !== "number" || !Number.isFinite(data.createdAt)) return undefined;
 		return {

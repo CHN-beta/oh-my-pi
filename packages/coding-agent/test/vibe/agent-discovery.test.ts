@@ -44,17 +44,21 @@ async function projectWithAgents(...names: string[]): Promise<TempDir> {
 
 describe("vibe slot agent discovery", () => {
 	it("resolves each slot to its project agent definition and model", async () => {
-		using directory = await projectWithAgents("doc", "code", "math");
+		using directory = await projectWithAgents("doc", "code", "debug", "design", "math");
 		const session = sessionFor(directory.path());
 
 		const doc = await resolveVibeWorkerAgent(session, "doc", "doc");
 		const code = await resolveVibeWorkerAgent(session, "code", "code");
+		const debug = await resolveVibeWorkerAgent(session, "debug", "debug");
+		const design = await resolveVibeWorkerAgent(session, "design", "design");
 		const math = await resolveVibeWorkerAgent(session, "math", "math");
 
 		expect(doc.name).toBe("doc");
 		expect(doc.model).toEqual(["provider/doc-model"]);
 		expect(doc.systemPrompt).toContain("You are the doc worker.");
 		expect(code.model).toEqual(["provider/code-model"]);
+		expect(debug.model).toEqual(["provider/debug-model"]);
+		expect(design.model).toEqual(["provider/design-model"]);
 		expect(math.model).toEqual(["provider/math-model"]);
 	});
 

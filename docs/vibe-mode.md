@@ -23,23 +23,25 @@ Toggle it with the `/vibe` slash command:
 
 Switching to a saved session suspends the source scope: running worker turns are cancelled and queued directives are cleared, but the persisted child conversations are not tombstoned. Returning to that parent can rehydrate them; this differs from deliberately exiting `/vibe`.
 
-## The three worker slots
+## The five worker slots
 
 Every worker is a real, keep-alive task-executor subagent with the normal coding tool surface and its own persisted child transcript. Choose a slot by the domain of the work when spawning — the slots are specializations, not capability tiers:
 
-| Slot   | Agent    | Use for                                                                         |
-| ------ | -------- | ------------------------------------------------------------------------------- |
-| `doc`  | `doc`    | Research, documentation, reports, specifications, correspondence, summarizing    |
-| `code` | `code`   | Implementation, refactors, debugging, build/test plumbing                        |
-| `math` | `math`   | Derivations, proofs, dimensional/unit checks, numerical verification, modeling   |
+| Slot     | Agent    | Use for                                                                            |
+| -------- | -------- | ---------------------------------------------------------------------------------- |
+| `doc`    | `doc`    | Research, documentation, reports, specifications, correspondence, summarizing      |
+| `code`   | `code`   | Feature implementation, business logic, refactors, build/test plumbing             |
+| `debug`  | `debug`  | Root-cause debugging, crash/race diagnosis, failure triage, code/security review   |
+| `design` | `design` | System architecture, API/schema contracts, migration blueprints, frontend/UI design |
+| `math`   | `math`   | Derivations, proofs, dimensional/unit checks, numerical verification, modeling     |
 
-Each slot runs the agent definition named after it, resolved through normal task-agent discovery (project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots, then bundled). This fork ships no bundled `doc`/`code`/`math` definitions, so create them; each definition carries its own `model:`, prompt, tool list and spawn policy. Model resolution otherwise matches task-agent routing: `task.agentModelOverrides.doc` / `.code` / `.math` wins over the definition's model, and role aliases resolve through `modelRoles`, with the parent active/default model as fallback. A missing definition fails the spawn with a message naming both config paths and the directories searched.
+Each slot runs the agent definition named after it, resolved through normal task-agent discovery (project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots, then bundled). This fork ships no bundled `doc`/`code`/`debug`/`design`/`math` definitions, so create them; each definition carries its own `model:`, prompt, tool list and spawn policy. Model resolution otherwise matches task-agent routing: `task.agentModelOverrides.<slot>` wins over the definition's model, and role aliases resolve through `modelRoles`, with the parent active/default model as fallback. A missing definition fails the spawn with a message naming both config paths and the directories searched.
 
 ## Worker-control tools
 
 | Tool         | Input and behavior                                                                                                                                                                                   |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vibe_spawn` | `{ cli: "doc" \| "code" \| "math", prompt, name? }`. Starts a blank worker with a complete, self-contained first brief. `name` is sanitized/capped at 48 characters; an id is generated when omitted.         |
+| `vibe_spawn` | `{ cli: "doc" \| "code" \| "debug" \| "design" \| "math", prompt, name? }`. Starts a blank worker with a complete, self-contained first brief. `name` is sanitized/capped at 48 characters; an id is generated when omitted. |
 | `vibe_send`  | `{ session, message }`. Steers a streaming turn at its next step; if a turn exists but cannot be steered, queues an automatic next turn; if idle/parked, starts the next turn immediately.           |
 | `vibe_wait`  | `{ sessions?, timeout? }`. Waits for the first watched turn to settle (all in-flight workers when omitted), default 30 seconds. It acknowledges settled jobs so their result is not delivered twice. |
 | `vibe_kill`  | `{ session }`. Cancels an in-flight turn, clears queued messages, releases the worker, and retains any initialized transcript at `history://<id>`.                                                   |

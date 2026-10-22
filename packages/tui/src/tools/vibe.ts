@@ -108,8 +108,8 @@ export interface VibeWaitOutcome {
 	stillRunning: string[];
 	timedOut: boolean;
 }
-/** The three worker domain slots the director drives. */
-export type VibeCli = "doc" | "code" | "math";
+/** The five worker domain slots the director drives. */
+export type VibeCli = "doc" | "code" | "debug" | "design" | "math";
 // =============================================================================
 // TUI Renderer — mini composer (spawn/send) + TV wall (wait/list)
 // =============================================================================
