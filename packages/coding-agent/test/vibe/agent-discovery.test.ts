@@ -1,7 +1,7 @@
 /**
  * Contract: each vibe slot resolves the agent definition of the same name from
  * real project discovery (`.omp/agents/<name>.md`), not from a bundled list.
- * The definition's `model:` is what makes the three slots independent, so this
+ * The definition's `model:` is what makes the slots independent, so this
  * exercises the parser -> discovery -> slot path end to end.
  */
 import { describe, expect, it } from "bun:test";
@@ -44,7 +44,7 @@ async function projectWithAgents(...names: string[]): Promise<TempDir> {
 
 describe("vibe slot agent discovery", () => {
 	it("resolves each slot to its project agent definition and model", async () => {
-		using directory = await projectWithAgents("doc", "code", "debug", "design", "math");
+		using directory = await projectWithAgents("doc", "code", "debug", "design", "math", "exec");
 		const session = sessionFor(directory.path());
 
 		const doc = await resolveVibeWorkerAgent(session, "doc", "doc");
@@ -52,6 +52,7 @@ describe("vibe slot agent discovery", () => {
 		const debug = await resolveVibeWorkerAgent(session, "debug", "debug");
 		const design = await resolveVibeWorkerAgent(session, "design", "design");
 		const math = await resolveVibeWorkerAgent(session, "math", "math");
+		const exec = await resolveVibeWorkerAgent(session, "exec", "exec");
 
 		expect(doc.name).toBe("doc");
 		expect(doc.model).toEqual(["provider/doc-model"]);
@@ -60,6 +61,8 @@ describe("vibe slot agent discovery", () => {
 		expect(debug.model).toEqual(["provider/debug-model"]);
 		expect(design.model).toEqual(["provider/design-model"]);
 		expect(math.model).toEqual(["provider/math-model"]);
+		expect(exec.name).toBe("exec");
+		expect(exec.model).toEqual(["provider/exec-model"]);
 	});
 
 	it("fails with both config paths and the searched directories when a slot has no definition", async () => {

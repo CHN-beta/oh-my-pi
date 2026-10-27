@@ -110,7 +110,7 @@ After dispatch, press `Alt+A` to open [Agent Hub](./agent-hub.md). Its live rost
 
 ### `vibe_spawn` slot routing
 
-`vibe_spawn`'s `cli` names a domain slot, and each slot resolves the agent definition of the same name through normal discovery — project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots, session agents, then bundled (`resolveVibeWorkerAgent` in `src/vibe/runtime.ts`). The fork ships no bundled `doc`/`code`/`debug`/`design`/`math` definitions, so define them:
+`vibe_spawn`'s `cli` names a domain slot, and each slot resolves the agent definition of the same name through normal discovery — project `.omp/agents`, user `~/.omp/agent/agents`, extension/plugin roots, session agents, then bundled (`resolveVibeWorkerAgent` in `src/vibe/runtime.ts`). The fork ships no bundled `doc`/`code`/`debug`/`design`/`math`/`exec` definitions, so define them:
 
 ```text
 ~/.omp/agent/agents/doc.md    # model: <writing / research model>
@@ -118,9 +118,10 @@ After dispatch, press `Alt+A` to open [Agent Hub](./agent-hub.md). Its live rost
 ~/.omp/agent/agents/debug.md  # model: <debugging / audit model>
 ~/.omp/agent/agents/design.md # model: <architecture / UI design model>
 ~/.omp/agent/agents/math.md   # model: <reasoning / math model>
+~/.omp/agent/agents/exec.md   # model: <fast operational-execution model>
 ```
 
-Each definition carries its own model, prompt, tool list and spawn policy, so the five slots are independent specializations rather than a fixed tier pair. `task.agentModelOverrides.<agent>` still wins over the definition's `model:`; route through roles by keeping aliases there and concrete selectors only in `modelRoles`:
+Each definition carries its own model, prompt, tool list and spawn policy, so the six slots are independent specializations rather than a fixed tier pair. `task.agentModelOverrides.<agent>` still wins over the definition's `model:`; route through roles by keeping aliases there and concrete selectors only in `modelRoles`:
 
 ```yaml
 task:
@@ -130,12 +131,14 @@ task:
     debug: "@debug_worker"
     design: "@design_worker"
     math: "@math_worker"
+    exec: "@exec_worker"
 modelRoles:
   doc_worker: google/gemini-3.8-flash:high
   code_worker: deepseek/deepseek-flash
   debug_worker: google/gemini-4-argon:high
   design_worker: google/gemini-4-argon:high
   math_worker: google/gemini-4-argon:high
+  exec_worker: deepseek/deepseek-flash
 ```
 
 A missing definition fails the spawn with both config paths and the searched directories in the error.

@@ -53,6 +53,7 @@ const DEFAULT_AGENTS = [
 	workerAgent("debug", ["provider/debug-model"]),
 	workerAgent("design", ["provider/design-model"]),
 	workerAgent("math", ["provider/math-model"]),
+	workerAgent("exec", ["provider/exec-model"]),
 ];
 
 function makeParentSession(settings: Settings): ToolSession {

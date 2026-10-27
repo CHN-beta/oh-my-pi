@@ -359,7 +359,8 @@ export const BUILTIN_MODE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec> = [
 	{
 		name: "vibe",
 		icon: "wave",
-		description: "Toggle vibe mode (direct persistent doc/code/debug/design/math worker sessions; read-only toolset)",
+		description:
+			"Toggle vibe mode (direct persistent doc/code/debug/design/math/exec worker sessions; read-only toolset)",
 		inlineHint: "[prompt]",
 		allowArgs: true,
 		getTuiAutocompleteDescription: runtime => {

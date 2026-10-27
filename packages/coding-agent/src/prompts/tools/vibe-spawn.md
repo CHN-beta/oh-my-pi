@@ -6,8 +6,9 @@ CLI slot by domain — the slots are specializations, not capability tiers:
 - `debug`: root-cause debugging, failure diagnosis, race/crash investigation, code and security audit.
 - `design`: system architecture, API/schema contracts, migration plans, frontend/UI design.
 - `math`: derivations, formal proofs, unit/dimension checks, numerical verification.
+- `exec`: operational execution — running explicit, well-defined commands and operations such as checking git status/diff and committing, running routine scripts/commands, and mechanical file/repo operations.
 
-Each slot runs the agent definition named `doc`/`code`/`debug`/`design`/`math` (project `.omp/agents/` or user `~/.omp/agent/agents/`), so its model, prompt and tools come from that definition.
+Each slot runs the agent definition named `doc`/`code`/`debug`/`design`/`math`/`exec` (project `.omp/agents/` or user `~/.omp/agent/agents/`), so its model, prompt and tools come from that definition.
 
 `prompt`: first session instruction. Worker starts with NO context beyond it; include files, constraints, acceptance criteria.
 `name`: optional session label; otherwise generated.

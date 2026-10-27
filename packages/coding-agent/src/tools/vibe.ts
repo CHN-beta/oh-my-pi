@@ -3,7 +3,7 @@ import { type VibeToolDetails } from "@oh-my-pi/pi-tui/tools/vibe";
  * Vibe mode tools — the director's entire non-read surface.
  *
  * Five thin tools over {@link VibeSessionRegistry}: spawn/send/wait/kill/list
- * persistent worker sessions ("doc"/"code"/"debug"/"design"/"math" slots). Spawns and sends return
+ * persistent worker sessions ("doc"/"code"/"debug"/"design"/"math"/"exec" slots). Spawns and sends return
  * immediately; turn results self-deliver through the async job manager.
  *
  * The TUI renderers lean into the "you are driving little CLIs" fiction:
@@ -30,8 +30,8 @@ import type { Tool, ToolSession } from "./index";
 export const VIBE_TOOL_NAMES = ["vibe_spawn", "vibe_send", "vibe_wait", "vibe_kill", "vibe_list"] as const;
 
 const vibeSpawnSchema = type({
-	cli: type("'doc' | 'code' | 'debug' | 'design' | 'math'").describe(
-		"worker domain: doc = writing, documentation, research and language work; code = feature implementation, refactors and tests; debug = root-cause debugging, failure diagnosis and code audit; design = system architecture, contracts and frontend/UI design; math = derivations, formal and numerical reasoning",
+	cli: type("'doc' | 'code' | 'debug' | 'design' | 'math' | 'exec'").describe(
+		"worker domain: doc = writing, documentation, research and language work; code = feature implementation, refactors and tests; debug = root-cause debugging, failure diagnosis and code audit; design = system architecture, contracts and frontend/UI design; math = derivations, formal and numerical reasoning; exec = operational execution such as checking git status/diff and committing, running commands and mechanical file/repo operations",
 	),
 	"name?": type("string <= 48").describe("optional session name; generated when omitted"),
 	prompt: type("string > 0").describe("first instruction; the worker starts with no other context"),
@@ -87,7 +87,7 @@ export class VibeSpawnTool implements AgentTool<typeof vibeSpawnSchema, VibeTool
 	readonly name = "vibe_spawn";
 	readonly approval = "exec" as const;
 	readonly label = "Vibe Spawn";
-	readonly summary = "Start a persistent doc/code/debug/design/math worker session";
+	readonly summary = "Start a persistent doc/code/debug/design/math/exec worker session";
 	readonly description: string;
 	readonly parameters = vibeSpawnSchema;
 	readonly strict = true;

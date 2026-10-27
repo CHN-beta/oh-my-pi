@@ -65,10 +65,10 @@ import { cfgTaskAgentAccountPools, cfgTaskAgentModelOverrides, cfgTaskEnableLsp 
  * normal agent discovery (project `.omp/agents`, user `~/.omp/agent/agents`,
  * extension/plugin roots, then bundled), so a slot carries its own model,
  * prompt, tools and spawn policy. This fork ships no bundled
- * `doc`/`code`/`debug`/`design`/`math` agents: define them locally (or per
- * project) and the five slots bind to whatever model each definition selects.
- * `task.agentModelOverrides[agentName]` and `modelRoles` still override the
- * definition's `model:`.
+ * `doc`/`code`/`debug`/`design`/`math`/`exec` agents: define them locally (or
+ * per project) and the six slots bind to whatever model each definition
+ * selects. `task.agentModelOverrides[agentName]` and `modelRoles` still
+ * override the definition's `model:`.
  */
 export const VIBE_CLI_AGENT: Record<VibeCli, string> = {
 	doc: "doc",
@@ -76,6 +76,7 @@ export const VIBE_CLI_AGENT: Record<VibeCli, string> = {
 	debug: "debug",
 	design: "design",
 	math: "math",
+	exec: "exec",
 };
 
 /** One completed tool call in the per-turn activity trace. */

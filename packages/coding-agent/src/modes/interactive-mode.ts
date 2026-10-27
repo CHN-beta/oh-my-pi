@@ -4793,7 +4793,7 @@ export class InteractiveMode implements InteractiveModeContext {
 			sessionManager: this.sessionManager,
 			asyncJobManager: this.session.asyncJobManager,
 			settings: this.session.settings,
-			// Worker agents (doc/code/debug/design/math) are discovered like `task` agents, so a
+			// Worker agents (doc/code/debug/design/math/exec) are discovered like `task` agents, so a
 			// restored or switched-to session must resolve them against its own cwd,
 			// extension roots and session agents, not a launch-time snapshot.
 			cwd: this.sessionManager.getCwd(),
@@ -6342,7 +6342,7 @@ export class InteractiveMode implements InteractiveModeContext {
 			this.#updateVibeModeStatus();
 			if (options?.persistModeChange !== false) this.sessionManager.appendModeChange("vibe", { previousTools });
 			this.showStatus(
-				"Vibe mode enabled. You direct doc/code/debug/design/math worker sessions; toolset is read + optional parent Todo + vibe tools.",
+				"Vibe mode enabled. You direct doc/code/debug/design/math/exec worker sessions; toolset is read + optional parent Todo + vibe tools.",
 			);
 		})();
 		this.#vibeModeEntry = entry;

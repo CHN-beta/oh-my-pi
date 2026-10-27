@@ -76,7 +76,8 @@ export function parseLifecycleEvent(value: unknown): VibeLifecycleEvent | undefi
 			data.cli === "code" ||
 			data.cli === "debug" ||
 			data.cli === "design" ||
-			data.cli === "math"
+			data.cli === "math" ||
+			data.cli === "exec"
 				? data.cli
 				: undefined;
 		if (!cli || typeof data.agent !== "string" || typeof data.childSessionFile !== "string") return undefined;
