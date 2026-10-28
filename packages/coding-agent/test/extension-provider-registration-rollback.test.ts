@@ -117,6 +117,11 @@ describe("extension provider registration rollback", () => {
 
 	test("applies provider replacement after runtime initialization", async () => {
 		const tempDir = TempDir.createSync("@provider-replacement-");
+		// `cliproxyapi` has an env fallback (`CLIPROXYAPI_API_KEY`); a developer
+		// shell exporting it would make the provider look authenticated after the
+		// replacement installs no config key. Pin the env empty for this assertion.
+		const previousEnvKey = Bun.env.CLIPROXYAPI_API_KEY;
+		delete Bun.env.CLIPROXYAPI_API_KEY;
 		const authStorage = await AuthStorage.create(tempDir.join("auth.db"));
 		try {
 			const modelRegistry = new ModelRegistry(authStorage, tempDir.join("models.json"));
@@ -191,6 +196,7 @@ describe("extension provider registration rollback", () => {
 			unregisterOAuthProvider("cliproxyapi");
 			authStorage.close();
 			tempDir.removeSync();
+			if (previousEnvKey !== undefined) Bun.env.CLIPROXYAPI_API_KEY = previousEnvKey;
 		}
 	});
 

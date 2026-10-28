@@ -593,7 +593,7 @@ export class UsageService implements UsageApi {
 			const provider = providerId as Provider;
 			const providerImpl = this.providerFor(provider);
 			if (!providerImpl) continue;
-			const baseUrl = options?.baseUrlResolver?.(provider);
+			const baseUrl = options?.baseUrlResolver?.(provider) ?? this.#deps.overrides.baseUrl(providerId);
 			let entries = this.#deps.pool.entries(providerId);
 			if (entries.length > 0) {
 				const dedupedEntries = await this.#deps.pool.pruneDuplicates(providerId, entries);
@@ -630,8 +630,15 @@ export class UsageService implements UsageApi {
 					extensionUsageKey = extensionUsageKeyConfig
 						? await this.#deps.overrides.resolve(extensionUsageKeyConfig)
 						: undefined,
+					// A provider configured only in `models.yml` (e.g. an extension
+					// gateway such as `cliproxyapi`) has no stored credential row;
+					// its pinned key is the one requests use, so probe with it
+					// rather than skipping the provider entirely.
+					configKeyConfig = this.#deps.overrides.configKey(providerId),
+					configKey =
+						configKeyConfig !== undefined ? await this.#deps.overrides.resolve(configKeyConfig) : undefined,
 					envKey = getEnvApiKey(providerId);
-				const apiKey = runtimeKey ?? extensionUsageKey ?? envKey;
+				const apiKey = runtimeKey ?? extensionUsageKey ?? configKey ?? envKey;
 				if (!apiKey) continue;
 				const request = usageRequest(provider, { type: "api_key", apiKey }, baseUrl);
 				if (providerImpl.supports && !providerImpl.supports(request)) continue;

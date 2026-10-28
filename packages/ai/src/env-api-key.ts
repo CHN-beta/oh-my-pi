@@ -13,6 +13,7 @@ type KeyResolver = string | (() => string | undefined);
 const LEGACY_ENV_KEYS: Record<string, KeyResolver> = {
 	// Non-provider / search-tool keys and API-name keys not modeled as registry provider defs.
 	"azure-openai-responses": "AZURE_OPENAI_API_KEY",
+	cliproxyapi: "CLIPROXYAPI_API_KEY",
 	jina: "JINA_API_KEY",
 	brave: "BRAVE_API_KEY",
 	tinyfish: "TINYFISH_API_KEY",

@@ -33,6 +33,7 @@ export class KeyOverrides {
 	#runtimeOverrides: Map<string, string> = new Map();
 	#configOverrides: Map<string, string> = new Map();
 	#configFallbacks: Map<string, string> = new Map();
+	#configBaseUrls: Map<string, string> = new Map();
 	#configValueResolver: (config: string) => Promise<string | undefined>;
 
 	constructor(resolver?: (config: string) => Promise<string | undefined>) {
@@ -60,6 +61,16 @@ export class KeyOverrides {
 
 	configKey(provider: string): string | undefined {
 		return this.#configOverrides.get(provider);
+	}
+
+	/**
+	 * Configured `models.yml` base URL for `provider`, registered alongside its
+	 * config key. Usage probes read it when no registry resolver supplies one —
+	 * a gateway such as `cliproxyapi` must be queried at the endpoint its key
+	 * belongs to, never at a canonical host.
+	 */
+	baseUrl(provider: string): string | undefined {
+		return this.#configBaseUrls.get(provider);
 	}
 
 	/** Config value consulted only after stored OAuth/login credentials. */
@@ -101,14 +112,20 @@ export class KeyOverrides {
 	 * credentials (at the env-var tier). Providers that own a `/login` flow use
 	 * this so their default key reference (e.g. an unset env-var name, which
 	 * resolves to its literal text) cannot shadow the key the user logged in with.
+	 *
+	 * `baseUrl` records the provider's configured endpoint so usage probes can
+	 * reach the same gateway the key was minted for.
 	 */
-	setConfig(provider: string, apiKeyConfig: string, options?: { fallback?: boolean }): void {
+	setConfig(provider: string, apiKeyConfig: string, options?: { fallback?: boolean; baseUrl?: string }): void {
 		if (options?.fallback) {
 			this.#configOverrides.delete(provider);
 			this.#configFallbacks.set(provider, apiKeyConfig);
 		} else {
 			this.#configFallbacks.delete(provider);
 			this.#configOverrides.set(provider, apiKeyConfig);
+		}
+		if (options?.baseUrl) {
+			this.#configBaseUrls.set(provider, options.baseUrl);
 		}
 	}
 
@@ -118,6 +135,7 @@ export class KeyOverrides {
 	removeConfig(provider: string): void {
 		this.#configOverrides.delete(provider);
 		this.#configFallbacks.delete(provider);
+		this.#configBaseUrls.delete(provider);
 	}
 
 	/**
@@ -127,6 +145,7 @@ export class KeyOverrides {
 	clearConfig(): void {
 		this.#configOverrides.clear();
 		this.#configFallbacks.clear();
+		this.#configBaseUrls.clear();
 	}
 
 	/**
@@ -587,7 +606,7 @@ export class KeyCascade implements KeysApi {
 		this.#deps.overrides.removeRuntime(provider);
 	}
 
-	setConfig(provider: string, apiKeyConfig: string, options?: { fallback?: boolean }): void {
+	setConfig(provider: string, apiKeyConfig: string, options?: { fallback?: boolean; baseUrl?: string }): void {
 		this.#deps.overrides.setConfig(provider, apiKeyConfig, options);
 	}
 

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added a `cliproxyapi` usage provider: `omp usage` reports a CLIProxyAPI gateway key's monthly USD allowance from `GET /v1/quota` (quota, used, remaining, `resets_at`), marks unlimited keys used-only instead of inventing a cap, and falls back to `CLIPROXYAPI_API_KEY`
+- Added usage probes for providers configured only in `models.yml`: a pinned provider key (and its configured `baseUrl`) is now used when the provider has no stored credential row, so gateway providers such as `cliproxyapi` appear in `omp usage` without a separate login
+
 ## [18.12.3] - 2026-10-19
 
 ### Added

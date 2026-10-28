@@ -4,6 +4,7 @@ import { alibabaTokenPlanRankingStrategy, alibabaTokenPlanUsageProvider } from "
 import { charmHyperUsageProvider } from "./charm-hyper";
 import { claudeRankingStrategy, claudeUsageProvider } from "./claude";
 import { clinePassUsageProvider } from "./cline-pass";
+import { cliproxyapiUsageProvider } from "./cliproxyapi";
 import { commandCodeRankingStrategy, commandCodeUsageProvider } from "./commandcode";
 import { cursorRankingStrategy, cursorUsageProvider } from "./cursor";
 import { devinUsageProvider } from "./devin";
@@ -48,6 +49,7 @@ export const DEFAULT_USAGE_PROVIDERS: readonly UsageProvider[] = [
 	xaiOauthUsageProvider,
 	devinUsageProvider,
 	charmHyperUsageProvider,
+	cliproxyapiUsageProvider,
 	commandCodeUsageProvider,
 ];
 

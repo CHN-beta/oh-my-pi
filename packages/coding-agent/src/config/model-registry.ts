@@ -372,7 +372,7 @@ export class ModelRegistry {
 	// models registered by extensions survive the model selector's offline reload.
 	#runtimeModelOverlays: CustomModelOverlay[] = [];
 	// `fallback` ranks the key below stored login credentials (see registerProvider).
-	#runtimeProviderApiKeys: Map<string, { keyConfig: string; fallback: boolean }> = new Map();
+	#runtimeProviderApiKeys: Map<string, { keyConfig: string; fallback: boolean; baseUrl?: string }> = new Map();
 	#runtimeProviderOverrides: Map<string, ProviderOverride> = new Map();
 	// Command-backed values from registerProvider (apiKey + provider/model
 	// headers). Separate from #commandConfigsByProvider because static reload
@@ -500,7 +500,11 @@ export class ModelRegistry {
 		this.#reloadStaticModels();
 	}
 
-	#installProviderApiKey(provider: string, keyConfig: string, options?: { fallback?: boolean }): void {
+	#installProviderApiKey(
+		provider: string,
+		keyConfig: string,
+		options?: { fallback?: boolean; baseUrl?: string },
+	): void {
 		this.#customProviderApiKeys.set(provider, keyConfig);
 		this.authStorage.keys.setConfig(provider, keyConfig, options);
 	}
@@ -931,8 +935,8 @@ export class ModelRegistry {
 		this.authStorage.keys.clearConfig();
 		// Restore runtime API keys before #loadModels — survives because
 		// #loadModels only calls .set() on #customProviderApiKeys, never reassigns it.
-		for (const [provider, { keyConfig, fallback }] of this.#runtimeProviderApiKeys) {
-			this.#installProviderApiKey(provider, keyConfig, { fallback });
+		for (const [provider, { keyConfig, fallback, baseUrl }] of this.#runtimeProviderApiKeys) {
+			this.#installProviderApiKey(provider, keyConfig, { fallback, baseUrl });
 		}
 		this.#providerOverrides.clear();
 		this.#modelOverrides.clear();
@@ -1840,7 +1844,9 @@ export class ModelRegistry {
 			// bearer in models.yml (e.g. for an auth-gateway baseUrl), that bearer
 			// must authenticate the outbound request.
 			if (providerConfig.apiKey) {
-				this.#installProviderApiKey(providerName, providerConfig.apiKey);
+				this.#installProviderApiKey(providerName, providerConfig.apiKey, {
+					baseUrl: providerConfig.baseUrl,
+				});
 			}
 
 			// Parse per-model overrides. Header values stay raw (`!cmd` intact)
@@ -2945,7 +2951,9 @@ export class ModelRegistry {
 			const modelDefs = providerConfig.models ?? [];
 			if (modelDefs.length === 0) continue; // Override-only, no custom models
 			if (providerConfig.apiKey) {
-				this.#installProviderApiKey(providerName, providerConfig.apiKey);
+				this.#installProviderApiKey(providerName, providerConfig.apiKey, {
+					baseUrl: providerConfig.baseUrl,
+				});
 			}
 			for (const modelDef of modelDefs) {
 				const providerCompat = providerConfig.disableStrictTools
@@ -3541,9 +3549,13 @@ export class ModelRegistry {
 			// and would otherwise be sent (and passed to fetchDynamicModels)
 			// instead of the saved key.
 			const fallback = config.oauth !== undefined;
-			this.#installProviderApiKey(providerName, config.apiKey, { fallback });
+			this.#installProviderApiKey(providerName, config.apiKey, { fallback, baseUrl: config.baseUrl });
 			// Persist runtime API keys so they survive #reloadStaticModels() cycles
-			this.#runtimeProviderApiKeys.set(providerName, { keyConfig: config.apiKey, fallback });
+			this.#runtimeProviderApiKeys.set(providerName, {
+				keyConfig: config.apiKey,
+				fallback,
+				baseUrl: config.baseUrl,
+			});
 		}
 		this.#recordRuntimeCommandConfigs(providerName, config);
 

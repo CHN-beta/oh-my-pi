@@ -999,8 +999,11 @@ export interface KeysApi {
 	 * `fallback: true` ranks the value below stored OAuth and `/login`
 	 * credentials instead, so a provider's default key reference cannot shadow
 	 * a key the user logged in with.
+	 *
+	 * `baseUrl` records the provider's configured endpoint (e.g. a gateway
+	 * proxy) so usage probes query the endpoint the key authenticates against.
 	 */
-	setConfig(provider: string, apiKeyConfig: string, options?: { fallback?: boolean }): void;
+	setConfig(provider: string, apiKeyConfig: string, options?: { fallback?: boolean; baseUrl?: string }): void;
 	/**
 	 * Remove a single config-sourced API key (override or fallback).
 	 */
