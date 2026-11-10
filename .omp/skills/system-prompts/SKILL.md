@@ -1,11 +1,11 @@
 ---
 name: system-prompts
-description: Write system prompts, tool docs, and agent definitions. Project tag conventions + RFC 2119 keywords + dense compression. Use when authoring or editing any prompt the model reads.
+description: Write system prompts, tool docs, and agent definitions. Project tag conventions + normative keywords + dense compression. Use when authoring or editing any prompt the model reads.
 ---
 
 # System Prompts
 
-House style: dense, imperative, RFC-keyed.
+House style: dense, imperative, normative-keyed.
 
 Small models (≤2B; tiny/on-device, e.g. LFM2): MUST read [small-models.md](small-models.md). Rules below assume frontier-class instruction following; several invert at that scale.
 
@@ -15,7 +15,7 @@ Tags: authoritative, literal structural markers; meaning exactly matches name. N
 
 |Tag|Purpose|
 |---|---|
-|`<system-conventions>`|Tag/RFC-keyword interpretation; contract.|
+|`<conventions>`|Normative keyword contract.|
 |`<stakes>`|Correctness importance; domain framing.|
 |`<communication>`|Voice, tone, response shape.|
 |`<critical>`|Inviolable rules; place at START and END.|
@@ -25,7 +25,7 @@ Tags: authoritative, literal structural markers; meaning exactly matches name. N
 
 ## Normative Language
 
-RFC 2119: full caps, no bold; all-caps form is the marker.
+Normative keywords: full caps, no bold; all-caps form is the marker.
 
 |Keyword|Meaning|Replaces|
 |---|---|---|
@@ -37,9 +37,9 @@ RFC 2119: full caps, no bold; all-caps form is the marker.
 
 Aliases: prefer `NEVER` to `MUST NOT`; `AVOID` to `SHOULD NOT`. Both: single-token in cl100k/o200k; identical authority.
 
-Near top, inside `<system-conventions>`, state once:
+Near top, inside `<conventions>`, state once:
 
-> RFC 2119 applies to MUST, REQUIRED, SHOULD, RECOMMENDED, MAY, OPTIONAL. `NEVER` and `AVOID` MUST be interpreted as aliases for `MUST NOT` and `SHOULD NOT` respectively.
+> Normative keywords: MUST, REQUIRED, SHOULD, RECOMMENDED, MAY, OPTIONAL. `NEVER` = `MUST NOT`; `AVOID` = `SHOULD NOT`.
 
 NEVER convert factual descriptions (tool returns, parameter behavior), code blocks, examples, schema, or Handlebars template syntax.
 
@@ -89,7 +89,7 @@ Negation: pair positive alternative when non-obvious; otherwise `NEVER X.` alone
 
 Front matter:
 1. Role + agency one-liner (`You are THE staff engineer…`).
-2. `<system-conventions>` — RFC contract, tag semantics.
+2. `<conventions>` — normative contract, tag semantics.
 3. `<stakes>` — importance.
 4. `<communication>` — style.
 5. `<critical>` — top-priority rules.
@@ -123,14 +123,14 @@ Live-system-prompt patterns:
 |Critical instructions only in middle|20%+ degradation vs edges|
 |Restating bold lead in body|Token waste; AI-padding signal|
 |Inventing emphasis tags|Tags have semantics; ornament dilutes|
-|Lowercase RFC keywords|All-caps is marker; lowercase ordinary prose|
+|Lowercase normative keywords|All-caps is marker; lowercase ordinary prose|
 
 ## Checklist
 
 - Tags match content; no ornamental tags.
-- `<system-conventions>` defines `NEVER`/`AVOID` aliases.
+- `<conventions>` defines `NEVER`/`AVOID` aliases.
 - Critical rules at START and END.
-- Prescriptive prose: uppercase RFC 2119 keywords.
+- Prescriptive prose: uppercase normative keywords.
 - Tactical bullets ≤12 words unless distinct subclaims justify more.
 - NEVER restate bold lead in body.
 - Non-obvious negation gets positive alternative.
