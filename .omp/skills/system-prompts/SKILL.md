@@ -37,9 +37,9 @@ Normative keywords: full caps, no bold; all-caps form is the marker.
 
 Aliases: prefer `NEVER` to `MUST NOT`; `AVOID` to `SHOULD NOT`. Both: single-token in cl100k/o200k; identical authority.
 
-Near top, inside `<conventions>`, state once:
+Near top, state once:
 
-> Normative keywords: MUST, REQUIRED, SHOULD, RECOMMENDED, MAY, OPTIONAL. `NEVER` = `MUST NOT`; `AVOID` = `SHOULD NOT`.
+> Directive terms in all-caps (`MUST`, `NEVER`, `SHOULD`, `AVOID`, `MAY`) express strictness levels: `NEVER` means `MUST NOT`, and `AVOID` means `SHOULD NOT`.
 
 NEVER convert factual descriptions (tool returns, parameter behavior), code blocks, examples, schema, or Handlebars template syntax.
 

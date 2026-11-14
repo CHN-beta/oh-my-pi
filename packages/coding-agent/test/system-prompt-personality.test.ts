@@ -16,7 +16,7 @@ const EMPTY_TREE = {
 };
 
 // Distinctive line from the bundled default preset (prompts/system/personalities/default.md).
-const DEFAULT_PRESET_MARKER = "Evidence-first terse engineer";
+const DEFAULT_PRESET_MARKER = "Direct, evidence-driven engineer";
 const OVERRIDE = "Follow ASD-STE100 Simplified Technical English for all responses.";
 
 // PERSONALITY.md contract (issue #8528): `<agentDir>/PERSONALITY.md` replaces

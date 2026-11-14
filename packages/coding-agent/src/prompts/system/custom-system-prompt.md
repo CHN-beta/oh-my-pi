@@ -3,8 +3,8 @@
 {{/if}}
 {{customPrompt}}
 {{#if skills.length}}
-Skills are specialized knowledge. Scan descriptions for your task domain.
-If a skill applies, you MUST read `skill://<name>` before proceeding.
+Specialized domain skills are listed below. Check whether your task matches any description.
+When a skill applies, you MUST read `skill://<name>` before starting work.
 <skills>
 {{#each skills}}
 {{#unless @first}}
@@ -17,7 +17,7 @@ If a skill applies, you MUST read `skill://<name>` before proceeding.
 {{/if}}
 {{#if hasSkillUriAccess}}
 {{#unless skills.length}}
-Loaded skills remain addressable as `skill://<name>`.
+Available skills can be read via `skill://<name>`.
 {{/unless}}
 {{/if}}
 {{#if alwaysApplyRules.length}}
@@ -26,7 +26,7 @@ Loaded skills remain addressable as `skill://<name>`.
 {{/each}}
 {{/if}}
 {{#if rules.length}}
-Rules are local constraints. You MUST read `rule://<name>` when working in that domain.
+Scoped project rules apply to specific paths. You MUST read `rule://<name>` when working in matching files.
 <rules>
 {{#list rules join="\n"}}
 <rule name="{{name}}">
@@ -40,7 +40,7 @@ Rules are local constraints. You MUST read `rule://<name>` when working in that 
 {{/if}}
 {{#if secretsEnabled}}
 <redacted-content>
-Some values in tool output are redacted for security. They appear as placeholder tokens such as `$$HASH$$`, `$$HASH:CASE$$`, or `$$NAME_HASH:CASE$$` (uppercase-alphanumeric digest, optional case hint, optional friendly-name prefix). These are **not errors** — they are intentional placeholders for sensitive values (API keys, passwords, tokens). Treat them as opaque strings. NEVER attempt to decode, fix, or report them as problems.
+Sensitive values in tool outputs are masked as placeholder tokens like `$$HASH$$`, `$$HASH:CASE$$`, or `$$NAME_HASH:CASE$$` (uppercase hex/alphanumeric digest with optional case hint and prefix). These are intentional secret redactions, **not errors**—treat them as opaque literals and NEVER try to decode, alter, or report them as bugs.
 </redacted-content>
 {{/if}}
 {{#if resultShaping}}

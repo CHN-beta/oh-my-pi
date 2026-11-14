@@ -89,7 +89,7 @@ describe("browser prelude relay guidance", () => {
 			const onRelay = resolveBrowserKind({ action: "open" }, session).kind === "relay";
 			const guidance = createBrowserPrelude(session).guidance;
 			expect(guidance !== undefined).toBe(onRelay);
-			if (onRelay) expect(guidance).toContain('`app: "auto"` for a throwaway managed browser');
+			if (onRelay) expect(guidance).toContain('`app: "auto"` for an isolated managed browser');
 		}
 	});
 
@@ -111,13 +111,13 @@ describe("browser prelude relay guidance", () => {
 				settings: {},
 				env: { TERN_PANE_SOCKET: "/tmp/tern.sock", TERN_PANE: "1" },
 				kind: "tern",
-				says: "omp's own Tern picture-in-picture instead",
+				says: "the built-in Tern picture-in-picture view instead",
 			},
 			{
 				settings: {},
 				env: { CMUX_SOCKET_PATH: "/tmp/cmux.sock" },
 				kind: "cmux",
-				says: "omp's own cmux browser surface instead",
+				says: "the built-in cmux browser surface instead",
 			},
 		];
 		for (const { settings, env, kind, says } of cases) {
@@ -127,7 +127,7 @@ describe("browser prelude relay guidance", () => {
 			expect(resolveBrowserKind({ action: "open", app: "auto" }, session).kind).toBe(kind);
 			const guidance = createBrowserPrelude(session).guidance;
 			expect(guidance).toContain(says);
-			expect(guidance).not.toContain("throwaway");
+			expect(guidance).not.toContain("isolated managed browser");
 		}
 	});
 });

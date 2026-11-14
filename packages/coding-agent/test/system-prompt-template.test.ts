@@ -205,7 +205,7 @@ describe("system prompt Handlebars templates", () => {
 			const result = await buildSystemPrompt(options(cwd));
 			const text = result.systemPrompt.join("\n\n");
 			expect(text).toContain("fallback literal prompt");
-			expect(text).not.toContain("⁂ Tool Policy");
+			expect(text).not.toContain("§ Tool Policy");
 		});
 	});
 
@@ -216,7 +216,7 @@ describe("system prompt Handlebars templates", () => {
 			const result = await buildSystemPrompt(options(cwd));
 			const text = result.systemPrompt.join("\n\n");
 			expect(text).not.toContain("TASK_BRANCH=");
-			expect(text).toContain("⁂ Tool Policy");
+			expect(text).toContain("§ Tool Policy");
 		});
 	});
 
@@ -228,7 +228,7 @@ describe("system prompt Handlebars templates", () => {
 			const result = await buildSystemPrompt(options(cwd));
 			const text = result.systemPrompt.join("\n\n");
 			expect(text).toContain("fallback literal prompt");
-			expect(text).not.toContain("⁂ Tool Policy");
+			expect(text).not.toContain("§ Tool Policy");
 		});
 	});
 
@@ -419,7 +419,7 @@ describe("per-model system prompt template", () => {
 							modelSystemPromptTemplates: compile({ claude: templatePath }),
 						}),
 					);
-					expect(result.systemPrompt.join("\n\n")).toContain("RFC 2119 keywords");
+					expect(result.systemPrompt.join("\n\n")).toContain("Directive terms in all-caps");
 					expect(warn.mock.calls.filter(([message]) => message === warning)).toHaveLength(1);
 				} finally {
 					warn.mockRestore();

@@ -516,7 +516,7 @@ describe("system prompt tool inventory", () => {
 		});
 		const text = systemPrompt.join("\n\n");
 		expect(text).toContain("MUST use `xd://lsp` for definitions");
-		expect(text).toContain("MUST run `xd://lsp` references first");
+		expect(text).toContain("MUST check its callers via `xd://lsp` references");
 		expect(text).not.toContain("`lsp`");
 	});
 
@@ -533,7 +533,7 @@ describe("system prompt tool inventory", () => {
 				eagerTasks,
 			});
 			const count = (needle: string) => systemPrompt[0].split(needle).length - 1;
-			return [count("Map unknown code via `task`"), count("Unfamiliar subsystem?"), count("Inline first.")];
+			return [count("Map unfamiliar code through `task`"), count("Exploring an unfamiliar subsystem?"), count("Work inline first.")];
 		};
 		expect(await renderDelegation("eager", false)).toEqual([1, 0, 0]);
 		expect(await renderDelegation("eager", true)).toEqual([1, 0, 0]);
@@ -560,8 +560,8 @@ describe("system prompt tool inventory", () => {
 		expect(systemPrompt[1]).toBe("COMPUTER-GUIDANCE");
 		expect(systemPrompt.filter(block => block.includes("COMPUTER-GUIDANCE"))).toHaveLength(1);
 		// Prelude names still drive the verification bullets.
-		expect(systemPrompt[0]).toContain("Native desktop: JS/Python eval `computer` helpers");
-		expect(systemPrompt[0]).not.toContain("No runtime for changed surface");
+		expect(systemPrompt[0]).toContain("Desktop UI: drive and inspect via JS/Python `eval` `computer` helpers");
+		expect(systemPrompt[0]).not.toContain("When no display runtime is available for the changed surface");
 	});
 
 	it("renders the functions namespace (not a name list) when tools are not native", async () => {
@@ -1009,12 +1009,12 @@ describe("system prompt tool inventory", () => {
 			inlineToolDescriptors: false,
 		};
 		const withoutTodo = (await buildSystemPrompt({ ...opts, toolNames: ["read", "bash"] })).systemPrompt.join("\n\n");
-		expect(withoutTodo).not.toContain("Update todos");
+		expect(withoutTodo).not.toContain("Keep the todo list updated");
 
 		const withTodo = (await buildSystemPrompt({ ...opts, toolNames: ["read", "bash", "todo"] })).systemPrompt.join(
 			"\n\n",
 		);
-		expect(withTodo).toContain("Update todos");
+		expect(withTodo).toContain("Keep the todo list updated");
 	});
 
 	// A session without `read` cannot open `xd://read/urls`, so the grammar that link stands for must ship inline.
