@@ -407,7 +407,7 @@ describe("per-model system prompt template", () => {
 		},
 	];
 	for (const { name, content, warning } of fallbackCases) {
-		it(`warns and renders the bundled prompt when the selected template is ${name}`, async () => {
+		it(`warns when the selected template is ${name}`, async () => {
 			await withDiscoveryHome(async ({ cwd }) => {
 				const templatePath = path.join(cwd, "templates", "claude.md");
 				if (content !== undefined) await Bun.write(templatePath, content);
