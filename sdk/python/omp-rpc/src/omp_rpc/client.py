@@ -350,7 +350,7 @@ class HostToolCompletedEvent:
     """A registered host tool's `execute()` returned without raising.
 
     Emitted by `RpcClient.on_host_tool_completed` for every dispatch path —
-    top-level call, `xd://` device write, or the eval bridge — unlike
+    top-level call, `xdev://` device write, or the eval bridge — unlike
     `tool_execution_end`, which only names the transport tool the agent
     invoked. `tool_call_id` is the id omp dispatched with; for eval-bridged
     calls it is synthetic and matches no `tool_execution_*` event.
@@ -1505,7 +1505,7 @@ class RpcClient(WireClient):
     def _normalize_host_tool_event(self, payload: JsonObject) -> None:
         """Rename transport tool events for in-flight host-tool dispatches.
 
-        With `tools.xdev` enabled, omp mounts custom tools as `xd://` devices
+        With `tools.xdev` enabled, omp mounts custom tools as `xdev://` devices
         and the agent invokes them through the `write` tool, so
         `tool_execution_update`/`tool_execution_end` events report the
         transport tool (`write`) rather than the host tool that actually ran.

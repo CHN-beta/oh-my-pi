@@ -32,15 +32,15 @@ import {
 const FIXTURE_PATH = path.join(import.meta.dir, "fixtures", "instructions-mcp.ts");
 const MCP_TOOL_NAME = "mcp__instr_do_thing";
 /** Route line for the fixture's backtick-named tool: escaped label, normalized mount path. */
-const DO_THING_ROUTE = '- "do\\u0060thing" → `xd://mcp__instr_do_thing`';
+const DO_THING_ROUTE = '- "do\\u0060thing" → `xdev://mcp__instr_do_thing`';
 const MCP_ROUTE_SECTION = "## MCP Tool Routes";
-const CONTEXT_MODE_ROUTE = '- "ctx_execute" → `xd://mcp__context_mode_ctx_execute`';
+const CONTEXT_MODE_ROUTE = '- "ctx_execute" → `xdev://mcp__context_mode_ctx_execute`';
 const CONTEXT_MODE_MCP_TOOL_NAME = "mcp__context_mode_ctx_execute";
 /** Sentinel proving the user's append prompt stays a block of its own. */
 const USER_APPEND_MARKER = "USER_APPEND_SENTINEL_7d13f2: prefer Bun APIs over Node APIs.";
 /** Heading that opens the user's append section, asserted literally rather than imported. */
 const USER_APPEND_SECTION_HEADING = "## User Instructions";
-/** The route section's instruction to read an `xd://` path before first use. */
+/** The route section's instruction to read an `xdev://` path before first use. */
 const READ_FIRST_CLAUSE = "for docs + JSON schema before first use";
 
 /** The rendered `## MCP Tool Routes` section, up to the next heading. */
@@ -228,7 +228,7 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 			expect(prompt).toContain(SERVER_INSTRUCTIONS);
 			// The instructions are framed under the MCP section, and guidance keeps
 			// the escaped original tool name while routing through the exact
-			// normalized name actually mounted in the live xd:// registry.
+			// normalized name actually mounted in the live xdev:// registry.
 			expect(prompt).toContain("MCP Server Instructions");
 			expect(prompt).toContain(DO_THING_ROUTE);
 		} finally {
@@ -325,7 +325,7 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 		}
 	}, 20_000);
 
-	it("bounds mounted route guidance deterministically and points to the live xd:// inventory", async () => {
+	it("bounds mounted route guidance deterministically and points to the live xdev:// inventory", async () => {
 		fs.writeFileSync(
 			path.join(tempDir, ".mcp.json"),
 			JSON.stringify({
@@ -364,9 +364,9 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 			expect(prompt).toContain(SERVER_INSTRUCTIONS);
 			const renderedMappings = prompt.split("\n").filter(line => line.startsWith('- "row_'));
 			expect(renderedMappings).toHaveLength(64);
-			expect(renderedMappings[0]).toBe('- "row_aa" → `xd://mcp__instr_row_aa` — Bounded guidance fixture tool aa.');
-			expect(renderedMappings[63]).toBe('- "row_cl" → `xd://mcp__instr_row_cl` — Bounded guidance fixture tool cl.');
-			expect(prompt).not.toContain('- "row_cm" → `xd://mcp__instr_row_cm`');
+			expect(renderedMappings[0]).toBe('- "row_aa" → `xdev://mcp__instr_row_aa` — Bounded guidance fixture tool aa.');
+			expect(renderedMappings[63]).toBe('- "row_cl" → `xdev://mcp__instr_row_cl` — Bounded guidance fixture tool cl.');
+			expect(prompt).not.toContain('- "row_cm" → `xdev://mcp__instr_row_cm`');
 			// Truncation notice present (row_cm absent above proves the cap applied).
 			expect(prompt).toContain("omitted");
 			// Every mounted MCP tool is listed exactly once: routed tools on their
@@ -379,7 +379,7 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 				.filter(name => name.startsWith("mcp__instr_row_"));
 			expect(mountedRows).toHaveLength(BOUNDED_GUIDANCE_TOOL_COUNT);
 			const listings = (name: string) =>
-				prompt.split("\n").filter(line => line.includes(`\`xd://${name}\``) || line.startsWith(`- ${name} — `))
+				prompt.split("\n").filter(line => line.includes(`\`xdev://${name}\``) || line.startsWith(`- ${name} — `))
 					.length;
 			expect(mountedRows.filter(name => listings(name) !== 1)).toEqual([]);
 		} finally {
@@ -450,7 +450,7 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 			const prompt = session.systemPrompt.join("\n");
 			expect(prompt).not.toContain("## mcp__instr_do_thing");
 			expect(prompt.split("\n")).toContain(`${DO_THING_ROUTE} — Fixture tool returning a deterministic sentinel.`);
-			expect(prompt.split("xd://mcp__instr_do_thing")).toHaveLength(2);
+			expect(prompt.split("xdev://mcp__instr_do_thing")).toHaveLength(2);
 			expect(routeSection(prompt)).toContain(READ_FIRST_CLAUSE);
 		} finally {
 			await session.dispose();
@@ -479,7 +479,7 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 		try {
 			expect(session.getActiveToolNames()).toContain("read");
 
-			// A device-only write supplies the xd:// execution half without granting
+			// A device-only write supplies the xdev:// execution half without granting
 			// filesystem mutation, so deferred MCP tools mount after connection
 			// instead of shipping their full schemas top-level.
 			// Mount state lands before the awaited system-prompt rebuild while
@@ -538,7 +538,7 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 			expect(session.getXdevToolEntries().map(entry => entry.name)).not.toContain(MCP_TOOL_NAME);
 			expect(prompt).toContain("## MCP Server Instructions");
 			expect(prompt).toContain(SERVER_INSTRUCTIONS);
-			expect(prompt).not.toContain(`xd://${MCP_TOOL_NAME}`);
+			expect(prompt).not.toContain(`xdev://${MCP_TOOL_NAME}`);
 		} finally {
 			await session.dispose();
 		}

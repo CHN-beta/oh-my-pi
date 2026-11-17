@@ -367,7 +367,7 @@ If you want runtime conversion into a richer Python type, pass `decode=` to
 parsing the incoming argument object into a dataclass or model in the handler.
 
 `tool_execution_update`/`tool_execution_end` events for a top-level or
-`xd://` device dispatch carry the host tool's name, but a call made through the
+`xdev://` device dispatch carry the host tool's name, but a call made through the
 eval bridge only surfaces as the enclosing `eval` call. To observe which host
 tools actually ran regardless of dispatch path, subscribe with
 `client.on_host_tool_completed(...)`; it receives a

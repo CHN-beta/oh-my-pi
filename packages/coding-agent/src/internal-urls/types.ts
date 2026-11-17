@@ -124,7 +124,7 @@ export interface SchemeSpec {
 	unbounded?: boolean;
 	/** Renderers may call `locate` to hyperlink these URLs: locate is local, cheap, never spawns or fetches. */
 	linkable?: boolean;
-	/** Transcript read cards collapse like plain files instead of expanding (xd://). */
+	/** Transcript read cards collapse like plain files instead of expanding (xdev://). */
 	compactTranscript?: boolean;
 	/** `read` peels a trailing `?q=<question>` as an image question (local://, attachment://); other schemes own their query. */
 	imageQuestion?: true;
@@ -325,7 +325,7 @@ export interface ResolveContext {
 	 */
 	rules?: readonly Rule[];
 	/**
-	 * Calling tool session. Session-bound schemes (`proc://`, `xd://`) require it
+	 * Calling tool session. Session-bound schemes (`proc://`, `xdev://`) require it
 	 * and throw when it is absent.
 	 */
 	session?: ToolSession;
@@ -351,10 +351,10 @@ export interface WriteContext {
 	localProtocolOptions?: LocalProtocolOptions;
 	/**
 	 * Calling tool session. Session-bound writes (`agent://` messages,
-	 * `proc://` stdin/stop/mode, `xd://` devices) require it and throw when it is absent.
+	 * `proc://` stdin/stop/mode, `xdev://` devices) require it and throw when it is absent.
 	 */
 	session?: ToolSession;
-	/** The `write` tool call dispatching this write; device dispatch (`xd://`) forwards it to the wrapped tool. */
+	/** The `write` tool call dispatching this write; device dispatch (`xdev://`) forwards it to the wrapped tool. */
 	toolCall?: {
 		id: string;
 		onUpdate?: AgentToolUpdateCallback;
@@ -363,7 +363,7 @@ export interface WriteContext {
 }
 
 /**
- * Handler for a specific internal URL scheme (e.g., agent://, memory://, skill://, xd://).
+ * Handler for a specific internal URL scheme (e.g., agent://, memory://, skill://, xdev://).
  */
 export interface ProtocolHandler {
 	/** The scheme this handler processes (without trailing ://) */
@@ -442,7 +442,7 @@ export interface ProtocolHandler {
 	/**
 	 * Sub-path, query and limit grammar the {@link promptDoc} line leaves out
 	 * (rendered from `prompts/internal-urls/<scheme>-reference.md`), served on demand
-	 * at `xd://read/urls`. Reads cheap process facts only; `undefined` omits the scheme.
+	 * at `xdev://read/urls`. Reads cheap process facts only; `undefined` omits the scheme.
 	 */
 	promptReference?(): string | undefined;
 }

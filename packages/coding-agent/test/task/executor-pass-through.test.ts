@@ -336,7 +336,7 @@ describe("runSubprocess parent-discovery pass-through (issue #2190)", () => {
 		expect(persistedInits[0]).toMatchObject({ restrictToolNames: true, tools: ["read", "yield"] });
 	});
 
-	it("persists xd://-mounted tools from the enabled set", async () => {
+	it("persists xdev://-mounted tools from the enabled set", async () => {
 		const session = yieldEmittingSession();
 		vi.spyOn(session, "getActiveToolNames").mockReturnValue(["read", "yield"]);
 		vi.spyOn(session, "getEnabledToolNames").mockReturnValue(["read", "lsp", "yield"]);

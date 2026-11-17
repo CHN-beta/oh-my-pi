@@ -29,10 +29,10 @@ const xdevWriteSchema = type({ path: type("string"), content: type("string") });
 const xdevWriteTool: AgentTool<typeof xdevWriteSchema, unknown> = {
 	name: "write",
 	label: "Write",
-	description: "Dispatch a write to an xd:// device",
+	description: "Dispatch a write to an xdev:// device",
 	parameters: xdevWriteSchema,
 	async execute(_toolCallId, params) {
-		const tool = params.path === "xd://checkpoint" ? "checkpoint" : "rewind";
+		const tool = params.path === "xdev://checkpoint" ? "checkpoint" : "rewind";
 		if (/^\s*(?:\?|help)?\s*$/i.test(params.content)) {
 			return {
 				content: [{ type: "text" as const, text: `${tool} docs via xdev` }],
@@ -567,7 +567,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 							type: "toolCall",
 							id: "call_checkpoint_help",
 							name: "write",
-							arguments: { path: "xd://checkpoint", content: "help" },
+							arguments: { path: "xdev://checkpoint", content: "help" },
 						},
 					],
 					stopReason: "toolUse",
@@ -593,7 +593,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 							id: "call_checkpoint_xdev",
 							name: "write",
 							arguments: {
-								path: "xd://checkpoint",
+								path: "xdev://checkpoint",
 								content: JSON.stringify({ goal: "inspect" }),
 							},
 						},
@@ -607,7 +607,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 							id: "call_rewind_xdev",
 							name: "write",
 							arguments: {
-								path: "xd://rewind",
+								path: "xdev://rewind",
 								content: JSON.stringify({ report }),
 							},
 						},
@@ -640,7 +640,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 		});
 	});
 
-	it("tracks direct xd:// checkpoint and rewind calls through the session lifecycle", async () => {
+	it("tracks direct xdevev:// checkpoint and rewind calls through the session lifecycle", async () => {
 		const report = "findings: prefixed direct calls";
 		const proceed = Promise.withResolvers<void>();
 		const secondRequestStarted = Promise.withResolvers<void>();
@@ -651,7 +651,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 						{
 							type: "toolCall",
 							id: "call_checkpoint_direct_xdev",
-							name: "xd://checkpoint",
+							name: "xdev://checkpoint",
 							arguments: { goal: "inspect" },
 						},
 					],
@@ -664,7 +664,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 						{
 							type: "toolCall",
 							id: "call_rewind_direct_xdev",
-							name: "xd://rewind",
+							name: "xdev://rewind",
 							arguments: { report },
 						},
 					],
@@ -675,14 +675,14 @@ describe("AgentSession checkpoint rewind branch context", () => {
 			[checkpointTool as AgentTool, rewindTool as AgentTool],
 			{
 				resolveFallbackTool: name => {
-					if (name === "xd://checkpoint") return checkpointTool as AgentTool;
-					if (name === "xd://rewind") return rewindTool as AgentTool;
+					if (name === "xdev://checkpoint") return checkpointTool as AgentTool;
+					if (name === "xdev://rewind") return rewindTool as AgentTool;
 					return undefined;
 				},
 			},
 		);
 
-		const promptPromise = session.prompt("investigate with direct xd device calls");
+		const promptPromise = session.prompt("investigate with direct xdevev device calls");
 		await secondRequestStarted.promise;
 
 		// Exercise the real RewindTool while the provider's second response is
@@ -976,7 +976,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 							id: "call_checkpoint_xdev",
 							name: "write",
 							arguments: {
-								path: "xd://checkpoint",
+								path: "xdev://checkpoint",
 								content: JSON.stringify({ goal: "inspect" }),
 							},
 						},
@@ -990,7 +990,7 @@ describe("AgentSession checkpoint rewind branch context", () => {
 							id: "call_rewind_xdev",
 							name: "write",
 							arguments: {
-								path: "xd://rewind",
+								path: "xdev://rewind",
 								content: JSON.stringify({ report: "findings" }),
 							},
 						},

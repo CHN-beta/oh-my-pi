@@ -1444,7 +1444,7 @@ describe("agentLoop with AgentMessage", () => {
 	});
 
 	it("records fallback-resolved alias calls under the resolved tool's name", async () => {
-		// Providers reject `xd://recall` as a replayed function-call name, so the
+		// Providers reject `xdev://recall` as a replayed function-call name, so the
 		// alias must not reach history, persistence, or the next request.
 		const toolSchema = type({ value: "string" });
 		const deviceTool: AgentTool<typeof toolSchema, { value: string }> = {
@@ -1459,14 +1459,14 @@ describe("agentLoop with AgentMessage", () => {
 		const context: AgentContext = { systemPrompt: [""], messages: [], tools: [] };
 		const mock = createMockModel({
 			responses: [
-				{ content: [{ type: "toolCall", id: "tool-1", name: "xd://recall", arguments: { value: "x" } }] },
+				{ content: [{ type: "toolCall", id: "tool-1", name: "xdev://recall", arguments: { value: "x" } }] },
 				{ content: ["done"] },
 			],
 		});
 		const config: AgentLoopConfig = {
 			model: mock.model,
 			convertToLlm: identityConverter,
-			resolveFallbackTool: name => (name === "xd://recall" || name === "recall" ? deviceTool : undefined),
+			resolveFallbackTool: name => (name === "xdev://recall" || name === "recall" ? deviceTool : undefined),
 		};
 
 		const messages = await agentLoop([createUserMessage("recall")], context, config, undefined, mock.stream).result();
@@ -1587,7 +1587,7 @@ describe("agentLoop with AgentMessage", () => {
 
 	it("suggests a mounted device the advertised set does not contain", async () => {
 		// Observed in a real transcript: the session mounts `github` as an
-		// `xd://` device, the model emitted `mcp__<ns>__<id>_github`, and the miss
+		// `xdev://` device, the model emitted `mcp__<ns>__<id>_github`, and the miss
 		// produced a bare `not found`. That is the one unrecoverable shape — the
 		// capability is live, but it appears in no advertised name, so matching
 		// only the advertised set had nothing to offer.

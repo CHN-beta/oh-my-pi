@@ -2954,7 +2954,7 @@ function resolveToolForCall(
 		tools?.find(t => t.name === toolCall.name) ??
 		tools?.find(t => t.customWireName !== undefined && t.customWireName === toolCall.name) ??
 		// Not in the advertised set: let the host route side-transport tools
-		// (e.g. xd:// device mounts) called by their top-level name. It receives
+		// (e.g. xdev:// device mounts) called by their top-level name. It receives
 		// the snapshot searched above, never the agent's live tools, so a
 		// mid-stream roster change cannot widen what this request can reach.
 		resolveFallbackTool?.(toolCall.name, tools ?? [])
@@ -2977,7 +2977,7 @@ const MAX_TOOL_NAME_SUGGESTIONS = 3;
  * Both the last `__` and last `_` boundary are tried, so a name that lost only
  * its separator (`…__resolve_library_id`) and one that lost a whole id segment
  * (`…__read`) both recover. `fallbackNames` adds targets the host can route but
- * never advertises (`xd://` device mounts); without them a corrupted device
+ * never advertises (`xdev://` device mounts); without them a corrupted device
  * call is the one miss with nothing to suggest, because the capability exists
  * in the session yet appears in no advertised name. Purely advisory: this only
  * builds an error string and never selects a tool, so dispatch semantics are
@@ -3155,7 +3155,7 @@ async function prepareToolCallDispatch(
 		if (toolCall.type !== "toolCall") continue;
 		if ((toolCall as CursorExecResolvedCarrier)[kCursorExecResolved] === true) continue;
 		const tool = resolveToolForCall(context.tools, toolCall, resolveFallbackTool);
-		// A host fallback accepts aliases (`xd://recall`, a mis-separated MCP
+		// A host fallback accepts aliases (`xdev://recall`, a mis-separated MCP
 		// name) that providers reject when replayed as a function-call name.
 		// Record the call under the resolved tool's canonical name so history,
 		// persistence, and replay agree; custom-wire calls keep their wire name.
@@ -3701,7 +3701,7 @@ async function executeToolCalls(
 					// ride the loop-owned ToolCallContext (surfacing as
 					// `ctx.toolCall.*`); the host surfaces the sink on the context it
 					// builds, and the loop hands that object to the tool untouched.
-					// Wrapper-dispatched nested calls (for example `write xd://…`)
+					// Wrapper-dispatched nested calls (for example `write xdev://…`)
 					// inherit the context, so their passive hook context joins this
 					// root call at the batch boundary.
 					const toolContext = getToolContext?.({
@@ -3996,7 +3996,7 @@ async function executeToolCalls(
 
 	// Skipped calls never ran. Hook-prepared context also requires a non-error
 	// final result; context the tool itself reported during execution stands.
-	// Within a call, tool-reported context (including nested `xd://` dispatch)
+	// Within a call, tool-reported context (including nested `xdev://` dispatch)
 	// precedes the hook's: wrappers release hook context only after the call
 	// succeeds, so this is the one order every dispatch path can produce.
 	const additionalContext = joinAdditionalContext(

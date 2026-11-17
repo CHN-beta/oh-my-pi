@@ -195,7 +195,7 @@ export const resolveRenderer = {
 	mergeCallAndResult: true,
 } satisfies ToolRenderer<Partial<ResolveInvocation>, ResolveDetails>;
 
-/** Whether an xd:// device name is one of the plain-text resolution devices. */
+/** Whether an xdev:// device name is one of the plain-text resolution devices. */
 export function isResolutionDeviceName(name: string): name is ResolutionDeviceName {
 	return name === RESOLVE_DEVICE_NAME || name === REJECT_DEVICE_NAME || name === PROPOSE_DEVICE_NAME;
 }

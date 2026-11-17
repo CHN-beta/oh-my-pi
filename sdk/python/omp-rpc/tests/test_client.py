@@ -637,7 +637,7 @@ FAKE_SERVER = textwrap.dedent(
                             "type": "tool_execution_start",
                             "toolCallId": "toolu_write_1",
                             "toolName": "write",
-                            "args": {"path": "xd://echo_host", "content": '{"message": "hello"}'},
+                            "args": {"path": "xdev://echo_host", "content": '{"message": "hello"}'},
                         }
                     ),
                     flush=True,
@@ -1602,10 +1602,10 @@ class RpcClientTests(unittest.TestCase):
             self.assertEqual(end_events[0].result["content"][0]["text"], "host:hello")
 
     def test_xd_dispatched_custom_tool_events_carry_host_tool_name(self) -> None:
-        """Events for an xd:// device dispatch are renamed to the executed host tool.
+        """Events for an xdev:// device dispatch are renamed to the executed host tool.
 
         With `tools.xdev` on, omp invokes a custom tool through `write
-        xd://<name>` and the wire events carry the transport tool (`write`).
+        xdev://<name>` and the wire events carry the transport tool (`write`).
         Consumers must observe the host-tool name on update/end events
         regardless of transport — roboomp's terminal-action detection
         triple-posted PR reviews when end events only said `write`

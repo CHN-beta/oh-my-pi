@@ -134,7 +134,7 @@ function aliasReplyWriteTranscript(): TranscriptEntryLike[] {
 				{
 					type: "toolCall",
 					id: "call-1",
-					name: "xd://write",
+					name: "xdev://write",
 					arguments: { path: "out://final", content: "Rebuild answer: 42" },
 				},
 			]),
@@ -147,7 +147,7 @@ function aliasReplyWriteTranscript(): TranscriptEntryLike[] {
 			message: {
 				role: "toolResult",
 				toolCallId: "call-1",
-				toolName: "xd://write",
+				toolName: "xdev://write",
 				content: [{ type: "text", text: "ok" }],
 				isError: false,
 				timestamp: 2,
@@ -165,7 +165,7 @@ function aliasReadTranscript(): TranscriptEntryLike[] {
 			parentId: null,
 			timestamp: "2026-01-01T00:00:00Z",
 			message: assistant([
-				{ type: "toolCall", id: "call-2", name: "xd://read", arguments: { path: "/tmp/rebuild-target.ts" } },
+				{ type: "toolCall", id: "call-2", name: "xdev://read", arguments: { path: "/tmp/rebuild-target.ts" } },
 			]),
 		},
 		{
@@ -176,7 +176,7 @@ function aliasReadTranscript(): TranscriptEntryLike[] {
 			message: {
 				role: "toolResult",
 				toolCallId: "call-2",
-				toolName: "xd://read",
+				toolName: "xdev://read",
 				content: [{ type: "text", text: "const rebuilt = true;\n" }],
 				isError: false,
 				timestamp: 2,
@@ -556,7 +556,7 @@ describe("native transcript", () => {
 		const h = await startWith(h => {
 			const builder = new ChatTranscriptBuilder({
 				ui: h.tui,
-				getTool: name => (name === "xd://write" ? writeTool : undefined),
+				getTool: name => (name === "xdev://write" ? writeTool : undefined),
 				isBuiltInTool: name => name === "write",
 				cwd: "/tmp",
 				requestRender: () => h.tui.requestRender(),
@@ -582,7 +582,7 @@ describe("native transcript", () => {
 		const h = await startWith(h => {
 			const builder = new ChatTranscriptBuilder({
 				ui: h.tui,
-				getTool: name => (name === "xd://read" ? readTool : undefined),
+				getTool: name => (name === "xdev://read" ? readTool : undefined),
 				isBuiltInTool: name => name === "read",
 				cwd: "/tmp",
 				requestRender: () => h.tui.requestRender(),

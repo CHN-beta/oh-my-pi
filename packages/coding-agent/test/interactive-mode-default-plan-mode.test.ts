@@ -103,7 +103,7 @@ describe("InteractiveMode plan.defaultOnStartup", () => {
 		const initialModel = modelOrThrow(registry, "claude-sonnet-4-5");
 		const readTool = makeTool("read");
 		// AgentSession requires a Map-typed tool registry; `read` is the initial
-		// active tool. Plan approval is a `write` to xd://propose, so plan-mode
+		// active tool. Plan approval is a `write` to xdev://propose, so plan-mode
 		// entry only augments the built-in `write` tool when present.
 		const xdev = options.xdev;
 		const toolRegistry = xdev?.tools ?? new Map<string, AgentTool>();
@@ -192,9 +192,9 @@ describe("InteractiveMode plan.defaultOnStartup", () => {
 
 	it("deactivates an extension `write` on plan-mode entry so approval can dispatch (issue #14030)", async () => {
 		// An extension that registers the literal name `write` shadows the built-in
-		// tool. Plan approval is a `write` to `xd://propose`, which only the built-in
+		// tool. Plan approval is a `write` to `xdev://propose`, which only the built-in
 		// tool can dispatch, so carrying the shadow into plan mode leaves the agent
-		// calling `xd://propose` forever with the overlay never opening (#14030).
+		// calling `xdev://propose` forever with the overlay never opening (#14030).
 		const shadowWrite = makeTool("write");
 		const created = createHarness(Settings.isolated({ "plan.defaultOnStartup": true, "compaction.enabled": false }), {
 			extraRegistryTools: [shadowWrite],

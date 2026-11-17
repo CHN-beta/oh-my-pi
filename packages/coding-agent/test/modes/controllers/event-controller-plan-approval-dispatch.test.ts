@@ -10,7 +10,7 @@ beforeAll(() => {
 });
 
 /**
- * A completed `write xd://propose` execution with `mode: "execute"` — the event
+ * A completed `write xdev://propose` execution with `mode: "execute"` — the event
  * that drives `#handleToolExecutionEnd` into `ctx.handlePlanApproval`.
  */
 function proposeExecuteEnd(): AgentSessionEvent {

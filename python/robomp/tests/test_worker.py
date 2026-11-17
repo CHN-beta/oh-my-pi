@@ -785,7 +785,7 @@ async def test_run_rpc_review_pr_still_reminds_when_submit_fails(
 ) -> None:
     """An errored terminal-tool end event does not count as the terminal action.
 
-    omp_rpc normalizes xd:// device dispatches to the host-tool name, so a
+    omp_rpc normalizes xdev:// device dispatches to the host-tool name, so a
     rejected `submit_pr_review` surfaces as an end event with `is_error=True`
     under its real name. Counting it would end the review task silently with
     no review submitted — the completion reminder must still fire.

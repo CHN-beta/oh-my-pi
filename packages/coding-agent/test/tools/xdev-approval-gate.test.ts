@@ -1,5 +1,5 @@
 /**
- * Approval prompts for `write xd://<device>`: the write tool's outer gate and the
+ * Approval prompts for `write xdev://<device>`: the write tool's outer gate and the
  * mounted tool's own wrapper must ask the user once per call (#17039).
  */
 import { afterAll, beforeAll, describe, expect, it, vi } from "bun:test";
@@ -104,7 +104,7 @@ function runnerWith(sessionManager: SessionManager, select: ExtensionUIContext["
 /**
  * The session's tool graph for one mounted device: the registry wraps every
  * tool (the mounted device included) in `ExtensionToolWrapper`, and `write`
- * dispatches `xd://` to the wrapped device.
+ * dispatches `xdev://` to the wrapped device.
  */
 function mountedDevice(runner: ExtensionRunner, cwd: string): { write: AgentTool; executed: unknown[] } {
 	const executed: unknown[] = [];
@@ -139,7 +139,7 @@ function mountedDevice(runner: ExtensionRunner, cwd: string): { write: AgentTool
 
 /**
  * The same graph for `edit` in apply_patch mode, active at the top level:
- * `write` dispatches both `xd://edit` and the wire alias `xd://apply_patch`
+ * `write` dispatches both `xdev://edit` and the wire alias `xdev://apply_patch`
  * to the one wrapped `edit`.
  */
 function editBehindWrite(runner: ExtensionRunner, cwd: string): AgentTool {
@@ -194,7 +194,7 @@ async function editPromptsBySpelling(): Promise<Record<string, number>> {
 		const asked = select.mock.calls.length;
 		const result = await write.execute(
 			`call-${spelling}`,
-			{ path: `xd://${spelling}`, content: JSON.stringify({ input }) },
+			{ path: `xdev://${spelling}`, content: JSON.stringify({ input }) },
 			undefined,
 			undefined,
 			context(sessionManager, settings),
@@ -206,9 +206,9 @@ async function editPromptsBySpelling(): Promise<Record<string, number>> {
 	return prompts;
 }
 
-const args = { path: `xd://${DEVICE}`, content: JSON.stringify({ body: "hello" }) };
+const args = { path: `xdev://${DEVICE}`, content: JSON.stringify({ body: "hello" }) };
 
-describe("write xd://<device> approval", () => {
+describe("write xdev://<device> approval", () => {
 	it("asks once for an explicit device prompt policy", async () => {
 		const cwd = root.path();
 		const sessionManager = SessionManager.inMemory(cwd);
@@ -227,7 +227,7 @@ describe("write xd://<device> approval", () => {
 		expect(executed).toEqual([{ body: "hello" }]);
 	});
 
-	it("asks once for xd://apply_patch under tools.approval.edit: prompt, as for xd://edit", async () => {
+	it("asks once for xdev://apply_patch under tools.approval.edit: prompt, as for xdev://edit", async () => {
 		// The outer gate must key the alias on `edit`: keyed on `apply_patch`, the
 		// mode asks there and the inner `edit` gate asks again for its own policy.
 		expect(await editPromptsBySpelling()).toEqual({ edit: 1, apply_patch: 1 });

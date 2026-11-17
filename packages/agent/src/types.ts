@@ -451,7 +451,7 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	/**
 	 * Resolve a tool call whose name matched no advertised tool (including
 	 * `customWireName` aliases). Lets hosts route calls to tools they expose
-	 * through side transports (e.g. `xd://` device mounts) instead of failing
+	 * through side transports (e.g. `xdev://` device mounts) instead of failing
 	 * with "Tool not found". Returning `undefined` keeps the failure.
 	 *
 	 * `advertised` is the very snapshot exact-name dispatch just searched — the
@@ -464,7 +464,7 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	resolveFallbackTool?: (name: string, advertised: readonly AgentTool<any>[]) => AgentTool<any> | undefined;
 	/**
 	 * Names reachable through {@link resolveFallbackTool} but absent from the
-	 * advertised set (e.g. `xd://` device mounts). Consulted only to name a
+	 * advertised set (e.g. `xdev://` device mounts). Consulted only to name a
 	 * plausible target when a call misses, so a mis-transcribed device call is
 	 * recoverable; never a dispatch source.
 	 */
@@ -1086,7 +1086,7 @@ export type ToolTier = "read" | "write" | "exec";
 /**
  * How an enabled tool is presented to the model. `"essential"` tools are exposed
  * as normal top-level tools. `"discoverable"` tools are removed from the top-level
- * schema and either mounted under `xd://` device URLs (when that transport is
+ * schema and either mounted under `xdev://` device URLs (when that transport is
  * active) or surfaced through BM25 tool search — keeping their schemas off every
  * request. Selection (settings, `hidden`, `defaultInactive`, explicit `--tools`,
  * provider availability) decides whether a tool is enabled; `loadMode` only
@@ -1113,7 +1113,7 @@ export type ToolApprovalDecision =
 			policy?: "allow" | "deny" | "prompt";
 			/** User-policy key for this decision. When set, `tools.approval.<policyKey>`
 			 *  is consulted instead of `tools.approval.<tool.name>`. Lets a dispatcher
-			 *  tool (e.g. `write` for an `xd://` device call) scope user allow/deny/
+			 *  tool (e.g. `write` for an `xdev://` device call) scope user allow/deny/
 			 *  prompt policies to the tool it dispatches into. */
 			policyKey?: string;
 	  };
@@ -1194,7 +1194,7 @@ export interface AgentTool<
 	readonly delegationGuidance?: string;
 	/**
 	 * On-demand documentation topics (`topic → markdown`), readable as
-	 * `xd://<tool>/<topic>`. Lets a tool keep large sub-surfaces out of its
+	 * `xdev://<tool>/<topic>`. Lets a tool keep large sub-surfaces out of its
 	 * description and advertise only a one-line pointer per topic.
 	 */
 	docTopics?(): Readonly<Record<string, string>>;

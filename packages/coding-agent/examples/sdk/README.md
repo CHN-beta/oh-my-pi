@@ -109,8 +109,8 @@ await session.prompt("Hello");
 
 `ast_edit` now always returns a preview. To finalize, write plain text to the appropriate virtual device with the `write` tool.
 
-- `xd://resolve` → apply the pending preview; body = reason text
-- `xd://reject` → discard the pending preview; body = reason text
+- `xdev://resolve` → apply the pending preview; body = reason text
+- `xdev://reject` → discard the pending preview; body = reason text
 
 `createAgentSession()` / `createTools()` auto-include `write` whenever a deferrable tool (e.g. `ast_edit`) is present, so the devices are always reachable.
 
@@ -119,7 +119,7 @@ const tools = await createTools(toolSession, ["ast_edit"]); // write is auto-inc
 const writeTool = tools.find(t => t.name === "write")!;
 
 await writeTool.execute("call-1", {
-	path: "xd://resolve",
+	path: "xdev://resolve",
 	content: "Preview matches expected replacements",
 });
 ```

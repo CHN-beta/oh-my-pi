@@ -1,5 +1,5 @@
-This `write` tool is limited to the xd:// device transport and local:// session scratch:
-- call it with path `xd://<tool>` and the device's JSON arguments in `content` (`read xd://` lists mounted devices), or
+This `write` tool is limited to the xdev:// device transport and local:// session scratch:
+- call it with path `xdev://<tool>` and the device's JSON arguments in `content` (`read xdev://` lists mounted devices), or
 - write a `local://<name>` file.
 
 Other filesystem paths are refused{{#if diskPath}}, but a `local://<name>` file is a real file on disk at {{diskPath}}{{/if}}.

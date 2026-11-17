@@ -477,8 +477,8 @@ describe("readArgsCollapseIntoGroup", () => {
 		[path.resolve("/tmp/example.ts")],
 		["./relative/path.md"],
 		["https://example.com/file"],
-		["xd://"],
-		["xd://generate_image"],
+		["xdev://"],
+		["xdev://generate_image"],
 	])("collapses %s into the read group", target => {
 		expect(readArgsCollapseIntoGroup({ path: target })).toBe(true);
 		expect(readArgsCollapseIntoGroup({ file_path: target })).toBe(true);
@@ -487,8 +487,8 @@ describe("readArgsCollapseIntoGroup", () => {
 	it("returns false for non-record / missing arguments", () => {
 		expect(readArgsCollapseIntoGroup(undefined)).toBe(false);
 		expect(readArgsCollapseIntoGroup(null)).toBe(false);
-		expect(readArgsCollapseIntoGroup("xd://x")).toBe(false);
-		expect(readArgsCollapseIntoGroup(["xd://x"])).toBe(false);
+		expect(readArgsCollapseIntoGroup("xdev://x")).toBe(false);
+		expect(readArgsCollapseIntoGroup(["xdev://x"])).toBe(false);
 		expect(readArgsCollapseIntoGroup({})).toBe(false);
 		expect(readArgsCollapseIntoGroup({ path: 42 })).toBe(false);
 	});

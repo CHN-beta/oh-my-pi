@@ -1465,7 +1465,7 @@ describe("CursorExecHandlers argument validation", () => {
 });
 
 describe("CursorExecHandlers mounted tool bridge", () => {
-	it("executes MCP tools resolved from the xd:// registry", async () => {
+	it("executes MCP tools resolved from the xdev:// registry", async () => {
 		const mountedTool: AgentTool = {
 			name: "mcp__fixture_report",
 			label: "Fixture Report",

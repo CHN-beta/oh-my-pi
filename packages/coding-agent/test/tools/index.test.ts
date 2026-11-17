@@ -47,7 +47,7 @@ describe("createTools", () => {
 
 	it("creates all builtin tools by default", async () => {
 		// xdev mounting (default-on) would unmount discoverables like lsp and
-		// web_search into xd://; disable it to assert the full builtin set.
+		// web_search into xdev://; disable it to assert the full builtin set.
 		const session = createTestSession({ settings: createSettingsWithOverrides({ "tools.xdev": false }) });
 		const tools = await createTools(session);
 		const names = tools.map(t => t.name);
@@ -117,7 +117,7 @@ describe("createTools", () => {
 		expect(names).toEqual(["read", "write"]);
 	});
 
-	it("creates xd:// presentation state without remounting explicitly requested built-ins", async () => {
+	it("creates xdev:// presentation state without remounting explicitly requested built-ins", async () => {
 		const session = createTestSession();
 		const tools = await createTools(session, ["read", "lsp", "write"]);
 
@@ -126,9 +126,9 @@ describe("createTools", () => {
 		expect(tools.map(tool => tool.name)).toEqual(["read", "lsp", "write"]);
 	});
 
-	it("grants a device-only xd:// transport write when an explicit list keeps read but omits write", async () => {
-		// The xd:// transport rides `write xd://<tool>`; with no write at all the
-		// session would allocate no xd:// state and later SDK assembly would
+	it("grants a device-only xdev:// transport write when an explicit list keeps read but omits write", async () => {
+		// The xdev:// transport rides `write xdev://<tool>`; with no write at all the
+		// session would allocate no xdev:// state and later SDK assembly would
 		// expose custom/MCP tools top-level. A device-only write restores
 		// mounting while filesystem writes stay rejected (see WriteTool).
 		const session = createTestSession();
@@ -223,7 +223,7 @@ describe("createTools", () => {
 			}),
 			["ask", "read"],
 		);
-		// write joins as the device-only xd:// transport (read granted, ask disabled).
+		// write joins as the device-only xdev:// transport (read granted, ask disabled).
 		expect(requested.map(t => t.name)).toEqual(["read", "write"]);
 	});
 
@@ -253,8 +253,8 @@ describe("createTools", () => {
 		expect(names).not.toContain("browser");
 
 		const requestedTools = await createTools(createTestSession({ settings: session.settings }), ["bash", "read"]);
-		// `write` joins as the device-only xd:// transport: read was granted,
-		// write omitted (see the "device-only xd:// transport write" test).
+		// `write` joins as the device-only xdev:// transport: read was granted,
+		// write omitted (see the "device-only xdev:// transport write" test).
 		expect(requestedTools.map(t => t.name)).toEqual(["read", "write"]);
 	});
 
@@ -268,7 +268,7 @@ describe("createTools", () => {
 		const tools = await createTools(session, ["read"]);
 		const names = tools.map(t => t.name);
 
-		// `write` joins last as the device-only xd:// transport (see above).
+		// `write` joins last as the device-only xdev:// transport (see above).
 		expect(names).toEqual(["read", "goal", "write"]);
 	});
 

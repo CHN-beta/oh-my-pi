@@ -6,7 +6,7 @@ import { initTheme } from "@oh-my-pi/pi-tui/theme";
 import type { XdevMountedRenderer, XdevMountedState } from "@oh-my-pi/pi-tui/tools/xdev";
 
 /**
- * A `write xd://<tool>` card renders with the dispatched tool's own renderer,
+ * A `write xdev://<tool>` card renders with the dispatched tool's own renderer,
  * while streaming (call branch) and once the result lands, for mounted devices
  * and active top-level tools alike. The TUI forwards the host's canonical
  * resolver (`XdevMountedState.resolve`, wired to `resolveXdevTool`) and must
@@ -55,7 +55,7 @@ const dispatchResult = {
 function deviceWrite(resolve: XdevMountedState["resolve"]): ToolExecutionComponent {
 	const component = new ToolExecutionComponent(
 		"write",
-		{ path: "xd://probe", content: JSON.stringify({ command: "Write-Output 42" }) },
+		{ path: "xdev://probe", content: JSON.stringify({ command: "Write-Output 42" }) },
 		{ useBuiltInRenderer: true },
 		writeToolWithXdev(xdevState(resolve)),
 		ui(),
@@ -64,7 +64,7 @@ function deviceWrite(resolve: XdevMountedState["resolve"]): ToolExecutionCompone
 	return component;
 }
 
-describe("write xd:// device card renderer resolution", () => {
+describe("write xdev:// device card renderer resolution", () => {
 	beforeAll(async () => {
 		await initTheme();
 	});

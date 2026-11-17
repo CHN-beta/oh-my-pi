@@ -4092,7 +4092,7 @@ describe("ExtensionRunner", () => {
 			// The agent loop emits tool_call at arg-prep time (session beforeToolCall
 			// wiring) and marks the dispatch on the runner; the wrapper must not fire
 			// handlers a second time for the same call. The marker is consume-once,
-			// so a dispatch the loop never marked (nested xd://, Cursor direct)
+			// so a dispatch the loop never marked (nested xdev://, Cursor direct)
 			// still emits.
 			const recordPath = path.join(tempDir.path(), "loop-marker.jsonl");
 			const extCode = `
@@ -4128,8 +4128,8 @@ describe("ExtensionRunner", () => {
 			expect(executed).toEqual([{ command: "echo original" }, { command: "echo revised" }]);
 		});
 
-		it("forfeits the xd:// prompt bypass when a handler revises the input", async () => {
-			// write.ts dispatches xd:// devices with xdevPolicyKey because its
+		it("forfeits the xdev:// prompt bypass when a handler revises the input", async () => {
+			// write.ts dispatches xdev:// devices with xdevPolicyKey because its
 			// outer gate already approved the ORIGINAL device input. A tool_call
 			// revision may raise the tier, so revised input must face the full gate
 			// (here: no interactive UI => reject) instead of riding the outer approval.
@@ -4200,7 +4200,7 @@ describe("ExtensionRunner", () => {
 			expect(fs.existsSync(recordPath)).toBe(false);
 		});
 
-		it("reports the effective tier after a tool_call handler revises xd:// input", async () => {
+		it("reports the effective tier after a tool_call handler revises xdev:// input", async () => {
 			const recordPath = path.join(tempDir.path(), "xdev-effective-tier.jsonl");
 			const extCode = `
 				export default function(pi) {

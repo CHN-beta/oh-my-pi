@@ -8,7 +8,7 @@ import { RpcClient } from "@oh-my-pi/pi-coding-agent/modes/rpc/rpc-client";
 import { isRecord, ptree, readLines, removeWithRetries } from "@oh-my-pi/pi-utils";
 
 const device = "mcp__stub_regression_announce";
-const deviceUri = `xd://${device}`;
+const deviceUri = `xdev://${device}`;
 const cli = path.join(import.meta.dir, "../src/cli.ts");
 const peer = path.join(import.meta.dir, "fixtures/rpc-mcp-server.ts");
 const fakeModel = path.join(import.meta.dir, "rpc-wire/fake-openai-server.ts");
@@ -132,7 +132,7 @@ describe("CLI RPC MCP discovery", () => {
 						const state = await client.getState();
 						expect(state.dumpTools?.map(tool => tool.name)).toEqual(expect.arrayContaining(["read", "write"]));
 						expect(state.dumpTools?.some(tool => tool.name === device)).toBe(false);
-						const listing = toolResult(await client.promptAndWait("read_uri xd://"), "read", { path: "xd://" });
+						const listing = toolResult(await client.promptAndWait("read_uri xdev://"), "read", { path: "xdev://" });
 						if (phase === "disabled") {
 							expect(listing).not.toContain(device);
 							const events = await client.promptAndWait(`write_uri ${deviceUri} {}`);

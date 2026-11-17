@@ -85,7 +85,7 @@ export function ToolView(props: ToolViewProps): ReactNode {
 				) : (
 					<span className={`tv-status tv-status--${status}`} aria-hidden="true" />
 				)}
-				<span className="tv-name">{xdev ? `xd://${name}` : name}</span>
+				<span className="tv-name">{xdev ? `xdev://${name}` : name}</span>
 				<span className="tv-sum">
 					<renderer.Summary {...renderProps} />
 				</span>

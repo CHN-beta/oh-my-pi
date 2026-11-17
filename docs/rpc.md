@@ -556,16 +556,16 @@ model/thinking level, session name/file, or unavailable `contextUsage`.
 `dumpTools` may also include each tool's `examples` alongside its schema.
 It lists only the agent's **top-level tool definitions**, not the full mounted
 inventory. With the default `tools.xdev: true`, enabled discoverable tools,
-including MCP tools, can be mounted as `xd://` devices instead. An MCP tool's
+including MCP tools, can be mounted as `xdev://` devices instead. An MCP tool's
 absence from `dumpTools` does **not** mean its server failed to connect. This
 applies to both `--mode rpc` and `--mode rpc-ui`.
 
 The agent discovers and invokes mounted tools through the ordinary `read` and
 `write` tools:
 
-- `read({"path":"xd://"})` lists mounted devices.
-- `read({"path":"xd://mcp__stub_announce"})` returns a device's documentation and input schema.
-- `write({"path":"xd://mcp__stub_announce","content":"{}"})` invokes that device with a JSON arguments object. Replace `{}` with the tool's required arguments.
+- `read({"path":"xdev://"})` lists mounted devices.
+- `read({"path":"xdev://mcp__stub_announce"})` returns a device's documentation and input schema.
+- `write({"path":"xdev://mcp__stub_announce","content":"{}"})` invokes that device with a JSON arguments object. Replace `{}` with the tool's required arguments.
 
 These are **agent tool calls**, not additional RPC command types. Use the actual
 device name from the listing; MCP runtime names are sanitized and may differ

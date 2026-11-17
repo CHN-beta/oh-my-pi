@@ -589,7 +589,7 @@ describe("TanCommandController", () => {
 		expect(unregister).not.toHaveBeenCalled();
 	});
 
-	it("copies and persists the full enabled tool set and its xd:// devices", async () => {
+	it("copies and persists the full enabled tool set and its xdev:// devices", async () => {
 		const enabledToolNames = ["eval", "read", "bash", "ast_grep"];
 		const harness = createContext({ activeToolNames: ["eval"], enabledToolNames });
 		vi.spyOn(SessionManager, "forkFrom").mockResolvedValue(harness.cloneManager);

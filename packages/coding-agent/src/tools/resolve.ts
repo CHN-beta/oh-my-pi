@@ -9,17 +9,17 @@ import {
 } from "@oh-my-pi/pi-tui/tools/resolve";
 /**
  * Resolution devices: staged work is finalized through plain-text writes to
- * always-available `xd://` URLs — no tool schema, no JSON protocol.
+ * always-available `xdev://` URLs — no tool schema, no JSON protocol.
  *
- *   write xd://resolve   reason text  → APPLY the pending staged preview
- *   write xd://reject    reason text  → DISCARD the pending staged preview
- *   write xd://propose   plan <slug>  → submit the plan for approval (plan mode)
+ *   write xdev://resolve   reason text  → APPLY the pending staged preview
+ *   write xdev://reject    reason text  → DISCARD the pending staged preview
+ *   write xdev://propose   plan <slug>  → submit the plan for approval (plan mode)
  *
  * Nothing rides the system prompt: the flows that stage work teach the call
  * shape at the moment it becomes relevant (the preview reminder for
  * resolve/reject, the plan-mode prompt for propose).
  *
- * Rendering rides the write tool's xd:// delegation: renderers.ts keys the
+ * Rendering rides the write tool's xdev:// delegation: renderers.ts keys the
  * resolve renderer under `resolve` and `reject` so device writes and legacy
  * `resolve` tool transcripts draw the same block.
  */
@@ -27,7 +27,7 @@ import type { AgentToolResult, CustomMessage } from "@oh-my-pi/pi-agent-core";
 
 import { prompt } from "@oh-my-pi/pi-utils";
 
-import { parseXdUrl, XD_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { parseXdevUrl, XDEV_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xdev-url";
 import { splitUrlScheme } from "@oh-my-pi/pi-tui/tools/url-scheme-host";
 
 import resolveReminderPrompt from "../prompts/system/resolve-device-reminder.md" with { type: "text" };
@@ -38,10 +38,10 @@ import { ToolError } from "@oh-my-pi/pi-tui/tools/tool-errors";
 import { unwrapHashlineHeaderPath } from "./hashline-header-path";
 import type { XdevDispatch } from "./xdev";
 
-/** The plain-text resolution device URLs (`xd://resolve`, …). */
-export const RESOLVE_DEVICE_PATH = `${XD_URL_PREFIX}${RESOLVE_DEVICE_NAME}`;
-export const REJECT_DEVICE_PATH = `${XD_URL_PREFIX}${REJECT_DEVICE_NAME}`;
-export const PROPOSE_DEVICE_PATH = `${XD_URL_PREFIX}${PROPOSE_DEVICE_NAME}`;
+/** The plain-text resolution device URLs (`xdev://resolve`, …). */
+export const RESOLVE_DEVICE_PATH = `${XDEV_URL_PREFIX}${RESOLVE_DEVICE_NAME}`;
+export const REJECT_DEVICE_PATH = `${XDEV_URL_PREFIX}${REJECT_DEVICE_NAME}`;
+export const PROPOSE_DEVICE_PATH = `${XDEV_URL_PREFIX}${PROPOSE_DEVICE_NAME}`;
 
 /**
  * Model-visible banner prepended to a staged preview's tool result text. The
@@ -51,7 +51,7 @@ export const PROPOSE_DEVICE_PATH = `${XD_URL_PREFIX}${PROPOSE_DEVICE_NAME}`;
  */
 export const PREVIEW_PENDING_NOTICE = `Staged as a proposal — files NOT modified yet. To apply: write a one-sentence reason to ${RESOLVE_DEVICE_PATH}. To discard: write to ${REJECT_DEVICE_PATH}.`;
 
-/** One-line usage string returned by `read xd://<device>` — the only "docs" these devices carry. */
+/** One-line usage string returned by `read xdev://<device>` — the only "docs" these devices carry. */
 export function resolutionDeviceUsage(device: ResolutionDeviceName): string {
 	switch (device) {
 		case RESOLVE_DEVICE_NAME:
@@ -71,21 +71,21 @@ function toolCallWritePath(toolCall: { name: string; arguments?: Record<string, 
 }
 
 /**
- * Whether an assistant tool call is a `write` targeting `xd://resolve` or
- * `xd://reject`. Used as the SoftToolRequirement compliance check while a
+ * Whether an assistant tool call is a `write` targeting `xdev://resolve` or
+ * `xdev://reject`. Used as the SoftToolRequirement compliance check while a
  * preview is pending — a plain `write` elsewhere resolves nothing.
  */
 export function isPreviewResolutionToolCall(toolCall: { name: string; arguments?: Record<string, unknown> }): boolean {
 	const path = toolCallWritePath(toolCall);
 	if (path === undefined) return false;
-	const device = parseXdUrl(path)?.name;
+	const device = parseXdevUrl(path)?.name;
 	return device === RESOLVE_DEVICE_NAME || device === REJECT_DEVICE_NAME;
 }
 
-/** Whether an assistant tool call is a `write` targeting `xd://propose` (plan-mode decision detection). */
+/** Whether an assistant tool call is a `write` targeting `xdev://propose` (plan-mode decision detection). */
 export function isProposeToolCall(toolCall: { name: string; arguments?: Record<string, unknown> }): boolean {
 	const path = toolCallWritePath(toolCall);
-	return path !== undefined && parseXdUrl(path)?.name === PROPOSE_DEVICE_NAME;
+	return path !== undefined && parseXdevUrl(path)?.name === PROPOSE_DEVICE_NAME;
 }
 
 /** Exposes dispatched device names so loop exemptions need not exempt every write. */
@@ -93,7 +93,7 @@ export function writeDeviceName(toolCall: { name: string; arguments?: Record<str
 	const path = toolCallWritePath(toolCall);
 	if (path === undefined) return undefined;
 	const target = unwrapHashlineHeaderPath(path);
-	return splitUrlScheme(target)?.scheme === "xd" ? (parseXdUrl(target)?.name ?? undefined) : undefined;
+	return splitUrlScheme(target)?.scheme === "xdev" ? (parseXdevUrl(target)?.name ?? undefined) : undefined;
 }
 
 /**
@@ -113,10 +113,10 @@ export function writeDeviceDispatch(toolName: string, result: unknown): XdevDisp
 	return xdev as XdevDispatch;
 }
 
-/** Handler installed by plan mode; `xd://propose` dispatches the written plan title to it. */
+/** Handler installed by plan mode; `xdev://propose` dispatches the written plan title to it. */
 export type PlanProposalHandler = (title: string) => Promise<AgentToolResult<unknown>>;
 
-/** Parse a completed `write` dispatch targeting `xd://resolve` or `xd://reject`. */
+/** Parse a completed `write` dispatch targeting `xdev://resolve` or `xdev://reject`. */
 export function resolveDispatchDetails(toolName: string, result: unknown): ResolveDetails | undefined {
 	const dispatch = writeDeviceDispatch(toolName, result);
 	if (!dispatch || (dispatch.tool !== RESOLVE_DEVICE_NAME && dispatch.tool !== REJECT_DEVICE_NAME)) return undefined;
@@ -143,8 +143,8 @@ let pendingPreviewSeq = 0;
 /**
  * Register a non-forcing resolve-protocol handler for a staged preview. Wraps the
  * caller's apply/reject into an onInvoked closure and stores it on the tool-choice
- * queue's pending-invoker registry under a UNIQUE id. A `write` to `xd://resolve`
- * or `xd://reject` dispatches to it; the agent-loop's SoftToolRequirement
+ * queue's pending-invoker registry under a UNIQUE id. A `write` to `xdev://resolve`
+ * or `xdev://reject` dispatches to it; the agent-loop's SoftToolRequirement
  * lifecycle injects the preview reminder and escalates to a forced `write` only
  * if the model declines — so a compliant turn pays ZERO tool_choice change (no
  * prompt-cache messages-cache invalidation).
@@ -280,9 +280,9 @@ async function runResolveInvocation(
 
 /**
  * Execute a resolution-device write. `text` is the raw plain-text body:
- * - `xd://resolve` / `xd://reject` → the reason; dispatches to the pending
+ * - `xdev://resolve` / `xdev://reject` → the reason; dispatches to the pending
  *   preview invoker (in-flight queue directive first).
- * - `xd://propose` → the plan title; dispatches to the plan-proposal handler
+ * - `xdev://propose` → the plan title; dispatches to the plan-proposal handler
  *   installed by plan mode.
  */
 export async function dispatchResolutionDevice(

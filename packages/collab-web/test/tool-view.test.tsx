@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ToolView } from "../src/tool-render/ToolView";
 
-describe("ToolView xd:// dispatches", () => {
+describe("ToolView xdev:// dispatches", () => {
 	it("renders successful execute-mode xdev writes as the inner generate_image tool", () => {
 		const html = renderToStaticMarkup(
 			<ToolView
@@ -24,12 +24,12 @@ describe("ToolView xd:// dispatches", () => {
 			/>,
 		);
 
-		expect(html).toContain("xd://generate_image");
+		expect(html).toContain("xdev://generate_image");
 		expect(html).toContain("alpine lake");
 		expect(html).toContain('src="data:image/png;base64,aW1hZ2U="');
 	});
 
-	it("renders xd://resolve apply cards from unwrapped inner details", () => {
+	it("renders xdev://resolve apply cards from unwrapped inner details", () => {
 		const html = renderToStaticMarkup(
 			<ToolView
 				name="write"
@@ -53,7 +53,7 @@ describe("ToolView xd:// dispatches", () => {
 			/>,
 		);
 
-		expect(html).toContain("xd://resolve");
+		expect(html).toContain("xdev://resolve");
 		expect(html).toContain("proposed → resolved");
 		expect(html).toContain("tv-badge--ok");
 		expect(html).toContain("ast_edit: edit foo.ts");
@@ -61,7 +61,7 @@ describe("ToolView xd:// dispatches", () => {
 		expect(html).not.toContain('tv-badge--warn">?');
 	});
 
-	it("renders xd://reject discard cards with reject semantics", () => {
+	it("renders xdev://reject discard cards with reject semantics", () => {
 		const html = renderToStaticMarkup(
 			<ToolView
 				name="write"
@@ -80,20 +80,20 @@ describe("ToolView xd:// dispatches", () => {
 			/>,
 		);
 
-		expect(html).toContain("xd://reject");
+		expect(html).toContain("xdev://reject");
 		expect(html).toContain("proposed → rejected");
 		expect(html).toContain("tv-badge--warn");
 		// Not the generic JSON dump.
 		expect(html).not.toContain("tv-out-title");
 	});
 
-	it("defaults a running xd://reject to discard before details arrive", () => {
+	it("defaults a running xdev://reject to discard before details arrive", () => {
 		const html = renderToStaticMarkup(<ToolView name="reject" defaultOpen running args={{ reason: "" }} />);
 
 		expect(html).toContain("proposed → rejected");
 	});
 
-	it("renders xd://propose plan metadata from unwrapped inner details", () => {
+	it("renders xdev://propose plan metadata from unwrapped inner details", () => {
 		const html = renderToStaticMarkup(
 			<ToolView
 				name="write"
@@ -112,7 +112,7 @@ describe("ToolView xd:// dispatches", () => {
 			/>,
 		);
 
-		expect(html).toContain("xd://propose");
+		expect(html).toContain("xdev://propose");
 		expect(html).toContain("plan proposed");
 		expect(html).toContain("local://ship-it-plan.md");
 	});

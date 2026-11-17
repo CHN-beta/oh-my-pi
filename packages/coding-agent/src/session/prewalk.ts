@@ -49,7 +49,7 @@ const PLAN_YOLO_HANDOFF_MESSAGE_TYPE = "plan-yolo-handoff";
  * write touched no files: a subagent messaging its parent through
  * `write agent://…`, a reply, process stdin, or background-work control is
  * coordination, not implementation, and must not hand the plan off. A `write`
- * that dispatched an `xd://` device (e.g. `lsp`, `ast_edit`, `debug`)
+ * that dispatched an `xdev://` device (e.g. `lsp`, `ast_edit`, `debug`)
  * counts only when the wrapped tool resolved to the `write` approval tier.
  * Read-only device calls — LSP navigation, `debug` inspection, `ast_edit` on
  * internal URLs, help lookups — leave the tier `read` (or absent) and must not
@@ -65,7 +65,7 @@ function isPrewalkImplementationAction(result: ToolResultMessage): boolean {
 	const details = result.details;
 	if (!details || typeof details !== "object") return true;
 	if ("touchesNoFiles" in details && details.touchesNoFiles === true) return false;
-	// A direct filesystem edit/write carries no `xd://` dispatch metadata.
+	// A direct filesystem edit/write carries no `xdev://` dispatch metadata.
 	if (!("xdev" in details) || !details.xdev) return true;
 	const xdev = details.xdev;
 	// Device dispatch: switch only on the mutation tier. An absent tier (help
@@ -529,7 +529,7 @@ export class PrewalkCoordinator {
 		// plan mode before applying the tool set so SessionTools keeps an existing
 		// device-only write restricted.
 		this.#host.setPlanModeState(planModeState);
-		// Only the built-in write carries the xd:// propose transport. A shadowing
+		// Only the built-in write carries the xdev:// propose transport. A shadowing
 		// extension `write` would answer every proposal as a file write and the plan
 		// phase would never end (#14030), so it is left out of the plan tool set.
 		const planTools = this.#host.hasBuiltInTool("write")

@@ -181,7 +181,7 @@ describe("device tool-call predicates", () => {
 		expect(isPreviewResolutionToolCall({ name: "edit", arguments: { path: RESOLVE_DEVICE_PATH } })).toBe(false);
 	});
 
-	it("matches only writes targeting xd://propose for plan decisions", () => {
+	it("matches only writes targeting xdev://propose for plan decisions", () => {
 		expect(isProposeToolCall({ name: "write", arguments: { path: PROPOSE_DEVICE_PATH } })).toBe(true);
 		expect(isProposeToolCall({ name: "write", arguments: { path: RESOLVE_DEVICE_PATH } })).toBe(false);
 		expect(isProposeToolCall({ name: "ask", arguments: {} })).toBe(false);

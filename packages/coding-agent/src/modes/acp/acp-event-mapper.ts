@@ -152,7 +152,7 @@ function isInternalAgentMessageTool(toolName: string, args: unknown): boolean {
 }
 
 export function mapToolKind(toolName: string, args?: unknown): ToolKind {
-	// A device write (xd:// tool dispatch, proc:// control) executes something —
+	// A device write (xdev:// tool dispatch, proc:// control) executes something —
 	// "edit" would make ACP clients render it as a file modification to a
 	// nonexistent path (and auto-approve it under edit-tier policies). Reads
 	// stay "read": listing devices or fetching docs is discovery.
@@ -594,7 +594,7 @@ function buildToolTitle(toolName: string, args: unknown, intent: string | undefi
 		extractStringProperty<PatternContainer>(args, "pattern") ??
 		extractStringProperty<QueryContainer>(args, "query");
 	if (subject) {
-		// Internal URLs (xd://github, skill://react, …) name their target fully;
+		// Internal URLs (xdev://github, skill://react, …) name their target fully;
 		// prefixing the transport tool reads as a file write to a fake path.
 		if (INTERNAL_URL_SUBJECT.test(subject)) return subject;
 		return `${toolName}: ${subject}`;
@@ -619,9 +619,9 @@ function toAcpLocationPath(value: string, cwd?: string): string {
 }
 
 /**
- * Scheme-qualified subjects (`xd://`, `skill://`, `agent://`, `https://`, …)
+ * Scheme-qualified subjects (`xdev://`, `skill://`, `agent://`, `https://`, …)
  * are not local files: resolving them against cwd fabricates paths like
- * `/repo/xd:/github` and makes editors focus nonexistent files.
+ * `/repo/xdev:/github` and makes editors focus nonexistent files.
  */
 const INTERNAL_URL_SUBJECT = /^[a-z][a-z0-9+.-]*:\/\//i;
 

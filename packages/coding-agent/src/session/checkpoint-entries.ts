@@ -1,7 +1,7 @@
 import type { AgentMessage } from "@oh-my-pi/pi-agent-core";
 import type { ImageContent, TextContent } from "@oh-my-pi/pi-ai";
 import { stringProperty } from "@oh-my-pi/pi-utils";
-import { stripXdUrlPrefix } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { stripXdevUrlPrefix } from "@oh-my-pi/pi-tui/tools/xdev-url";
 import type { CompletedRewindState } from "../tools/checkpoint";
 import { writeDeviceDispatch } from "../tools/resolve";
 import { REWIND_REPORT_MESSAGE_TYPE } from "./messages";
@@ -36,7 +36,7 @@ export interface SemanticToolResult {
 
 /** Normalizes checkpoint and rewind results across native calls and xdev dispatches. */
 export function semanticToolResult(toolName: string | undefined, result: unknown): SemanticToolResult | undefined {
-	const canonicalName = toolName === undefined ? undefined : stripXdUrlPrefix(toolName);
+	const canonicalName = toolName === undefined ? undefined : stripXdevUrlPrefix(toolName);
 	if (canonicalName === "checkpoint" || canonicalName === "rewind") {
 		const details = result && typeof result === "object" && "details" in result ? result.details : undefined;
 		return { toolName: canonicalName, details };

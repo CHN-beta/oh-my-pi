@@ -12,7 +12,7 @@
  * Replies, by the conversation's last message:
  * - a tool result → text `tool said: <result text>`
  * - a user message containing `echo_host` → a call to the `echo_host` tool with
- *   `{"message": "hello"}` (through `write` to `xd://echo_host` when host tools
+ *   `{"message": "hello"}` (through `write` to `xdev://echo_host` when host tools
  *   are mounted as devices)
  * - a user message containing `read_uri <url>` → a `read` call for `<url>`
  * - a user message containing `write_uri <url>` → a `write` call storing
@@ -55,7 +55,7 @@ function scriptedReply(request: ChatRequest): Reply {
 		const args = { message: "hello" };
 		if (offered.has("echo_host")) return { tool: "echo_host", args };
 		if (offered.has("write"))
-			return { tool: "write", args: { path: "xd://echo_host", content: JSON.stringify(args) } };
+			return { tool: "write", args: { path: "xdev://echo_host", content: JSON.stringify(args) } };
 	}
 	return { text: "pong" };
 }

@@ -1,13 +1,13 @@
 /**
- * `xd://` virtual tool devices.
+ * `xdev://` virtual tool devices.
  *
  * Discoverable built-ins and custom tools are unmounted from the request's
  * tools array and exposed as internal URLs driven through the `read`/`write`
  * tools the model already has:
  *
- *   read  xd://          → mounted tool listing (discovery)
- *   read  xd://<tool>    → tool docs + JSON parameter schema
- *   write xd://<tool>    → execute: `content` is the JSON args object
+ *   read  xdev://          → mounted tool listing (discovery)
+ *   read  xdev://<tool>    → tool docs + JSON parameter schema
+ *   write xdev://<tool>    → execute: `content` is the JSON args object
  *
  * Direct and device dispatch share one canonical tool map. The mounted-name
  * set controls presentation only; dispatch accepts the enabled union of
@@ -22,10 +22,10 @@
  * duplication* — one wire schema per tool instead of one per dispatcher
  * branch — but full docs + schema for every mounted device can be inlined
  * into the system prompt, so no discovery read is needed before first use;
- * `read xd://<tool>` remains for on-demand re-fetch.
+ * `read xdev://<tool>` remains for on-demand re-fetch.
  *
  * Rendering: the write renderer draws NOTHING until the streamed `path` is
- * known and provably does not target `xd://`. Device writes then show as
+ * known and provably does not target `xdev://`. Device writes then show as
  * queued/planning until `tool_execution_start`, and only then delegate to the
  * wrapped tool's own renderer with the decoded inner args.
  */
@@ -39,7 +39,7 @@ import {
 import { type Tool as AiTool, jsonSchemaToTypeScript, toolWireSchema } from "@oh-my-pi/pi-ai";
 import { schemaDeclaresIntentField } from "../utils/tool-schema";
 import { resolveToolWireName } from "../utils/tool-wire-name";
-import { stripXdUrlPrefix, XD_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { stripXdevUrlPrefix, XDEV_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xdev-url";
 import { truncateHeadBytes } from "@oh-my-pi/pi-tui/tools/streaming-output";
 import { resolveToolTier, type ToolTier } from "./approval";
 import type { Tool, ToolSession } from "./index";
@@ -51,7 +51,7 @@ import { ToolError } from "@oh-my-pi/pi-tui/tools/tool-errors";
  * active: `todo` feeds the todo prelude/prewalk machinery, `ask` is the
  * model's user-interaction affordance, `grep` is the redirect target of the
  * bash interceptor rules, and `web_search` is invoked directly by most models
- * (which have no notion of the `xd://` protocol) so hiding it behind dispatch
+ * (which have no notion of the `xdev://` protocol) so hiding it behind dispatch
  * makes it unreachable in practice (issue #5973). `yield` terminates structured
  * subagent runs and must stay directly callable — each loses its harness
  * integration or usability if hidden behind dispatch.
@@ -65,9 +65,9 @@ export const XDEV_KEEP_TOP_LEVEL: Record<string, true> = {
 };
 
 /**
- * Tools that carry the `xd://` transport itself and therefore can never be
- * mounted as devices: `read xd://` lists/documents devices and
- * `write xd://<tool>` executes them. Demoting either leaves every mounted
+ * Tools that carry the `xdev://` transport itself and therefore can never be
+ * mounted as devices: `read xdev://` lists/documents devices and
+ * `write xdev://<tool>` executes them. Demoting either leaves every mounted
  * device unreachable (issue #5764), so they stay top-level regardless of a
  * declared `loadMode`.
  */
@@ -77,8 +77,8 @@ export const XDEV_TRANSPORT_TOOLS: Record<string, true> = { read: true, write: t
 export type XdevDocsMode = "inline" | "builtins" | "catalog";
 
 /**
- * Whether an enabled tool is presented under `xd://` (rather than top-level)
- * while the `xd://` transport is active. Discoverable tools mount unless they
+ * Whether an enabled tool is presented under `xdev://` (rather than top-level)
+ * while the `xdev://` transport is active. Discoverable tools mount unless they
  * are pinned top-level by {@link XDEV_KEEP_TOP_LEVEL} or carry the transport
  * itself ({@link XDEV_TRANSPORT_TOOLS}); essential tools never do. The caller
  * gates this on the transport being active.
@@ -89,7 +89,7 @@ export function isMountableUnderXdev(tool: { name: string; loadMode?: ToolLoadMo
 }
 
 /**
- * Whether the session can open `xd://<tool>/<topic>` doc topics: `read` is their only
+ * Whether the session can open `xdev://<tool>/<topic>` doc topics: `read` is their only
  * transport. A tool whose description links a topic inlines it instead when this is false.
  */
 export function docTopicsReadable(session: Pick<ToolSession, "isToolActive">): boolean {
@@ -123,7 +123,7 @@ function renderDocs(inst: Tool, heading = "#", descriptionCap?: number): string 
 	const schema = jsonSchemaToTypeScript(toolWireSchema(inst as AiTool));
 	let description = inst.description ?? "";
 	if (descriptionCap !== undefined && description.length > descriptionCap) {
-		description = `${description.slice(0, descriptionCap).trimEnd()}… (full docs: read ${XD_URL_PREFIX}${inst.name})`;
+		description = `${description.slice(0, descriptionCap).trimEnd()}… (full docs: read ${XDEV_URL_PREFIX}${inst.name})`;
 	}
 	return [
 		`${heading} ${inst.name}${inst.label ? ` — ${inst.label}` : ""}`,
@@ -134,7 +134,7 @@ function renderDocs(inst: Tool, heading = "#", descriptionCap?: number): string 
 		"```ts",
 		`type Args = ${schema};`,
 		"```",
-		`Execute by writing JSON to ${XD_URL_PREFIX}${inst.name}.`,
+		`Execute by writing JSON to ${XDEV_URL_PREFIX}${inst.name}.`,
 	].join("\n");
 }
 
@@ -162,12 +162,12 @@ function parseDeviceArgs(
 		parsed = JSON.parse(content);
 	} catch (error) {
 		throw new ToolError(
-			`${XD_URL_PREFIX}${device.name} expects a JSON args object as content (${error instanceof Error ? error.message : String(error)}). Write \`?\` for docs.`,
+			`${XDEV_URL_PREFIX}${device.name} expects a JSON args object as content (${error instanceof Error ? error.message : String(error)}). Write \`?\` for docs.`,
 		);
 	}
 	if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
 		throw new ToolError(
-			`${XD_URL_PREFIX}${device.name} content must be a JSON object, got ${Array.isArray(parsed) ? "array" : typeof parsed}.`,
+			`${XDEV_URL_PREFIX}${device.name} content must be a JSON object, got ${Array.isArray(parsed) ? "array" : typeof parsed}.`,
 		);
 	}
 	// The harness only injects the intent field into top-level schemas; strip a
@@ -182,7 +182,7 @@ function parseDeviceArgs(
 		);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		throw new ToolError(`Invalid args for ${XD_URL_PREFIX}${device.name}: ${message}\n\n${docs()}`);
+		throw new ToolError(`Invalid args for ${XDEV_URL_PREFIX}${device.name}: ${message}\n\n${docs()}`);
 	}
 }
 
@@ -238,7 +238,7 @@ function compileInlineGlobs(patterns: readonly string[]): Bun.Glob[] {
 /** Device-write content that requests docs instead of executing: empty, `?`, or `help`. */
 const HELP_CONTENT_RE = /^\s*(\?|help)?\s*$/i;
 
-/** Shared tool state consumed by the `xd://` presentation layer. */
+/** Shared tool state consumed by the `xdev://` presentation layer. */
 export interface XdevState {
 	/** Canonical session tool map; direct and device dispatch read the same instances. */
 	readonly tools: Map<string, Tool>;
@@ -269,11 +269,11 @@ export function resolveXdevTool(state: XdevState, name: string): Tool | undefine
 }
 
 /**
- * Resolve a mounted tool by name. Presentation-only: `xd://` docs and renderer
+ * Resolve a mounted tool by name. Presentation-only: `xdev://` docs and renderer
  * lookup ask for names they already hold in canonical form.
  */
 export function resolveMountedXdevTool(state: XdevState, name: string): Tool | undefined {
-	const canonicalName = stripXdUrlPrefix(name);
+	const canonicalName = stripXdevUrlPrefix(name);
 	return state.mountedNames.has(canonicalName) ? state.tools.get(canonicalName) : undefined;
 }
 
@@ -315,14 +315,14 @@ export function xdevEntries(state: XdevState): Array<{ name: string; summary: st
 	});
 }
 
-/** `read xd://` listing with one device per line. */
+/** `read xdev://` listing with one device per line. */
 export function xdevListing(state: XdevState): string {
-	const rows = xdevEntries(state).map(({ name, summary }) => `${XD_URL_PREFIX}${name.padEnd(14)} ${summary}`);
+	const rows = xdevEntries(state).map(({ name, summary }) => `${XDEV_URL_PREFIX}${name.padEnd(14)} ${summary}`);
 	return [
-		`${XD_URL_PREFIX} ${state.mountedNames.size} mounted tool devices.`,
+		`${XDEV_URL_PREFIX} ${state.mountedNames.size} mounted tool devices.`,
 		...rows,
 		"",
-		`Read ${XD_URL_PREFIX}<tool> for docs + JSON schema; write the JSON args object to ${XD_URL_PREFIX}<tool> to execute. Active top-level tools accept the same dispatch.`,
+		`Read ${XDEV_URL_PREFIX}<tool> for docs + JSON schema; write the JSON args object to ${XDEV_URL_PREFIX}<tool> to execute. Active top-level tools accept the same dispatch.`,
 	].join("\n");
 }
 
@@ -368,7 +368,7 @@ export function planXdevPromptDocs(
 }
 
 /**
- * Render planned `xd://` prompt docs. Devices in `listedElsewhere` get no
+ * Render planned `xdev://` prompt docs. Devices in `listedElsewhere` get no
  * catalog line: the caller lists them itself, with their catalog summary.
  */
 export function renderXdevPromptDocs(docs: XdevPromptDocs, listedElsewhere?: ReadonlySet<string>): string {
@@ -381,7 +381,7 @@ export function renderXdevPromptDocs(docs: XdevPromptDocs, listedElsewhere?: Rea
 		"## Additional devices (docs on demand)",
 		...lines,
 		"",
-		`Read ${XD_URL_PREFIX}<tool> for full docs + JSON schema before first use.`,
+		`Read ${XDEV_URL_PREFIX}<tool> for full docs + JSON schema before first use.`,
 	].join("\n");
 	return [...docs.sections, catalogSection].join("\n\n");
 }
@@ -433,13 +433,13 @@ function resolveRequiredXdevTool(state: XdevState, name: string): Tool {
 	const inst = resolveXdevTool(state, name);
 	if (!inst) {
 		throw new ToolError(
-			`No such tool: ${XD_URL_PREFIX}${name}. Mounted devices: ${[...state.mountedNames].join(", ")}. Active top-level tools are also dispatchable via ${XD_URL_PREFIX}<tool>.`,
+			`No such tool: ${XDEV_URL_PREFIX}${name}. Mounted devices: ${[...state.mountedNames].join(", ")}. Active top-level tools are also dispatchable via ${XDEV_URL_PREFIX}<tool>.`,
 		);
 	}
 	return inst;
 }
 
-/** Execute an enabled canonical tool through `write xd://<tool>`. */
+/** Execute an enabled canonical tool through `write xdev://<tool>`. */
 export async function dispatchXdevTool(
 	state: XdevState,
 	name: string,

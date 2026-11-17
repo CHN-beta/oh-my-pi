@@ -276,7 +276,7 @@ describe("Mnemopi tool factories", () => {
 		expect(MemoryEditTool.createIf(session)).toBeInstanceOf(MemoryEditTool);
 	});
 
-	it("names sibling memory tools by their xd:// URL only when they are mounted as devices", () => {
+	it("names sibling memory tools by their xdev:// URL only when they are mounted as devices", () => {
 		const session = makeSession(Settings.isolated({ "memory.backend": "mnemopi" }));
 		const recall = new MemoryRecallTool(session);
 		const reflect = new MemoryReflectTool(session);
@@ -293,10 +293,10 @@ describe("Mnemopi tool factories", () => {
 			isActive: name => name === "reflect",
 		};
 
-		expect(reflect.description).toContain("unlike `xd://recall`, blends them");
+		expect(reflect.description).toContain("unlike `xdev://recall`, blends them");
 		expect(recall.description).toContain("`reflect`: synthesized answer");
-		expect(recall.description).toContain("Before any `xd://memory_edit update`");
-		expect(edit.description).toContain("Only ids returned by `xd://recall`.");
+		expect(recall.description).toContain("Before any `xdev://memory_edit update`");
+		expect(edit.description).toContain("Only ids returned by `xdev://recall`.");
 
 		// A mounted device without a summary makes catalog summaries read its description;
 		// rendering refs must not depend on them, or this recurses without bound.

@@ -4,9 +4,9 @@ Plan mode active.
 - `local://`: session-local planning artifacts; MAY create/update only when explicitly requested or needed for the plan; NEVER delete/rename.
 - Canonical plan: MUST write `local://<slug>-plan.md`.
 
-Implementing: write the plan `<slug>`/title, plain text, to `xd://propose` with `{{writeToolName}}`; `<slug>` MUST match `local://<slug>-plan.md`, allowed characters: letters, numbers, underscores, hyphens. User then selects an execution option; full write access restored.
+Implementing: write the plan `<slug>`/title, plain text, to `xdev://propose` with `{{writeToolName}}`; `<slug>` MUST match `local://<slug>-plan.md`, allowed characters: letters, numbers, underscores, hyphens. User then selects an execution option; full write access restored.
 
-NEVER ask user to exit plan mode or request approval in prose/with `{{askToolName}}`; approval ONLY via `xd://propose` write.
+NEVER ask user to exit plan mode or request approval in prose/with `{{askToolName}}`; approval ONLY via `xdev://propose` write.
 </critical>
 
 ## What a plan is
@@ -20,7 +20,7 @@ Detail removes implementer decisions, not padding. A plan with Non-Goals, Altern
 {{#if planExists}}
 Existing plan: `{{planFilePath}}`; read, incrementally update with `{{editToolName}}`. Different task → retain it; create `local://<slug>-plan.md`.
 {{else}}
-Choose short kebab-case task `<slug>`; create `local://<slug>-plan.md` (e.g. `local://auth-token-refresh-plan.md`). File NEVER renamed on approval; submit this same `<slug>` to `xd://propose` for approval.
+Choose short kebab-case task `<slug>`; create `local://<slug>-plan.md` (e.g. `local://auth-token-refresh-plan.md`). File NEVER renamed on approval; submit this same `<slug>` to `xdev://propose` for approval.
 {{/if}}
 
 `{{editToolName}}`: incremental edits only. `{{writeToolName}}`: create/full replacement only. MUST record findings as learned; NEVER defer all writing to the end.
@@ -117,7 +117,7 @@ Before approval: engineer unfamiliar with conversation can execute every step wi
 
 Turn ends ONLY:
 1. {{#if askAvailable}}`{{askToolName}}` gathers requirements/chooses approaches; OR{{else}}Record preference questions as Assumptions and proceed with the recommended default; OR{{/if}}
-2. `{{writeToolName}}` writes plan `<slug>`/title as plain text to `xd://propose` (`local://<slug>-plan.md` slug).
+2. `{{writeToolName}}` writes plan `<slug>`/title as plain text to `xdev://propose` (`local://<slug>-plan.md` slug).
 
-NEVER request plan approval via prose/{{#if askAvailable}}`{{askToolName}}`{{else}}a question{{/if}}; MUST use `xd://propose` write. MUST continue until decision-complete.
+NEVER request plan approval via prose/{{#if askAvailable}}`{{askToolName}}`{{else}}a question{{/if}}; MUST use `xdev://propose` write. MUST continue until decision-complete.
 </critical>

@@ -1,5 +1,5 @@
 /**
- * Contract: plan mode converges on `ask`/`write xd://propose` regardless of how a turn
+ * Contract: plan mode converges on `ask`/`write xdev://propose` regardless of how a turn
  * ends, and non-user producers cannot keep it spinning.
  *
  *  T1. An advisor concern in plan mode is recorded as a visible card but never
@@ -308,7 +308,7 @@ describe("AgentSession plan-mode convergence", () => {
 						type: "toolCall",
 						name: "write",
 						arguments: {
-							path: "xd://propose",
+							path: "xdev://propose",
 							content: "test-reset",
 						},
 					},

@@ -404,14 +404,14 @@ export interface ToolSession {
 	setActiveToolNames?: (names: Iterable<string>) => void;
 	/** Canonical map containing every registered tool exactly once. */
 	toolRegistry?: Map<string, Tool>;
-	/** `xd://` presentation state backed by {@link toolRegistry}. */
+	/** `xdev://` presentation state backed by {@link toolRegistry}. */
 	xdev?: XdevState;
 	/**
-	 * Set when this session's `write` tool was granted only as the `xd://`
-	 * transport: `write xd://<tool>` dispatches mounted devices and `local://`
+	 * Set when this session's `write` tool was granted only as the `xdev://`
+	 * transport: `write xdev://<tool>` dispatches mounted devices and `local://`
 	 * scratch stays writable, but other filesystem writes are rejected. Granted
 	 * by {@link createTools} to sessions whose explicit tool list includes `read`
-	 * but omits `write`, so xd:// mounting can engage without granting
+	 * but omits `write`, so xdev:// mounting can engage without granting
 	 * working-tree writes.
 	 */
 	deviceOnlyWrite?: boolean;
@@ -543,16 +543,16 @@ export interface ToolSession {
 	/** Steer a hidden custom message into the conversation (e.g. a preview reminder). */
 	steer?(message: { customType: string; content: string; details?: unknown }): void;
 	/** Peek the currently in-flight tool-choice queue directive's invocation handler. Used by
-	 *  the `xd://resolve` and `xd://reject` dispatch to reach the pending action. */
+	 *  the `xdev://resolve` and `xdev://reject` dispatch to reach the pending action. */
 	peekQueueInvoker?(): ((input: unknown) => Promise<unknown> | unknown) | undefined;
 	/** Peek the most-recently registered non-forcing pending preview invoker. A `write` to
-	 *  `xd://resolve` or `xd://reject` dispatches to it so a staged preview resolves
+	 *  `xdev://resolve` or `xdev://reject` dispatches to it so a staged preview resolves
 	 *  WITHOUT forcing tool_choice — the agent-loop's SoftToolRequirement lifecycle owns
 	 *  reminder injection and escalation. */
 	peekPendingInvoker?(): ((input: unknown) => Promise<unknown> | unknown) | undefined;
 	/** Clear stale pending preview markers when a resolution dispatch cannot run them. */
 	clearPendingInvokers?(): void;
-	/** Peek the plan-proposal handler installed by plan mode. `xd://propose` dispatches the
+	/** Peek the plan-proposal handler installed by plan mode. `xdev://propose` dispatches the
 	 *  written plan title to it. */
 	peekPlanProposalHandler?(): PlanProposalHandler | undefined;
 	/** Register or clear the plan-proposal handler. Passing `null` clears it. */
@@ -866,7 +866,7 @@ export async function resolveBuiltinToolPlan(session: ToolSession, toolNames?: s
 	return { requestedTools, names, isAllowed: isToolAllowed };
 }
 
-/** Allocates `xd://` presentation state over the session's canonical tool map. */
+/** Allocates `xdev://` presentation state over the session's canonical tool map. */
 export function createXdevState(
 	session: ToolSession,
 	tools: Map<string, Tool>,
@@ -921,13 +921,13 @@ export async function createTools(session: ToolSession, toolNames?: string[]): P
 	for (const tool of tools) toolRegistry.set(tool.name, tool);
 
 	const xdevRequested = !restrictToolNames && cfgToolsXdev.get(session.settings);
-	// xd:// mounting rides the write tool as its execution transport, so a
+	// xdev:// mounting rides the write tool as its execution transport, so a
 	// session whose explicit tool list grants `read` but omits `write` would
-	// allocate no xd:// state and expose every later-registered MCP/extension
+	// allocate no xdev:// state and expose every later-registered MCP/extension
 	// tool top-level with its full schema on every request — the opposite of
 	// the intended restriction, and enough to overflow narrow provider context
 	// windows on MCP-heavy sessions. Grant a device-only `write` instead:
-	// `write xd://<tool>` dispatches mounted devices while filesystem writes
+	// `write xdev://<tool>` dispatches mounted devices while filesystem writes
 	// outside the local:// session scratch stay rejected (enforced by WriteTool
 	// via `session.deviceOnlyWrite`). Mounted tools gain no capability: without
 	// mounting, they were already presented — and callable — top-level.
@@ -949,7 +949,7 @@ export async function createTools(session: ToolSession, toolNames?: string[]): P
 		}
 	}
 
-	// Ordinary sessions use xd:// for discoverable built-ins, custom tools, and
+	// Ordinary sessions use xdev:// for discoverable built-ins, custom tools, and
 	// MCP tools. Structured children must expose only their host-provided names,
 	// so never allocate a registry that later SDK assembly could populate.
 	// Explicitly requested built-ins retain their top-level presentation.
@@ -967,7 +967,7 @@ export async function createTools(session: ToolSession, toolNames?: string[]): P
 		tools = kept;
 	}
 	// Staged previews from deferrable tools (e.g. ast_edit) resolve through a
-	// `write` to xd://resolve/reject, so retain write whenever one can stage.
+	// `write` to xdev://resolve/reject, so retain write whenever one can stage.
 	const xdevMounted = (session.xdev?.mountedNames.size ?? 0) > 0;
 	if (
 		!restrictToolNames &&

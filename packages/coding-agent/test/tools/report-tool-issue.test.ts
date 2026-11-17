@@ -534,11 +534,11 @@ describe("dispatchReportIssueDevice", () => {
 
 	it.each([
 		[
-			"xd://tui: start fails because kitty-vt-wasm is missing",
-			"xd://tui",
+			"xdev://tui: start fails because kitty-vt-wasm is missing",
+			"xdev://tui",
 			"start fails because kitty-vt-wasm is missing",
 		],
-		["write xd://tui: start fails before executing bun", "write xd://tui", "start fails before executing bun"],
+		["write xdev://tui: start fails before executing bun", "write xdev://tui", "start fails before executing bun"],
 		[
 			'write conflict://*: per-id content "2:\ttext" was read as a hashline prefix',
 			"write conflict://*",

@@ -54,7 +54,7 @@ describe("Tool image rendering", () => {
 	it("surfaces images returned through xdev write results", () => {
 		const component = new ToolExecutionComponent(
 			"write",
-			{ path: "xd://generate_image" },
+			{ path: "xdev://generate_image" },
 			{ showImages: true },
 			undefined,
 			{

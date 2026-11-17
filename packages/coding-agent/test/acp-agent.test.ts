@@ -804,7 +804,7 @@ describe("ACP agent", () => {
 		expect(currentModeConfig?.currentValue).toBe("plan");
 
 		// Regression for #1869: entering plan mode must wire a plan-proposal
-		// handler so the agent's `xd://propose` write has a gate to dispatch to
+		// handler so the agent's `xdev://propose` write has a gate to dispatch to
 		// instead of erroring with no approval path.
 		expect(typeof session.planProposalHandler).toBe("function");
 

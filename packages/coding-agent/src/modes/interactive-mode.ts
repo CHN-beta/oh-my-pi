@@ -6083,7 +6083,7 @@ export class InteractiveMode implements InteractiveModeContext {
 		const previousMountedTools = this.session.getMountedXdevToolNames();
 		// `plan-mode-active.md` instructs the agent to draft the plan file with
 		// `write` and refine it with `edit`, and plan approval itself is a `write`
-		// to `xd://propose`. Both must be in the active set or the agent falls
+		// to `xdev://propose`. Both must be in the active set or the agent falls
 		// back to `edit` on a non-existent file and stalls — and cannot submit the plan.
 		// `edit` is an essential built-in and always ships top-level; re-activate
 		// `write` here only when the current registry entry is the built-in write
@@ -6092,7 +6092,7 @@ export class InteractiveMode implements InteractiveModeContext {
 		// write/edit guard. The standing handler below consumes plan-approval
 		// dispatches.
 		const planAugmentations: string[] = [];
-		// A shadowing extension tool named `write` has no `xd://` transport, so plan
+		// A shadowing extension tool named `write` has no `xdev://` transport, so plan
 		// approval would never dispatch and the turn would loop on propose writes
 		// forever (issue #14030). Drop it from the active set rather than carrying it
 		// over: keeping it active breaks both the read-only guarantee and approval.
@@ -6118,7 +6118,7 @@ export class InteractiveMode implements InteractiveModeContext {
 
 		// Plan mode state must land before the tool partition: it keeps `write`
 		// active as the staging transport, and plan approval is a top-level
-		// `write` to `xd://propose`.
+		// `write` to `xdev://propose`.
 		const previousPlanModeState = this.session.getPlanModeState();
 		this.session.setPlanModeState({
 			enabled: true,
@@ -6197,7 +6197,7 @@ export class InteractiveMode implements InteractiveModeContext {
 		}
 		// A mid-turn exit must interrupt the currently streaming turn.
 		// The plan-mode prompt instructs the model to keep planning until it
-		// writes to `xd://propose`, so the live turn must be aborted inside
+		// writes to `xdev://propose`, so the live turn must be aborted inside
 		// `runModeExitTeardown` to avoid restarting on the stale toolset.
 		if (options?.interruptActiveTurn && this.session.isStreaming) {
 			await this.session.runModeExitTeardown(async () => {
@@ -6297,7 +6297,7 @@ export class InteractiveMode implements InteractiveModeContext {
 	/**
 	 * Warn that a plan session blocks entering goal/vibe mode, distinguishing an
 	 * active session from a paused one. A paused session already restored the
-	 * tools/model and cleared the `xd://propose` handler, so "Exit plan mode
+	 * tools/model and cleared the `xdev://propose` handler, so "Exit plan mode
 	 * first." reads as stale right after the user toggled plan mode off (#11692);
 	 * point them at the second `/plan` toggle that fully exits instead.
 	 */

@@ -6,7 +6,7 @@ import type { AgentTool } from "./types";
  * - `"parsed"`: a provider stream parsed the arguments, so `__parseError` is a
  *   genuine parse-failure sentinel and is never handed to a tool.
  * - `"payload"`: the arguments are a payload the model wrote (eval tool bridge,
- *   `xd://` device content), so those keys are forged and only stripped.
+ *   `xdev://` device content), so those keys are forged and only stripped.
  */
 export type ToolArgumentSource = "parsed" | "payload";
 

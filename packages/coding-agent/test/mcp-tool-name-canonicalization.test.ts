@@ -167,8 +167,8 @@ describe("resolveMountedXdevExecutable", () => {
 		const state = xdevStateWith({ mounted: ["github"], active: [bank] });
 
 		expect(resolveMountedXdevExecutable(state, "github")?.name).toBe("github");
-		expect(resolveMountedXdevExecutable(state, "xd://github")?.name).toBe("github");
-		// Active but unmounted: only mounted devices resolve through xd://.
+		expect(resolveMountedXdevExecutable(state, "xdev://github")?.name).toBe("github");
+		// Active but unmounted: only mounted devices resolve through xdev://.
 		expect(resolveMountedXdevExecutable(state, bank)).toBeUndefined();
 	});
 });

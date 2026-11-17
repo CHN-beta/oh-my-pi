@@ -39,7 +39,7 @@ Import host values from the package root, `@oh-my-pi/pi-coding-agent`. Deeper pa
 
 - `formTheme`, `editorKey`, `editorKeys` and `formatKeyHint` for settings dialogs and key hints
 - `styledSpans` and `compactText` to turn ANSI-styled text into `TspText`, such as a transcript presenter's `{ compact: { label, rows } }`, and `rowsText` to wrap pre-rendered rows in one native text node; `styleSpans`, `plainText`, `plainLine`, `spansLine` and `styledBackground` cover the other conversions between ANSI text and spans
-- `parseXdUrl` to read the device name from an `xd://` URL, plus `parseXdTopicUrl`, `stripXdUrlPrefix`, `couldBecomeXdUrl` and `XD_URL_PREFIX`
+- `parseXdevUrl` to read the device name from an `xdev://` URL, plus `parseXdevTopicUrl`, `stripXdevUrlPrefix`, `couldBecomeXdevUrl` and `XDEV_URL_PREFIX`
 - `unwrapHashlineHeaderPath` to turn a `[path#TAG]` write/edit target into its plain path
 - `cfgExtensionTranscriptPresenters`, the handle of the `extensionRenderers.transcriptPresenters` setting
 
@@ -764,7 +764,7 @@ discarded.
 Registered tools can add context during execution through
 `ctx.addAdditionalContext?.("...")`. Context a tool adds itself is kept even when the tool then
 returns an error. Within one call, the tool's own context (including tools reached through nested
-`xd://` dispatch) comes before `tool_call` handler context.
+`xdev://` dispatch) comes before `tool_call` handler context.
 Calls Cursor executes on its exec channel deliver context after their buffered results, on the next
 provider request.
 

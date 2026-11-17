@@ -120,7 +120,7 @@ export interface ResolvedApproval {
 	source?: "tool" | "user" | "mode" | "restriction";
 	/**
 	 * User-policy key that produced `source: "user"` (defaults to the tool name), or the keyed
-	 * sub-tool (an `xd://` device) a tool-owned or mode decision is about.
+	 * sub-tool (an `xdev://` device) a tool-owned or mode decision is about.
 	 */
 	policyKey?: string;
 }
@@ -310,7 +310,7 @@ function getToolDecision(
  * Evaluate a tool's own approval declaration against `args` and return the
  * resulting capability tier, defaulting to `exec` when the tool omits an
  * approval. Unlike reading `tool.approval` directly, this runs function-valued
- * approvals — the write tool's `xd://` gate uses it to take a mounted device's
+ * approvals — the write tool's `xdev://` gate uses it to take a mounted device's
  * argument-dependent tier instead of falling back to `exec`.
  */
 export function resolveToolTier(tool: ApprovalSubject, args: unknown, context?: AgentToolContext): ToolTier {
@@ -351,7 +351,7 @@ export function approvalRestrictions(
  *     A decision may carry a `policyKey` — `tools.approval.<policyKey>` is then
  *     the user override consulted instead of `tools.approval.<tool.name>`, with
  *     the invoking tool's own policy as the fallback when the user set none for
- *     the keyed sub-tool (e.g. an `xd://` device dispatch without a device
+ *     the keyed sub-tool (e.g. an `xdev://` device dispatch without a device
  *     policy still honors `tools.approval.write`).
  *  2. User per-tool override, if set and valid.
  *  3. Active mode tier comparison. In `always-ask-cached`, a call whose
@@ -376,7 +376,7 @@ export function resolveApproval(
 	if (resolved.policy === "deny") return resolved;
 	const reason = restrictedFolderReason(tool, args, restrictions);
 	if (reason === undefined) return resolved;
-	// A restricted folder outranks every mode, policy, and grant. `override` keeps nested `xd://`
+	// A restricted folder outranks every mode, policy, and grant. `override` keeps nested `xdev://`
 	// dispatches asking, and a source other than `mode` makes the prompt neither session-grantable
 	// nor rememberable, so every call asks again.
 	return {
@@ -597,7 +597,7 @@ export function restrictedFolderReason(
 
 /**
  * What an "approve for this session" answer may cover for a `resolved` prompt: the subject the
- * prompt names (the tool, or its `xd://` device) and a grant key that also pins the tier, so
+ * prompt names (the tool, or its `xdev://` device) and a grant key that also pins the tier, so
  * approving a write never covers an exec call of the same tool. Undefined when the prompt must
  * stay per-call: only a prompt the approval mode raised is grantable, never a critical override
  * or an explicit `prompt` policy (the user's or the tool's own).

@@ -279,7 +279,7 @@ Full reloads use `MCPCommandController.reloadServers()`:
 Some mutations reconnect or disconnect only the affected server and then refresh
 tools. `refreshMCPTools()` serializes registry mutations, reconciles
 manager-owned and extension-owned MCP tools, and enables connected manager
-tools immediately (mounted under `xd://` when applicable). Extension-owned MCP
+tools immediately (mounted under `xdev://` when applicable). Extension-owned MCP
 tools retain their prior selection. Changes take effect without restarting.
 
 ### Mode differences

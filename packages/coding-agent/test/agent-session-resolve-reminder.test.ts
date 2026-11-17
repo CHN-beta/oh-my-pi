@@ -111,8 +111,8 @@ describe("AgentSession resolve reminder", () => {
 		expect(isSoftToolRequirement(directive)).toBe(true);
 		if (!isSoftToolRequirement(directive)) throw new Error("expected soft requirement");
 		expect(directive.toolName).toBe("write");
-		expect(directive.satisfies?.({ name: "write", arguments: { path: "xd://resolve" } })).toBe(true);
-		expect(directive.satisfies?.({ name: "write", arguments: { path: "xd://reject" } })).toBe(true);
+		expect(directive.satisfies?.({ name: "write", arguments: { path: "xdev://resolve" } })).toBe(true);
+		expect(directive.satisfies?.({ name: "write", arguments: { path: "xdev://reject" } })).toBe(true);
 		expect(directive.satisfies?.({ name: "write", arguments: { path: "/tmp/out.md" } })).toBe(false);
 		const reminder = directive.reminder[0];
 		expect(reminder?.role).toBe("custom");

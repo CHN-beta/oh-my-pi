@@ -70,7 +70,7 @@ describe("eval tool description", () => {
 		// wait() remains usable with completion() handles.
 		const options = { py: true, js: true, spawns: false };
 		const text = getEvalToolDescription(options);
-		expect(text).not.toContain("xd://eval/agents");
+		expect(text).not.toContain("xdev://eval/agents");
 		expect(text).not.toContain("workpool(");
 		expect(text).toContain("wait(handles");
 		expect(getEvalDocTopics(options).agents).toBeUndefined();
@@ -89,7 +89,7 @@ describe("eval tool description", () => {
 		expect(belowCap.docTopics().agents).toContain("agent(prompt");
 		for (const tool of [atCap, spawningDisabled]) {
 			expect(tool.docTopics().agents).toBeUndefined();
-			expect(tool.description).not.toContain("xd://eval/agents");
+			expect(tool.description).not.toContain("xdev://eval/agents");
 			expect(tool.description).toContain("wait(handles");
 		}
 	});
@@ -151,10 +151,10 @@ describe("eval tool description", () => {
 		expect(pyOnly.helpers).not.toContain("await budget.total()");
 	});
 
-	it("inlines every topic when the session cannot read xd:// URLs", () => {
+	it("inlines every topic when the session cannot read xdev:// URLs", () => {
 		const linked = new EvalTool(makeSession({})).description;
 		const inlined = new EvalTool(makeSession({ readActive: false })).description;
-		for (const uri of ["xd://eval/judge", "xd://eval/helpers", "xd://eval/agents"]) {
+		for (const uri of ["xdev://eval/judge", "xdev://eval/helpers", "xdev://eval/agents"]) {
 			expect(linked).toContain(uri);
 			expect(inlined).not.toContain(uri);
 		}
@@ -170,7 +170,7 @@ describe("eval tool description", () => {
 		}
 	});
 
-	it("read xd://eval topics returns the moved API documentation", async () => {
+	it("read xdev://eval topics returns the moved API documentation", async () => {
 		const session = makeSession({});
 		const evalTool = new EvalTool(session);
 		session.getToolByName = name => (name === "eval" ? (evalTool as unknown as AgentTool) : undefined);
@@ -180,7 +180,7 @@ describe("eval tool description", () => {
 			["helpers", "budget.total"],
 			["helpers", "%load <path>"],
 		]) {
-			const result = await readTool.execute("read-eval-topic", { path: `xd://eval/${topic}` });
+			const result = await readTool.execute("read-eval-topic", { path: `xdev://eval/${topic}` });
 			expect(result.content.some(part => part.type === "text" && part.text.includes(signature))).toBe(true);
 		}
 	});
@@ -199,11 +199,11 @@ describe("eval tool description", () => {
 			},
 		};
 		const tool = new EvalTool(makeSession({ preludes: () => [prelude] }));
-		expect(tool.description).toContain("`fixture`: Fixture summary line. → xd://eval/fixture");
+		expect(tool.description).toContain("`fixture`: Fixture summary line. → xdev://eval/fixture");
 		expect(tool.description).not.toContain("CURRENT PRELUDE DOCUMENTATION");
 		expect(tool.docTopics().fixture).toContain("CURRENT PRELUDE DOCUMENTATION");
 		enabled = false;
-		expect(tool.description).not.toContain("xd://eval/fixture");
+		expect(tool.description).not.toContain("xdev://eval/fixture");
 		expect(tool.docTopics().fixture).toBeUndefined();
 	});
 
@@ -222,12 +222,12 @@ describe("eval tool description", () => {
 		const tool = new EvalTool(makeSession({ preludes: () => [prelude] }));
 		expect(tool.description).toContain("<fixture>");
 		expect(tool.description).toContain("INLINE PRELUDE DOCUMENTATION");
-		expect(tool.description).not.toContain("xd://eval/fixture");
+		expect(tool.description).not.toContain("xdev://eval/fixture");
 		expect(tool.docTopics().fixture).toContain("INLINE PRELUDE DOCUMENTATION");
 		const withoutRead = new EvalTool(makeSession({ preludes: () => [prelude], readActive: false }));
 		expect(withoutRead.description.split("INLINE PRELUDE DOCUMENTATION")).toHaveLength(2);
 		expect(withoutRead.description).not.toContain("<fixture>");
-		expect(withoutRead.description).not.toContain("xd://eval/fixture");
+		expect(withoutRead.description).not.toContain("xdev://eval/fixture");
 	});
 });
 

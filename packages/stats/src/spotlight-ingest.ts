@@ -352,7 +352,7 @@ function filePaths(values: readonly unknown[]): string[] {
 
 /**
  * Files a call changes: an `edit`'s patch headers (or its `path`), a `write`'s `path`, an `ast_edit`'s `paths`
- * (globs kept as written), also when `ast_edit` runs through `write xd://ast_edit`. Null when the call is no file
+ * (globs kept as written), also when `ast_edit` runs through `write xdev://ast_edit`. Null when the call is no file
  * edit (other tools, or a write to an internal URL such as `proc://…/kill`).
  */
 export function editedPaths(toolName: string, args: unknown): string[] | null {
@@ -367,7 +367,7 @@ export function editedPaths(toolName: string, args: unknown): string[] | null {
 	} else if (toolName === "ast_edit") {
 		paths = filePaths(Array.isArray(args.paths) ? args.paths : [args.path]);
 	} else if (toolName === "write") {
-		if (args.path === "xd://ast_edit" && typeof args.content === "string") {
+		if (args.path === "xdev://ast_edit" && typeof args.content === "string") {
 			try {
 				return editedPaths("ast_edit", JSON.parse(args.content));
 			} catch {

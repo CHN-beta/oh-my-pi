@@ -3,7 +3,7 @@
 {{#if added.length}}
 Now available in JS/Python `eval`{{#if canRead}}; `read` the linked docs before first use{{/if}}:
 {{#each added}}
-- `{{name}}`{{#if summary}}: {{summary}}{{/if}}{{#if ../canRead}} → `xd://eval/{{name}}`{{/if}}
+- `{{name}}`{{#if summary}}: {{summary}}{{/if}}{{#if ../canRead}} → `xdev://eval/{{name}}`{{/if}}
 {{/each}}
 {{/if}}
 {{#if removed.length}}

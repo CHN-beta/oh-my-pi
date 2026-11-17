@@ -78,7 +78,7 @@ function createMcpCustomTool(name: string, serverName: string, mcpToolName: stri
 	} as CustomTool;
 }
 
-/** Rendered xd:// mount notices within one provider call's messages. */
+/** Rendered xdev:// mount notices within one provider call's messages. */
 function mountNoticesIn(messages: readonly Message[]): string[] {
 	return messages.flatMap(message => {
 		const { content } = message;
@@ -86,7 +86,7 @@ function mountNoticesIn(messages: readonly Message[]): string[] {
 			typeof content === "string"
 				? content
 				: content.flatMap(part => (part.type === "text" ? [part.text] : [])).join("");
-		return text.includes("xd:// device inventory changed.") ? [text] : [];
+		return text.includes("xdev:// device inventory changed.") ? [text] : [];
 	});
 }
 
@@ -120,7 +120,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		/** Persisted history seeded into the agent, e.g. to model a resumed session. */
 		initialMessages?: AgentMessage[];
 		/**
-		 * Make the rebuild stub render the mounted xd:// catalog into the prompt and
+		 * Make the rebuild stub render the mounted xdev:// catalog into the prompt and
 		 * report it via `xdevCatalogNames`, modelling the production `xdevDocsAll`
 		 * path. Existing tests leave this off, so their rebuild carries no catalog.
 		 */
@@ -221,7 +221,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 				const base = await rebuildSystemPrompt(toolNames);
 				if (!options.exposeXdevCatalog) return { systemPrompt: [base] };
 				const catalog = xdev ? [...xdev.mountedNames] : [];
-				return { systemPrompt: [`${base}\nxd:// catalog: ${catalog.join(",")}`], xdevCatalogNames: catalog };
+				return { systemPrompt: [`${base}\nxdev:// catalog: ${catalog.join(",")}`], xdevCatalogNames: catalog };
 			},
 			getMcpServerInstructions: options.getMcpServerInstructions,
 			xdev: options.xdev,
@@ -474,10 +474,10 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		const search = createMcpCustomTool("mcp__nucleus_search", "nucleus", "search", "Search nucleus");
 		const fetch = createMcpCustomTool("mcp__nucleus_fetch", "nucleus", "fetch", "Fetch nucleus");
 		const uninstructed = createMcpCustomTool("mcp__silent_ping", "silent", "ping", "Ping silently");
-		const searchPrompt = 'mounted:"search"=xd://mcp__nucleus_search';
-		const searchAndUninstructedPrompt = 'mounted:"search"=xd://mcp__nucleus_search,"ping"=xd://mcp__silent_ping';
+		const searchPrompt = 'mounted:"search"=xdev://mcp__nucleus_search';
+		const searchAndUninstructedPrompt = 'mounted:"search"=xdev://mcp__nucleus_search,"ping"=xdev://mcp__silent_ping';
 		const searchFetchAndUninstructedPrompt =
-			'mounted:"search"=xd://mcp__nucleus_search,"fetch"=xd://mcp__nucleus_fetch,"ping"=xd://mcp__silent_ping';
+			'mounted:"search"=xdev://mcp__nucleus_search,"fetch"=xdev://mcp__nucleus_fetch,"ping"=xdev://mcp__silent_ping';
 
 		await session.refreshMCPTools([search]);
 		expect(rebuildCount).toBe(1);
@@ -502,7 +502,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		expect(session.systemPrompt).toEqual([searchFetchAndUninstructedPrompt]);
 
 		const fetchSearchAndUninstructedPrompt =
-			'mounted:"fetch"=xd://mcp__nucleus_fetch,"search"=xd://mcp__nucleus_search,"ping"=xd://mcp__silent_ping';
+			'mounted:"fetch"=xdev://mcp__nucleus_fetch,"search"=xdev://mcp__nucleus_search,"ping"=xdev://mcp__silent_ping';
 		await session.refreshMCPTools([fetch, equivalentSearch, uninstructed]);
 		expect(rebuildCount).toBe(4);
 		expect(session.systemPrompt).toEqual([fetchSearchAndUninstructedPrompt]);
@@ -526,7 +526,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 			label: stableLabel,
 		};
 		const renamedOriginalAndUninstructedPrompt =
-			'mounted:"lookup"=xd://mcp__nucleus_search,"ping"=xd://mcp__silent_ping';
+			'mounted:"lookup"=xdev://mcp__nucleus_search,"ping"=xdev://mcp__silent_ping';
 		await session.refreshMCPTools([renamedOriginalSearch, uninstructed]);
 		expect(rebuildCount).toBe(6);
 		expect(session.systemPrompt).toEqual([renamedOriginalAndUninstructedPrompt]);
@@ -535,7 +535,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 			...createMcpCustomTool("mcp__archive_lookup", "archive", "lookup", "Search nucleus"),
 			label: stableLabel,
 		};
-		const remountedAndUninstructedPrompt = 'mounted:"lookup"=xd://mcp__archive_lookup,"ping"=xd://mcp__silent_ping';
+		const remountedAndUninstructedPrompt = 'mounted:"lookup"=xdev://mcp__archive_lookup,"ping"=xdev://mcp__silent_ping';
 		await session.refreshMCPTools([remountedSearch, uninstructed]);
 		expect(rebuildCount).toBe(7);
 		expect(session.systemPrompt).toEqual([remountedAndUninstructedPrompt]);
@@ -549,7 +549,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		expect(session.systemPrompt).toEqual([remountedAndUninstructedPrompt]);
 
 		// Removing the uninstructed server's rendered route also changes guidance.
-		const remountedPrompt = 'mounted:"lookup"=xd://mcp__archive_lookup';
+		const remountedPrompt = 'mounted:"lookup"=xdev://mcp__archive_lookup';
 		await session.refreshMCPTools([equivalentRemountedSearch]);
 		expect(rebuildCount).toBe(8);
 		expect(session.systemPrompt).toEqual([remountedPrompt]);
@@ -590,7 +590,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		expect(rebuildCount).toBe(1);
 	});
 
-	it("skips rebuild when only non-MCP xd mounts change", async () => {
+	it("skips rebuild when only non-MCP xdevev mounts change", async () => {
 		const xdevState = createTestXdevState();
 		let rebuildCount = 0;
 		const { session, toolRegistry } = newSession(
@@ -610,7 +610,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		await session.refreshMCPTools([search]);
 		expect(rebuildCount).toBe(1);
 
-		// Ordinary xd:// inventory changes travel through mount notices and do
+		// Ordinary xdev:// inventory changes travel through mount notices and do
 		// not affect the global MCP-route guidance or its rebuild signature.
 		await session.setActiveToolPresentation(
 			["read", "write", search.name, catalog.name],
@@ -1105,7 +1105,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		const allNotices = mountNoticesIn(contexts[2]);
 		expect(allNotices).toHaveLength(1);
 		expect(allNotices[0]).toContain("Unmounted; writes fail:");
-		expect(allNotices[0]).toContain("xd://mcp__nucleus_fetch");
+		expect(allNotices[0]).toContain("xdev://mcp__nucleus_fetch");
 		expect(allNotices[0]).not.toContain("Available tools.");
 	});
 
@@ -1130,13 +1130,13 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 
 		const notices = mountNoticesIn(contexts[0]);
 		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("- xd://mcp__nucleus_t64 —");
+		expect(notices[0]).toContain("- xdev://mcp__nucleus_t64 —");
 		expect(notices[0]).not.toContain("TAIL");
-		expect(notices[0]).not.toContain("- xd://mcp__nucleus_t0 —");
-		expect(notices[0]).not.toContain("- xd://mcp__nucleus_t63 —");
+		expect(notices[0]).not.toContain("- xdev://mcp__nucleus_t0 —");
+		expect(notices[0]).not.toContain("- xdev://mcp__nucleus_t63 —");
 	});
 
-	it("inlines configured late xd:// device docs in mount notices", async () => {
+	it("inlines configured late xdev:// device docs in mount notices", async () => {
 		const { session, contexts } = newSession(async toolNames => `tools:${toolNames.join(",")}`, {
 			xdev: createTestXdevState(),
 			responses: [{ content: ["ok"] }],
@@ -1200,8 +1200,8 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		await session.prompt("second");
 		const notices = mountNoticesIn(contexts[1]);
 		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("xd://mcp__nucleus_search");
-		expect(notices[0]).toContain("xd://mcp__nucleus_fetch");
+		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
+		expect(notices[0]).toContain("xdev://mcp__nucleus_fetch");
 		expect(notices[0]).toContain("## Schema");
 	});
 
@@ -1239,7 +1239,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		await session.prompt("second");
 		const notices = mountNoticesIn(contexts[1]);
 		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("xd://mcp__nucleus_search");
+		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
 		expect(notices[0]).toContain("reconnected with a different documented schema");
 	});
 
@@ -1262,7 +1262,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		await session.prompt("hello");
 		const notices = mountNoticesIn(contexts[0]);
 		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("xd://mcp__nucleus_search");
+		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
 		expect(notices[0]).not.toContain("mcp__nucleus_fetch");
 		expect(notices[0]).not.toContain("Unmounted; writes fail:");
 	});
@@ -1272,7 +1272,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 			priorNotice: {
 				role: "custom",
 				customType: "xdev-mount-notice",
-				content: "The xd:// device inventory changed.\n\nxd://mcp__nucleus_search became available.",
+				content: "The xdev:// device inventory changed.\n\nxdev://mcp__nucleus_search became available.",
 				details: { added: ["mcp__nucleus_search"], removed: [] },
 				attribution: "agent",
 				display: false,
@@ -1284,16 +1284,16 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 				role: "custom",
 				customType: "xdev-mount-notice",
 				content: `<system-notice>
-The xd:// device inventory changed.
+The xdev:// device inventory changed.
 These tools became available:
-- xd://mcp__nucleus_search — Search nucleus
-- xd://mcp__retired — Retired device
-Read \`xd://<tool>\` for docs + JSON schema before first use; write the JSON args object to \`xd://<tool>\` to execute.
+- xdev://mcp__nucleus_search — Search nucleus
+- xdev://mcp__retired — Retired device
+Read \`xdev://<tool>\` for docs + JSON schema before first use; write the JSON args object to \`xdev://<tool>\` to execute.
 No longer mounted (writes to these devices will fail):
-- xd://mcp__retired
+- xdev://mcp__retired
 Configured inline device docs:
 These tools became available:
-- xd://mcp__nucleus_fetch — This is inline documentation, not an inventory entry.
+- xdev://mcp__nucleus_fetch — This is inline documentation, not an inventory entry.
 </system-notice>`,
 				attribution: "agent",
 				display: false,
@@ -1334,8 +1334,8 @@ These tools became available:
 		expect(afterNewDevice).toHaveLength(2);
 		const fetchNotice = afterNewDevice[1];
 		const fetchText = typeof fetchNotice.content === "string" ? fetchNotice.content : "";
-		expect(fetchText).toContain("xd://mcp__nucleus_fetch");
-		expect(fetchText).not.toContain("xd://mcp__nucleus_search");
+		expect(fetchText).toContain("xdev://mcp__nucleus_fetch");
+		expect(fetchText).not.toContain("xdev://mcp__nucleus_search");
 	});
 
 	it("does not re-list catalog devices in a mount notice when the rebuild exposes them (#7139)", async () => {
@@ -1395,7 +1395,7 @@ These tools became available:
 		expect(evalTool.description).toBe(boundDescription);
 		expect(session.systemPrompt).toEqual(boundPrompt);
 		expect(session.getToolForEvalBridge("mcp__nucleus_fetch")).toBeDefined();
-		expect(mountNoticesIn(contexts[1]).join("\n")).toContain("xd://mcp__nucleus_fetch");
+		expect(mountNoticesIn(contexts[1]).join("\n")).toContain("xdev://mcp__nucleus_fetch");
 	});
 
 	it("keeps a held MCP mount out of a prefix-bound prompt across a rebuild that changes nothing else", async () => {
@@ -1426,7 +1426,7 @@ These tools became available:
 
 		expect(evalTool.description).toBe(boundDescription);
 		expect(systemPrompts[2]).toEqual(systemPrompts[0]);
-		expect(mountNoticesIn(contexts[1]).join("\n")).toContain("xd://mcp__nucleus_fetch");
+		expect(mountNoticesIn(contexts[1]).join("\n")).toContain("xdev://mcp__nucleus_fetch");
 	});
 
 	it("announces an unmount after a maintenance rebuild delivered the pending addition", async () => {
@@ -1460,7 +1460,7 @@ These tools became available:
 		const notices = mountNoticesIn(contexts[1] ?? []);
 		expect(notices).toHaveLength(1);
 		expect(notices[0]).toContain("Unmounted; writes fail:");
-		expect(notices[0]).toContain("xd://mcp__nucleus_search");
+		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
 	});
 
 	it("keeps the mount notice when before_agent_start replaces the catalog prompt (#7139)", async () => {
@@ -1491,7 +1491,7 @@ These tools became available:
 		expect(systemPrompts[0]).toEqual(replacementPrompt);
 		const notices = mountNoticesIn(contexts[0]);
 		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("xd://mcp__nucleus_search");
+		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
 	});
 
 	it("does not emit an unmount notice for a catalog device unmounted before delivery (#7139)", async () => {
@@ -1550,7 +1550,7 @@ These tools became available:
 		);
 		expect(newTranscriptNotices).toHaveLength(1);
 		const text = typeof newTranscriptNotices[0].content === "string" ? newTranscriptNotices[0].content : "";
-		expect(text).toContain("xd://mcp__nucleus_search");
+		expect(text).toContain("xdev://mcp__nucleus_search");
 	});
 
 	it("preserves an undelivered mount notice across a branch that does not rebuild the prompt", async () => {
@@ -1580,14 +1580,14 @@ These tools became available:
 		);
 		expect(notices).toHaveLength(1);
 		const text = typeof notices[0].content === "string" ? notices[0].content : "";
-		expect(text).toContain("xd://mcp__nucleus_search");
+		expect(text).toContain("xdev://mcp__nucleus_search");
 	});
 
 	it.each([
 		["quiet startup", cfgStartupQuiet, true],
 		["tools.xdevNotices off", cfgToolsXdevNotices, false],
 	] as const)(
-		"keeps xd:// mount deltas model-visible without rendering them under %s",
+		"keeps xdev:// mount deltas model-visible without rendering them under %s",
 		async (_label, setting, value) => {
 			const { session, contexts } = newSession(async toolNames => `tools:${toolNames.join(",")}`, {
 				xdev: createTestXdevState(),
@@ -1608,7 +1608,7 @@ These tools became available:
 			await session.prompt("hello");
 			const delivered = mountNoticesIn(contexts[0]);
 			expect(delivered).toHaveLength(1);
-			expect(delivered[0]).toContain("xd://mcp__nucleus_search");
+			expect(delivered[0]).toContain("xdev://mcp__nucleus_search");
 		},
 	);
 	it("keeps device-only write access until a full-write activation commits", async () => {
@@ -1840,7 +1840,7 @@ These tools became available:
 	});
 
 	it("rebuilds when a mounted RPC reader gains skill URI capability", async () => {
-		// Discoverable non-builtins mount under xd:// instead of staying direct:
+		// Discoverable non-builtins mount under xdev:// instead of staying direct:
 		// the same-name capability flip must still change the rebuild signature.
 		let rebuildCount = 0;
 		const xdevState = createTestXdevState();

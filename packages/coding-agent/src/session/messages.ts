@@ -58,7 +58,7 @@ import { isRecord, logger, prompt } from "@oh-my-pi/pi-utils";
 import { COLLAB_PROMPT_MESSAGE_TYPE } from "@oh-my-pi/pi-wire";
 import userInterjectionTemplate from "../prompts/steering/user-interjection.md" with { type: "text" };
 import { cleanTinyMessage, formatTitleConversationContext, type TitleConversationTurn } from "../tiny/message-preproc";
-import { stripXdUrlPrefix } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { stripXdevUrlPrefix } from "@oh-my-pi/pi-tui/tools/xdev-url";
 
 export {
 	type BranchSummaryMessage,
@@ -542,17 +542,17 @@ function stripDemotedThinkingForLlm(message: AssistantMessage): AssistantMessage
 }
 
 /**
- * Replay `xd://<device>` tool-call names under their bare device name. Sessions
+ * Replay `xdev://<device>` tool-call names under their bare device name. Sessions
  * saved before the agent loop canonicalized fallback-resolved names persist the
  * alias, which providers reject as a function name (#13352). Call ids are kept,
  * so call/result pairing is unchanged.
  */
-function canonicalizeXdToolCallNames(message: AssistantMessage): AssistantMessage {
+function canonicalizeXdevToolCallNames(message: AssistantMessage): AssistantMessage {
 	let content: AssistantMessage["content"] | undefined;
 	for (let i = 0; i < message.content.length; i++) {
 		const block = message.content[i]!;
 		if (block.type !== "toolCall") continue;
-		const name = stripXdUrlPrefix(block.name);
+		const name = stripXdevUrlPrefix(block.name);
 		if (name === block.name) continue;
 		content ??= message.content.slice();
 		content[i] = { ...block, name };
@@ -1261,7 +1261,7 @@ function convertOne(m: AgentMessage, interruptedNext: boolean): Message[] {
 			if (userInterrupted && !interruptedNext && source.content.length === 0 && m.requestControls === undefined) {
 				return [];
 			}
-			const converted = convertMessageToLlm(canonicalizeXdToolCallNames(source));
+			const converted = convertMessageToLlm(canonicalizeXdevToolCallNames(source));
 			return converted ? [converted] : [];
 		}
 		case "branchSummary":
@@ -1275,9 +1275,9 @@ function convertOne(m: AgentMessage, interruptedNext: boolean): Message[] {
 			return converted ? [converted] : [];
 		}
 		case "toolResult": {
-			// Same pre-canonicalization history as `canonicalizeXdToolCallNames`;
+			// Same pre-canonicalization history as `canonicalizeXdevToolCallNames`;
 			// Gemini replays the result under this name.
-			const toolName = stripXdUrlPrefix(m.toolName);
+			const toolName = stripXdevUrlPrefix(m.toolName);
 			const converted = convertMessageToLlm(toolName === m.toolName ? m : { ...m, toolName });
 			return converted ? [converted] : [];
 		}

@@ -150,7 +150,7 @@ import {
 import { type FileSlashCommand, loadSlashCommands as loadSlashCommandsInternal } from "./extensibility/slash-commands";
 import type { HindsightSessionStateApi } from "./hindsight/state";
 import { LocalProtocolHandler, type LocalProtocolOptions, outRepliesActive } from "./internal-urls";
-import { stripXdUnderscorePrefix, stripXdUrlPrefix } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { stripXdevUnderscorePrefix, stripXdevUrlPrefix } from "@oh-my-pi/pi-tui/tools/xdev-url";
 import { holdSharedLsp } from "./lsp/client";
 import { LSP_STARTUP_EVENT_CHANNEL, type LspStartupEvent } from "./lsp/startup-events";
 import {
@@ -885,7 +885,7 @@ export interface CreateAgentSessionOptions {
 	skipPythonPreflight?: boolean;
 	/** Tool names explicitly requested (enables disabled-by-default tools) */
 	toolNames?: string[];
-	/** Names from `toolNames` that a fork inherits as `xd://` devices rather than explicit top-level tools. */
+	/** Names from `toolNames` that a fork inherits as `xdev://` devices rather than explicit top-level tools. */
 	mountedToolNames?: string[];
 	/** Limit the session to explicitly supplied tool names, without discovered extras. */
 	restrictToolNames?: boolean;
@@ -2965,7 +2965,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 							applyMCPEnvironment(mcpResult);
 							logMCPLoadErrors(mcpResult.errors);
 							// Connected MCP tools (and cached routes of servers still connecting) are
-							// enabled and mounted under xd:// devices right away, so a turn whose
+							// enabled and mounted under xdev:// devices right away, so a turn whose
 							// wait runs out still carries them.
 							await liveSession.refreshMCPTools(mcpResult.tools);
 							// Discovery returns after the startup window while slower servers keep
@@ -4077,7 +4077,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			return goalRegistration;
 		};
 
-		// `tools.xdev` flips allocate or release the `xd://` state createTools builds
+		// `tools.xdev` flips allocate or release the `xdev://` state createTools builds
 		// over the canonical map; the session re-partitions on its next apply. Like
 		// createTools, mounting needs a built-in `write` transport.
 		const syncXdevState = (): void => {
@@ -4146,7 +4146,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 
 		// Existing staged/device paths need write registered before active-set assembly.
 		// Deferred MCP also registers it now, but refresh activates it only after a server connects.
-		// xd:// mounts ride the session's write grant: createTools either saw a
+		// xdev:// mounts ride the session's write grant: createTools either saw a
 		// granted write tool or registered a device-only transport one for an
 		// explicit-list session that omitted it, so xdev state always implies one.
 		const hasDeferrableTools = Array.from(toolRegistry.values()).some(tool => tool.deferrable === true);
@@ -4159,7 +4159,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 		let cursorEventEmitter: ((event: AgentEvent) => void) | undefined;
 		// Cursor and the agent loop may call a mounted device by its top-level
 		// name. Resolve that name from the canonical map and apply the same
-		// execution-only ACP decorator used by `write xd://<tool>`; docs and
+		// execution-only ACP decorator used by `write xdev://<tool>`; docs and
 		// renderer lookup continue to use the undecorated canonical instance.
 		//
 		// `advertised` is the agent loop's per-request tool snapshot, the very set
@@ -4171,7 +4171,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 		// Callers with no request snapshot (the Cursor exec bridge) pass none and
 		// get device resolution only.
 		const resolveDeviceSpelling = (name: string, advertised: readonly AgentTool[]): AgentTool | undefined => {
-			const bareName = stripXdUrlPrefix(name);
+			const bareName = stripXdevUrlPrefix(name);
 			const state = toolSession.xdev;
 			// An exact mounted name is the name itself, not a guess.
 			const exactDevice = state ? resolveMountedXdevExecutable(state, bareName) : undefined;
@@ -4181,7 +4181,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			// a mounted device AND by a different advertised tool is ambiguous, not
 			// a race the mounted set happens to win.
 			//
-			// `xd://` state exists only when `tools.xdev` is on and the session is
+			// `xdev://` state exists only when `tools.xdev` is on and the session is
 			// unrestricted (`createTools`), so the advertised arm is what recovers
 			// an MCP alias when there is no state at all. That arm reads a set
 			// already execution-wrapped by `#applyActiveToolsByName`, so a
@@ -4196,11 +4196,11 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			);
 		};
 		// A model whose tool-name charset cannot carry `://` spells the prefix with
-		// underscores (`xd__recall`). Only a name every exact spelling missed is
+		// underscores (`xdev__recall`). Only a name every exact spelling missed is
 		// read that way, so a tool actually named `xd_<something>` keeps its own
 		// dispatch.
 		const resolveDeviceTool = (name: string, advertised: readonly AgentTool[] = []): AgentTool | undefined => {
-			const unprefixed = stripXdUnderscorePrefix(name);
+			const unprefixed = stripXdevUnderscorePrefix(name);
 			return (
 				resolveDeviceSpelling(name, advertised) ??
 				(unprefixed === name ? undefined : resolveDeviceSpelling(unprefixed, advertised))
@@ -4407,7 +4407,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			const appendParts: string[] = [];
 			if (memoryInstructions) appendParts.push(memoryInstructions);
 			if (autoLearnInstructions) appendParts.push(autoLearnInstructions);
-			// List each mounted MCP tool once. A routed tool that the xd:// catalog
+			// List each mounted MCP tool once. A routed tool that the xdev:// catalog
 			// would list carries its catalog summary on the route line and gets no
 			// catalog line; a tool the route bound omits keeps its catalog line.
 			const xdevPromptDocs = xdev
@@ -4483,7 +4483,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 					);
 				}
 			}
-			// Mounted xd:// readers stay out of the direct inventory, but their skill
+			// Mounted xdev:// readers stay out of the direct inventory, but their skill
 			// capability still drives catalog/URI guidance: project them into the
 			// compact metadata map (inventory rendering stays driven by `toolNames`).
 			const mountedPromptToolNames = xdev ? xdevEntries(xdev).map(entry => entry.name) : [];
@@ -4680,10 +4680,10 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 		// constructed and attached. Startup failure therefore leaves it revivable.
 		hasRegistered = options.expectedAgentRef === undefined || options.expectedAgentRef === null;
 
-		// Partition the initial enabled set for the xd:// transport. Tool instances
+		// Partition the initial enabled set for the xdev:// transport. Tool instances
 		// remain in the canonical map; only presentation names move between layers.
-		// Mounting requires both transport halves in the granted set (`read xd://`
-		// discovers, `write xd://<tool>` executes); explicit-list sessions granted
+		// Mounting requires both transport halves in the granted set (`read xdev://`
+		// discovers, `write xdev://<tool>` executes); explicit-list sessions granted
 		// `read` without `write` can use the device-only transport registered by
 		// createTools without surfacing it when no device needs it.
 		if (toolSession.xdev) {
@@ -5181,7 +5181,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 		const createAdvisorToolSession = (): ToolSession => ({
 			...toolSession,
 			state: new ToolConversationState(),
-			// The primary may carry a dormant xd:// write transport. Advisors use
+			// The primary may carry a dormant xdev:// write transport. Advisors use
 			// their own configured tool slate, so a selected write is always full.
 			deviceOnlyWrite: undefined,
 			pendingFullWriteDescription: undefined,
@@ -5207,7 +5207,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			getAgentId: () => advisorAgent.id,
 			// The primary's availability signals are wrong for advisors: their tool
 			// slate is filtered separately at runtime (default read/grep/glob, no
-			// write transport), so xd:// devices are unreachable. Images are inlined,
+			// write transport), so xdev:// devices are unreachable. Images are inlined,
 			// and the provider boundary handles text-only advisor models.
 			xdev: undefined,
 			// Each slate binds its own predicate in `create`. The primary's active

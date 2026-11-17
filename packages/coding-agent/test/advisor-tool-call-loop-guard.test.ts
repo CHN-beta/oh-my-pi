@@ -352,7 +352,7 @@ describe("advisor tool-call loop guard", () => {
 							type: "toolCall",
 							id: `call-${index}`,
 							name: "write",
-							arguments: { path: `xd://${device}`, content: "{}" },
+							arguments: { path: `xdev://${device}`, content: "{}" },
 						},
 					],
 					api: "anthropic-messages",

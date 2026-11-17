@@ -1131,7 +1131,7 @@ const KNOWN_SCHEMES = new Set([
 	"security",
 	"skill",
 	"vault",
-	"xd",
+	"xdev",
 ]);
 
 /** File extensions kept on mock names; `.test`/`.spec`/`.d` qualify a known final extension. */

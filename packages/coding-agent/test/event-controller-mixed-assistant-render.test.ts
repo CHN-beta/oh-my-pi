@@ -236,11 +236,11 @@ describe("EventController mixed assistant text/tool rendering", () => {
 			parameters: type({}),
 			execute: async () => ({ content: [] }),
 		};
-		const toolByName = (name: string) => (name === "github" || name === "xd://github" ? githubTool : undefined);
+		const toolByName = (name: string) => (name === "github" || name === "xdev://github" ? githubTool : undefined);
 		const toolCall: ToolCall = {
 			type: "toolCall",
 			id: "toolu_prefixed_github",
-			name: "xd://github",
+			name: "xdev://github",
 			arguments: { op: "repo_view", repo: "can1357/oh-my-pi" },
 		};
 		const streaming = assistantMessage([toolCall]);
@@ -285,7 +285,7 @@ describe("EventController mixed assistant text/tool rendering", () => {
 		expect(Bun.stripANSI(rebuilt.chatContainer.render(120).join("\n"))).toContain("GitHub Repo can1357/oh-my-pi");
 
 		// Canonicalization is presentation-only; provider replay keeps the wire spelling.
-		expect(toolCall.name).toBe("xd://github");
+		expect(toolCall.name).toBe("xdev://github");
 	});
 
 	it("keeps assistant text streaming while hiding bash failures and grouped read activity", async () => {

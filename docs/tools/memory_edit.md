@@ -13,7 +13,7 @@
 - Tool metadata: `approval = "read"`, `strict = true`, `loadMode = "discoverable"`, even though successful calls mutate local memory.
 - Registration requires `memory.backend = "mnemopi"`; the tool is absent for `"off"`, `"local"`, and `"hindsight"`.
 - In an unrestricted session with an explicit tool list, registration auto-includes `memory_edit` for Mnemopi. Restricted lists are not widened.
-- In an ordinary `tools.xdev` session, discoverable built-ins may be presented as `xd://memory_edit`; an explicitly requested tool remains top-level.
+- In an ordinary `tools.xdev` session, discoverable built-ins may be presented as `xdev://memory_edit`; an explicitly requested tool remains top-level.
 - Execution is synchronous and single-shot, with no progress callback or cancellation parameter.
 
 ## Inputs

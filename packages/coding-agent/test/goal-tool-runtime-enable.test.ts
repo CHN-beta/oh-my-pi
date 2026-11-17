@@ -80,7 +80,7 @@ describe("goal tool registration when goal mode is enabled at runtime", () => {
 	it("exposes the goal tool when goal.enabled is turned on after session start", async () => {
 		// Regression for #9444: enabling goal mode at runtime (settings UI / config
 		// reload) left the tool registry without `goal`, so entering goal mode
-		// silently dropped the name and `xd://goal` failed with "No such tool".
+		// silently dropped the name and `xdev://goal` failed with "No such tool".
 		session = await makeSession(false);
 		cfgGoalEnabled.set(Settings.instance, true);
 
@@ -88,12 +88,12 @@ describe("goal tool registration when goal mode is enabled at runtime", () => {
 
 		expect(session.getEnabledToolNames()).toContain("goal");
 
-		// The failing path in the report: a real xd://goal dispatch via the write
+		// The failing path in the report: a real xdev://goal dispatch via the write
 		// transport must now resolve the tool instead of throwing.
 		const writeTool = session.agent.state.tools.find(t => t.name === "write");
 		expect(writeTool).toBeDefined();
 		const result = await writeTool!.execute("call_goal", {
-			path: "xd://goal",
+			path: "xdev://goal",
 			content: JSON.stringify({ op: "get" }),
 		} as never);
 		expect(result.isError ?? false).toBe(false);

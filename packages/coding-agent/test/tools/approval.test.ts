@@ -314,7 +314,7 @@ describe("MCP fallback and prompt formatting", () => {
 			{ subject: eager, args },
 			{ subject: deferred, args },
 			{ subject: tool(eager.name), args },
-			{ subject: writeTool, args: { path: `xd://${eager.name}`, content: JSON.stringify(args) } },
+			{ subject: writeTool, args: { path: `xdev://${eager.name}`, content: JSON.stringify(args) } },
 		];
 		for (const entry of cases) {
 			expect(formatApprovalPrompt(entry.subject, entry.args)).toContain(expected);
@@ -356,7 +356,7 @@ describe("MCP fallback and prompt formatting", () => {
 	it("shows empty and null JSON device payloads while omitting absent direct MCP arguments", () => {
 		const writeTool = new WriteTool({ cwd: "." } as ToolSession);
 		for (const content of ["{}", "[]", "null"]) {
-			expect(formatApprovalPrompt(writeTool, { path: "XD://run", content })).toContain(`Arguments:\n${content}`);
+			expect(formatApprovalPrompt(writeTool, { path: "XDEV://run", content })).toContain(`Arguments:\n${content}`);
 		}
 		expect(formatApprovalPrompt(tool("mcp__server__run"), undefined)).not.toContain("Arguments:");
 	});
@@ -371,14 +371,14 @@ describe("MCP fallback and prompt formatting", () => {
 		expect(details).toEqual(["Path: src/main.ts", 'Content:\n{"script":"first\\nsecond"}']);
 	});
 
-	it("falls back to raw Content for xd:// write with non-JSON content", () => {
+	it("falls back to raw Content for xdev:// write with non-JSON content", () => {
 		const session = { cwd: "." } as ToolSession;
 		const writeTool = new WriteTool(session);
 		const details = writeTool.formatApprovalDetails({
-			path: "xd://some_device",
+			path: "xdev://some_device",
 			content: "not-json-content",
 		});
-		expect(details).toEqual(["Path: xd://some_device", "Content:\nnot-json-content"]);
+		expect(details).toEqual(["Path: xdev://some_device", "Content:\nnot-json-content"]);
 	});
 
 	it("caps large device argument payloads at prompt truncation limit", () => {
@@ -447,7 +447,7 @@ describe("MCP fallback and prompt formatting", () => {
 });
 
 describe("decision policyKey scopes user policy to a sub-tool", () => {
-	// The write tool reports this decision for an `xd://knowledge_search` dispatch:
+	// The write tool reports this decision for an `xdev://knowledge_search` dispatch:
 	// the tier comes from the mounted tool, and the policyKey makes the user
 	// override key on the device instead of the invoking `write` tool (#7923).
 	const dispatch = tool("write", { tier: "exec", policyKey: "knowledge_search" });

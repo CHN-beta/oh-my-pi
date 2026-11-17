@@ -422,7 +422,7 @@ describe("hindsightBackend first-turn injection", () => {
 		expect(session.getHindsightSessionState()?.hasRecalledForFirstTurn).toBe(false);
 	});
 
-	it("names memory tools by their xd:// URL only when they are mounted as devices", async () => {
+	it("names memory tools by their xdev:// URL only when they are mounted as devices", async () => {
 		const settings = Settings.isolated({
 			"memory.backend": "hindsight",
 			"hindsight.apiUrl": "http://localhost:8888",
@@ -440,7 +440,7 @@ describe("hindsightBackend first-turn injection", () => {
 		});
 
 		const prompt = await hindsightBackend.buildDeveloperInstructions("/tmp", "/tmp", settings, session as never);
-		expect(prompt).toContain("Use `xd://recall` proactively");
+		expect(prompt).toContain("Use `xdev://recall` proactively");
 		expect(prompt).toContain("Use `retain` to store");
 	});
 

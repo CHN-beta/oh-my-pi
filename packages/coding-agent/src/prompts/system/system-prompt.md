@@ -64,7 +64,7 @@ When a task matches a listed skill, you MUST read `skill://<name>` before starti
 {{/if}}
 
 # Internal URLs
-Standard filesystem and shell tools resolve these schemes directly; see `read` documentation for path selectors.{{#has tools "read"}} Full sub-path, query, and limit syntax: xd://read/urls.{{/has}}
+Standard filesystem and shell tools resolve these schemes directly; see `read` documentation for path selectors.{{#has tools "read"}} Full sub-path, query, and limit syntax: xdev://read/urls.{{/has}}
 {{#each internalUrls}}
 - {{this}}
 {{/each}}
@@ -84,8 +84,8 @@ Standard filesystem and shell tools resolve these schemes directly; see `read` d
 {{/if}}
 
 {{#if xdevTools.length}}
-# xd:// Tool Devices
-Invoke a device by writing JSON arguments as `content` to `xd://<tool>` using `{{toolRefs.write}}`. Schema validation errors return the expected schema—adjust arguments and retry.
+# xdev:// Tool Devices
+Invoke a device by writing JSON arguments as `content` to `xdev://<tool>` using `{{toolRefs.write}}`. Schema validation errors return the expected schema—adjust arguments and retry.
 {{xdevDocs}}
 {{/if}}
 
@@ -127,7 +127,7 @@ Modify existing files strictly via `{{toolRefs.edit}}`{{#ifAny (includes tools "
 {{#if autoQaEnabled}}
 {{#has tools "write"}}
 <critical>
-Tool QA reporting via `{{toolRefs.write}} xd://report_issue`: whenever a tool's output contradicts its documented behavior for the supplied arguments, write `<tool>: <concise description>` as plain text to `xd://report_issue`. False positives are acceptable.
+Tool QA reporting via `{{toolRefs.write}} xdev://report_issue`: whenever a tool's output contradicts its documented behavior for the supplied arguments, write `<tool>: <concise description>` as plain text to `xdev://report_issue`. False positives are acceptable.
 </critical>
 {{/has}}
 {{/if}}

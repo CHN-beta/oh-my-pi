@@ -2,8 +2,8 @@
  * Regression for issue #5764: re-registering an essential built-in (read /
  * write / bash / edit / glob) without an explicit `loadMode` must NOT demote it
  * to `discoverable`, which — with `tools.xdev` on — unmounts it from the
- * top-level schema and breaks the `xd://` transport (transport IS `read xd://`
- * / `write xd://<tool>`).
+ * top-level schema and breaks the `xdev://` transport (transport IS `read xdev://`
+ * / `write xdev://<tool>`).
  */
 import { describe, expect, it } from "bun:test";
 import { type } from "@oh-my-pi/omptype";

@@ -192,10 +192,10 @@ export interface EvalToolDescriptionOptions {
 	eagerDelegation?: boolean;
 	/** Point blocked callers at the `wait` tool; false when the session lacks it (subagents). Default: true. */
 	waitTool?: boolean;
-	/** Enabled preludes; each becomes an `xd://eval/<name>` doc topic, inlined when it asks to be. */
+	/** Enabled preludes; each becomes an `xdev://eval/<name>` doc topic, inlined when it asks to be. */
 	preludes?: readonly Pick<EvalPreludeDefinition, "name" | "documentation" | "inlineDocumentation">[];
 	/**
-	 * Inline every doc topic instead of linking `xd://eval/<topic>`. Required
+	 * Inline every doc topic instead of linking `xdev://eval/<topic>`. Required
 	 * when the session cannot `read` (the only transport for topic docs).
 	 */
 	inlineTopics?: boolean;
@@ -228,7 +228,7 @@ function evalTemplateContext(options: EvalToolDescriptionOptions) {
 }
 
 /**
- * On-demand eval docs (`topic → markdown`) served at `xd://eval/<topic>`:
+ * On-demand eval docs (`topic → markdown`) served at `xdev://eval/<topic>`:
  * `judge` (including completion), `helpers`, `agents` (when spawning is allowed),
  * and one per enabled prelude.
  */
@@ -365,7 +365,7 @@ export class EvalTool implements AgentTool<typeof evalSchema> {
 	}
 
 	/**
-	 * `xd://eval/<topic>` docs follow the live prelude set so a prelude announced
+	 * `xdev://eval/<topic>` docs follow the live prelude set so a prelude announced
 	 * by the mid-session notice is readable before the description catches up.
 	 */
 	docTopics(): Record<string, string> {

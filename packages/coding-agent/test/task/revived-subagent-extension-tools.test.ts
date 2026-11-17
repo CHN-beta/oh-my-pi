@@ -311,7 +311,7 @@ it("cold-revives with the tools and devices it was parked with", async () => {
 		revived = await run.coldRevive();
 		const wake = await run.wake(revived);
 
-		// Tools the spawn mounted as `xd://` devices stay devices: a top-level copy changes the tool list.
+		// Tools the spawn mounted as `xdev://` devices stay devices: a top-level copy changes the tool list.
 		expect(wake.tools).toEqual(run.parked.tools);
 		expect(wake.systemPrompt).toEqual(run.parked.systemPrompt);
 	} finally {

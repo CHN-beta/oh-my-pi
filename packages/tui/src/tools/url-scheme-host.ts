@@ -10,7 +10,7 @@
  * - `workspace`: mutates user/external state; blocked in plan mode and device-only sessions.
  * - `sandbox`: session scratch space (local://); allowed in plan mode and device-only sessions.
  * - `coordination`: peer messaging (agent://); always allowed. `SchemeWritePolicy.cancels` grants the same per URL.
- * - `device`: tool-device dispatch (xd://); always allowed, the device enforces its own policy.
+ * - `device`: tool-device dispatch (xdev://); always allowed, the device enforces its own policy.
  * - `reply`: a message to the user (out://); always allowed, and transcripts draw the content as assistant prose.
  */
 export type SchemeWriteScope = "workspace" | "sandbox" | "coordination" | "device" | "reply";

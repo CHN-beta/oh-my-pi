@@ -1,5 +1,5 @@
 /**
- * Exclusive `write xd://…` calls stay queued after `message_end` (which marks
+ * Exclusive `write xdev://…` calls stay queued after `message_end` (which marks
  * every pending call args-complete) until that call's own `tool_execution_start`.
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from "bun:test";
@@ -44,7 +44,7 @@ function deviceWrite(id: string, name: string, inner: Record<string, unknown>) {
 		id,
 		name: "write",
 		arguments: {
-			path: `xd://${name}`,
+			path: `xdev://${name}`,
 			content: JSON.stringify(inner),
 		},
 	};
@@ -75,7 +75,7 @@ describe("EventController queues exclusive device writes until execution starts"
 		vi.restoreAllMocks();
 	});
 
-	it("keeps the second exclusive xd:// write queued after message_end until its own start", async () => {
+	it("keeps the second exclusive xdev:// write queued after message_end until its own start", async () => {
 		await Settings.init({ inMemory: true, cwd: process.cwd() });
 		cfgDisplaySmoothStreaming.set(settings, false);
 

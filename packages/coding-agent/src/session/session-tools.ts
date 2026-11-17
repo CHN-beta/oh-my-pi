@@ -25,7 +25,7 @@ import {
 	setActiveSkills,
 } from "../extensibility/skills";
 import { type LocalProtocolOptions } from "../internal-urls";
-import { stripXdUrlPrefix, XD_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { stripXdevUrlPrefix, XDEV_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xdev-url";
 import { deduplicateMCPToolsByName, resolveMCPToolAlias } from "../mcp/tool-bridge";
 import { resolveMemoryBackend } from "../memory-backend/resolve";
 import { MEMORY_BACKEND_TOOL_NAMES } from "../memory-backend/tool-names";
@@ -163,12 +163,12 @@ export interface SettingsGatedToolDelta {
 	readonly added: readonly { readonly name: string; readonly builtIn: boolean; readonly activate: boolean }[];
 	/** Names whose registry entries were removed. */
 	readonly removed: readonly string[];
-	/** `xd://` state after following `tools.xdev`; undefined while mounting is off. */
+	/** `xdev://` state after following `tools.xdev`; undefined while mounting is off. */
 	readonly xdev: XdevState | undefined;
 }
 
 /**
- * Renders the base prompt for an active tool set. `xdev` is the `xd://` state
+ * Renders the base prompt for an active tool set. `xdev` is the `xdev://` state
  * to render: the live state, or a frozen prefix's committed roster when a
  * rebuild re-renders it. Supplied by `sdk.ts`; called on every prompt rebuild.
  */
@@ -274,13 +274,13 @@ export function projectMountedMCPXdevGuidance(routes: Iterable<MountedMCPToolRou
 	let remainingMappingDataLength = MAX_MCP_XDEV_GUIDANCE_MAPPING_DATA_LENGTH;
 	let hasOmittedMappings = false;
 	for (const route of routes) {
-		const rawMappingDataLength = route.mcpToolName.length + XD_URL_PREFIX.length + route.name.length;
+		const rawMappingDataLength = route.mcpToolName.length + XDEV_URL_PREFIX.length + route.name.length;
 		if (mappings.length >= MAX_MCP_XDEV_GUIDANCE_MAPPINGS || rawMappingDataLength > remainingMappingDataLength) {
 			hasOmittedMappings = true;
 			continue;
 		}
 		const label = formatMCPXdevGuidanceLabel(route.mcpToolName);
-		const path = `${XD_URL_PREFIX}${route.name}`;
+		const path = `${XDEV_URL_PREFIX}${route.name}`;
 		const mappingDataLength = label.length + path.length;
 		if (mappingDataLength > remainingMappingDataLength) {
 			hasOmittedMappings = true;
@@ -389,7 +389,7 @@ interface PromptRoster {
 	readonly toolNames: string[];
 	/** Registry entries the render could read. */
 	readonly tools: Map<string, AgentTool>;
-	/** `xd://` state over {@link tools} with the mounts the render listed. */
+	/** `xdev://` state over {@link tools} with the mounts the render listed. */
 	readonly xdev: XdevState | undefined;
 }
 
@@ -454,7 +454,7 @@ export class SessionTools {
 	/** {@link currentPromptDigest} for the base prompt array it hashed. */
 	#currentPromptDigest: { base: readonly string[]; digest: string } | undefined;
 	/**
-	 * Dynamic (`xd://`) devices the model has already been told are mounted.
+	 * Dynamic (`xdev://`) devices the model has already been told are mounted.
 	 * Seeded lazily from persisted history on resume (see
 	 * {@link #ensureAnnouncedMountsSeeded}) and updated as notices are emitted, so
 	 * a host reconnect that re-mounts the same device does not re-announce it.
@@ -484,7 +484,7 @@ export class SessionTools {
 	/** Full enabled set, including tools demoted from the model-visible surface. */
 	#enabledToolNames = new Set<string>();
 	/**
-	 * `xd://` device names the current base system prompt renders in its catalog
+	 * `xdev://` device names the current base system prompt renders in its catalog
 	 * (the last rebuild's {@link BuildSystemPromptResult.xdevCatalogNames}). Consulted
 	 * when a pending mount notice is delivered: a device the outgoing prompt already
 	 * lists is recorded as announced without a redundant notice line. Empty when the
@@ -537,7 +537,7 @@ export class SessionTools {
 	#setDeviceOnlyWrite: SessionToolsOptions["setDeviceOnlyWrite"];
 	#setPendingFullWriteDescription: SessionToolsOptions["setPendingFullWriteDescription"];
 	/**
-	 * The session originated with an xd:// transport grant. Unlike the live
+	 * The session originated with an xdev:// transport grant. Unlike the live
 	 * device-only flag, this survives temporary full-write upgrades.
 	 */
 	readonly #deviceOnlyWriteTransportAvailable: boolean;
@@ -594,7 +594,7 @@ export class SessionTools {
 		this.#getMcpServerInstructions = options.getMcpServerInstructions;
 		this.#xdev = options.xdev;
 		if (this.#xdev && this.#xdev.tools !== this.#toolRegistry) {
-			throw new Error("xd:// state must reference the canonical session tool map");
+			throw new Error("xdev:// state must reference the canonical session tool map");
 		}
 		if (this.#xdev) this.#xdev.decorateExecution = tool => this.#wrapToolForAcpPermission(tool);
 		this.#setActiveToolNames = options.setActiveToolNames;
@@ -611,7 +611,7 @@ export class SessionTools {
 		this.#skillWarnings = options.skillWarnings ?? [];
 		this.#skillsSettings = options.skillsSettings;
 		this.#skillsReloadable = options.skillsReloadable ?? true;
-		// Seed from the construction slate (top-level tools plus xd:// mounts).
+		// Seed from the construction slate (top-level tools plus xdev:// mounts).
 		// Left empty, getEnabledToolNames() falls back to live agent.state.tools,
 		// so an early reconcile (think after the startup model resolution)
 		// landing while the live set is transiently narrow
@@ -866,9 +866,9 @@ export class SessionTools {
 	getActiveToolNames(): string[] {
 		return this.#host.agent.state.tools.map(t => t.name);
 	}
-	/** Enabled top-level and `xd://` tool names. */
+	/** Enabled top-level and `xdev://` tool names. */
 	getEnabledToolNames(): string[] {
-		// Union live xd:// mounts so devices mounted out-of-band (plugins writing
+		// Union live xdev:// mounts so devices mounted out-of-band (plugins writing
 		// to xdev state directly) survive the next apply.
 		const mountedNames = this.#xdev?.mountedNames;
 		const base = this.#enabledToolNames.size > 0 ? [...this.#enabledToolNames] : this.getActiveToolNames();
@@ -876,7 +876,7 @@ export class SessionTools {
 		return [...new Set([...base, ...mountedNames])];
 	}
 
-	/** Names currently presented as `xd://` devices. */
+	/** Names currently presented as `xdev://` devices. */
 	getMountedXdevToolNames(): string[] {
 		return [...(this.#xdev?.mountedNames ?? [])];
 	}
@@ -887,7 +887,7 @@ export class SessionTools {
 	}
 
 	/**
-	 * Looks up a registered tool by its canonical name or `xd://` alias.
+	 * Looks up a registered tool by its canonical name or `xdev://` alias.
 	 *
 	 * An unmatched `mcp__` name is retried under its canonical registry keys: the
 	 * identity prompt primes the Claude Code spelling `mcp__<server>__<tool>`
@@ -899,7 +899,7 @@ export class SessionTools {
 	 * shortcut could render or return the wrong tool.
 	 */
 	getToolByName(name: string): AgentTool | undefined {
-		const bareName = stripXdUrlPrefix(name);
+		const bareName = stripXdevUrlPrefix(name);
 		const direct = this.#toolRegistry.get(name) ?? this.#toolRegistry.get(bareName);
 		if (direct) return direct;
 		return resolveMCPToolAlias(bareName, candidate => this.#toolRegistry.get(candidate));
@@ -908,13 +908,13 @@ export class SessionTools {
 	/**
 	 * Looks up an enabled tool through the same ACP permission gate as direct calls.
 	 *
-	 * Accepts the spellings direct dispatch accepts: an `xd://` prefix and the
+	 * Accepts the spellings direct dispatch accepts: an `xdev://` prefix and the
 	 * Claude Code `mcp__<server>__<tool>` alias. The alias resolves in one
 	 * {@link resolveMCPToolAlias} pass over every enabled tool (top-level plus
 	 * mounted devices), so an alias two enabled tools answer resolves to nothing.
 	 */
 	getToolForEvalBridge(name: string): AgentTool | undefined {
-		const bareName = stripXdUrlPrefix(name);
+		const bareName = stripXdevUrlPrefix(name);
 		const enabled = new Set(this.getEnabledToolNames());
 		const named = resolveToolWireName(this.#toolRegistry, bareName);
 		// A registered name never falls through to an alias guess, even when disabled.
@@ -1188,7 +1188,7 @@ export class SessionTools {
 
 	/** Enabled MCP tools in their current presentation partition. */
 	getSelectedMCPToolNames(): string[] {
-		// Every connected MCP tool is enabled; presentation (top-level vs xd://) is
+		// Every connected MCP tool is enabled; presentation (top-level vs xdev://) is
 		// decided by loadMode. Return the enabled MCP tools in the current set.
 		return this.getEnabledToolNames().filter(name => isMCPToolName(name) && this.#toolRegistry.has(name));
 	}
@@ -1447,7 +1447,7 @@ export class SessionTools {
 		);
 	}
 
-	/** Applies an enabled tool set and reconciles its `xd://` partition. */
+	/** Applies an enabled tool set and reconciles its `xdev://` partition. */
 	applyActiveToolsByName(toolNames: string[], forcePromptRefresh = false, signal?: AbortSignal): Promise<void> {
 		return this.runToolRegistryMutation(
 			() => this.#applyActiveToolsByName(toolNames, forcePromptRefresh, signal),
@@ -1895,14 +1895,14 @@ export class SessionTools {
 	}
 
 	/**
-	 * Record a mid-session `xd://` mount delta for the model. Non-MCP mount
+	 * Record a mid-session `xdev://` mount delta for the model. Non-MCP mount
 	 * churn remains notice-only, leaving the system prompt and provider cache
 	 * prefix byte-stable; mounted MCP route changes additionally rebuild the
 	 * global route guidance through the applied-tool signature. The delta is NOT
 	 * steered immediately — a steered notice landing at a run's stop boundary
 	 * (or while the session is idle) forces an unsolicited extra assistant turn
 	 * — so it is coalesced into {@link #pendingXdevMountDelta} and rides along
-	 * with the next prompt (docs + schema stay one `read xd://<tool>` away).
+	 * with the next prompt (docs + schema stay one `read xdev://<tool>` away).
 	 * Full docs join the system prompt opportunistically on a rebuild.
 	 */
 	#notifyXdevMountDelta(previousMounted: ReadonlySet<string>): void {
@@ -1923,7 +1923,7 @@ export class SessionTools {
 		const parts: string[] = [];
 		if (addedNames.length > 0) parts.push(`mounted ${addedNames.join(", ")}`);
 		if (removedNames.length > 0) parts.push(`unmounted ${removedNames.join(", ")}`);
-		this.#host.emitNotice("info", `xd://: ${parts.join("; ")}`, "xdev");
+		this.#host.emitNotice("info", `xdev://: ${parts.join("; ")}`, "xdev");
 	}
 
 	/**
@@ -1982,12 +1982,12 @@ export class SessionTools {
 					continue;
 				}
 				if (line === "Configured inline device docs:" || line === "</system-notice>") break;
-				if (line.startsWith("Read `xd://<tool>`")) {
+				if (line.startsWith("Read `xdev://<tool>`")) {
 					section = undefined;
 					continue;
 				}
 				if (!section) continue;
-				const match = /^- xd:\/\/(\S+?)(?:\s+—|$)/.exec(line);
+				const match = /^- xdev:\/\/(\S+?)(?:\s+—|$)/.exec(line);
 				const name = match?.[1];
 				if (!name) continue;
 				if (section === "added") this.#announcedMounts.add(name);
@@ -2130,7 +2130,7 @@ export class SessionTools {
 	 * Builds the hidden notice of skills the live registry has gained, changed or lost since the system
 	 * prompt and the notices still in context listed them. A changed description is announced again
 	 * because the model routes on it. Gated like the prompt's skill list: `skillful` on and an enabled
-	 * tool, top-level or `xd://`-mounted, that reads `skill://`.
+	 * tool, top-level or `xdev://`-mounted, that reads `skill://`.
 	 */
 	takeSkillNotice(): CustomMessage<SkillNoticeDetails> | undefined {
 		if (cfgSkillful.get(this.#host.settings) !== true) return undefined;
@@ -2168,7 +2168,7 @@ export class SessionTools {
 		};
 	}
 
-	/** Previews the hidden `xd://` mount notice and its rendered-content fingerprint. */
+	/** Previews the hidden `xdev://` mount notice and its rendered-content fingerprint. */
 	peekPendingXdevMountNotice(options: {
 		baseCatalogDelivered: boolean;
 	}): PendingNoticePreview<XdevMountNoticeDetails> | undefined {
@@ -2348,13 +2348,13 @@ export class SessionTools {
 	}
 
 	/**
-	 * Restore an enabled tool set with its exact top-level versus `xd://` partition.
+	 * Restore an enabled tool set with its exact top-level versus `xdev://` partition.
 	 *
 	 * Both inputs are required because {@link setActiveToolsByName} only receives the
 	 * enabled name list and classifies mounts from the current presentation set.
 	 * Rollback/restore callers must pass the snapshotted mounted subset so names that
 	 * were top-level stay pinned (`#runtimeSelectedToolNames`) and names that were under
-	 * `xd://` remain mount-eligible, even when the live mount set has drifted.
+	 * `xdev://` remain mount-eligible, even when the live mount set has drifted.
 	 *
 	 * Names outside `mountedToolNames` are pinned top-level for this application;
 	 * names in the mounted subset remain eligible for xdev mounting. Set
@@ -2502,7 +2502,7 @@ export class SessionTools {
 
 	/**
 	 * Re-resolves settings-gated tools (built-in factories, image/speech generation,
-	 * `xd://` mounting) against live settings: registers newly allowed tools,
+	 * `xdev://` mounting) against live settings: registers newly allowed tools,
 	 * unregisters disallowed ones, and reapplies the enabled set with one forced
 	 * prompt rebuild — unconditionally unless `refreshPrompt` is false, then only
 	 * when the tool set changed. Unrelated selections and MCP/extension tools are
@@ -2513,7 +2513,7 @@ export class SessionTools {
 			const reconcile = this.#reconcileSettingsGatedTools;
 			if (!reconcile || this.#host.isDisposed()) return;
 			// Sampled before the delta: it still carries names mounted under the
-			// `xd://` state the reconcile may release.
+			// `xdev://` state the reconcile may release.
 			const enabled = new Set(this.getEnabledToolNames());
 			const delta = await reconcile(name => this.#builtInToolNames.has(name));
 			for (const name of delta.removed) {
@@ -2730,13 +2730,13 @@ export class SessionTools {
 	 *      `readsSkillUris` changes skill catalog/URI guidance with identical
 	 *      names and descriptions, so it must rebuild too.
 	 *   3. The bounded mounted-MCP projection: escaped original-name labels,
-	 *      actual `xd://` paths, and the omission flag in catalog order. These are
+	 *      actual `xdev://` paths, and the omission flag in catalog order. These are
 	 *      the exact values rendered by the global transport guidance; catalog
 	 *      churn wholly behind the fallback does not change the prompt.
 	 *   4. MCP server instructions text (per server), since `rebuildSystemPrompt`
 	 *      embeds these in the appended prompt under "## MCP Server Instructions".
 	 *      A server upgrade can change instructions while keeping tools identical.
-	 *   5. Sorted names of mounted xd:// skill readers: mounting, unmounting,
+	 *   5. Sorted names of mounted xdev:// skill readers: mounting, unmounting,
 	 *      or flipping such a reader changes skill catalog/URI guidance without
 	 *      touching the direct inventory, so it must rebuild. Mount churn of
 	 *      capability-less tools leaves this segment empty and the prompt stable.
@@ -2790,13 +2790,13 @@ export class SessionTools {
 			entries.sort();
 			instructionsSegment = entries.join("\u0006");
 		}
-		// The non-MCP remainder of the xd:// inventory is deliberately NOT part
+		// The non-MCP remainder of the xdev:// inventory is deliberately NOT part
 		// of the signature: its mount/unmount announces itself through
 		// `#notifyXdevMountDelta` rather than rewriting the system prompt, keeping
 		// the provider cache prefix byte-stable. Mounted MCP routes are the narrow
 		// exception above, bounded to the exact projection rendered in the global
 		// route guidance so churn wholly behind its fallback does not rebuild.
-		// Mounted xd:// readers stay out of the direct inventory, but a mounted
+		// Mounted xdev:// readers stay out of the direct inventory, but a mounted
 		// skill reader still drives catalog/URI guidance: hash only the sorted
 		// names of mounted readers so their mount/unmount/flip rebuilds, while
 		// mount churn of capability-less tools keeps the prompt byte-stable.

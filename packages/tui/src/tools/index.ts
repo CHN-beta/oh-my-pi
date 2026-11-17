@@ -1,6 +1,6 @@
 /**
  * Built-in tool renderer registry: maps tool names to their transcript renderers.
- * `ToolExecutionComponent` and the `xd://` dispatch look renderers up here;
+ * `ToolExecutionComponent` and the `xdev://` dispatch look renderers up here;
  * tools without an entry fall back to `renderDefaultToolExecution`.
  */
 import { askToolRenderer } from "./ask";
@@ -48,7 +48,7 @@ export const toolRenderers: Record<string, ToolRenderer> = {
 	lsp: lspToolRenderer,
 	wait: waitToolRenderer,
 	read: readToolRenderer,
-	// Keyed by xd:// resolution-device names: the write dispatch delegates here
+	// Keyed by xdev:// resolution-device names: the write dispatch delegates here
 	// by dispatch tool, and historical `resolve` tool transcripts still render
 	// through the `resolve` entry. Both devices carry the same ResolveDetails.
 	resolve: resolveRenderer,
@@ -71,5 +71,5 @@ export const toolRenderers: Record<string, ToolRenderer> = {
 	yield: yieldToolRenderer,
 };
 
-// Wire the xd:// render delegation without the xdev module importing this registry.
+// Wire the xdev:// render delegation without the xdev module importing this registry.
 setXdevRendererLookup(name => toolRenderers[name]);

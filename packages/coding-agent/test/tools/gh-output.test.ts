@@ -308,7 +308,7 @@ it("keeps multiline gh stderr on one terminal diagnostic row", async () => {
 });
 
 describe("pr_create concise output", () => {
-	for (const route of ["direct", "xd"] as const) {
+	for (const route of ["direct", "xdev"] as const) {
 		for (const summaryAvailable of [true, false]) {
 			it(`${route} preserves the creation body without echoing it when the summary lookup ${summaryAvailable ? "succeeds" : "fails"}`, async () => {
 				const session = await createSession();
@@ -364,7 +364,7 @@ describe("pr_create concise output", () => {
 					route === "direct"
 						? await tool.execute("create-output", input)
 						: await new WriteTool(session).execute("create-output", {
-								path: "xd://github",
+								path: "xdev://github",
 								content: JSON.stringify(input),
 							});
 				expect(submittedBody).toBe(body);
@@ -384,7 +384,7 @@ describe("pr_create concise output", () => {
 				for (const field of ["body", "files", "comments", "reviews", "reviewComments"]) {
 					expect(requestedFields).not.toContain(field);
 				}
-				if (route === "xd") {
+				if (route === "xdev") {
 					await themeModule.initTheme();
 					const theme = await themeModule.getThemeByName("dark");
 					if (!theme) throw new Error("expected an initialized theme");
@@ -425,7 +425,7 @@ describe("pr_create concise output", () => {
 		session.xdev = xdev;
 		const input = { op: "search_prs", query: "is:open", repo: "owner/repo" };
 		const result = await new WriteTool(session).execute("other-output", {
-			path: "xd://github",
+			path: "xdev://github",
 			content: JSON.stringify(input),
 		});
 		expect(result.details?.xdev?.args).toEqual(input);

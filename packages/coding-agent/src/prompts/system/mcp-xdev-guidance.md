@@ -7,5 +7,5 @@ Execute each mounted tool: write JSON arguments to its path.{{#if hasCatalogOnly
 {{/each}}
 {{/if}}
 {{#if hasOmittedTools}}
-Additional mounted MCP tool mappings omitted: prompt bounded. Inspect `xd://` for exact current paths.
+Additional mounted MCP tool mappings omitted: prompt bounded. Inspect `xdev://` for exact current paths.
 {{/if}}

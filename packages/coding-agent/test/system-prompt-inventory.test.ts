@@ -503,7 +503,7 @@ describe("system prompt tool inventory", () => {
 		expect(text).not.toContain("Reads files from disk.");
 	});
 
-	it("references xd://-only tools by their xd:// URL", async () => {
+	it("references xdev://-only tools by their xdev:// URL", async () => {
 		const { systemPrompt } = await buildSystemPrompt({
 			cwd: tempDir,
 			contextFiles: [],
@@ -515,8 +515,8 @@ describe("system prompt tool inventory", () => {
 			workspaceTree: { ...EMPTY_TREE, rootPath: tempDir },
 		});
 		const text = systemPrompt.join("\n\n");
-		expect(text).toContain("MUST use `xd://lsp` for definitions");
-		expect(text).toContain("MUST check its callers via `xd://lsp` references");
+		expect(text).toContain("MUST use `xdev://lsp` for definitions");
+		expect(text).toContain("MUST check its callers via `xdev://lsp` references");
 		expect(text).not.toContain("`lsp`");
 	});
 
@@ -585,19 +585,19 @@ describe("system prompt tool inventory", () => {
 	it.each([
 		["compact", true],
 		["inline", false],
-	] as const)("omits xd-only tools from the %s inventory", async (_mode, nativeTools) => {
+	] as const)("omits xdev-only tools from the %s inventory", async (_mode, nativeTools) => {
 		const { text, inventory } = await renderMountedWebSearch({ nativeTools, directDefinition: false });
 
 		expect(inventory).toContain(nativeTools ? "\nread" : "type read = (_: {");
 		expect(inventory).not.toContain(nativeTools ? "web_search" : "type web_search = (");
-		expect(text).toContain("# xd:// Tool Devices");
+		expect(text).toContain("# xdev:// Tool Devices");
 		expect(text).toContain("Mounted web search documentation.");
 	});
 
 	it.each([
 		["compact", true],
 		["inline", false],
-	] as const)("keeps direct tools that share an xd device name in the %s inventory", async (_mode, nativeTools) => {
+	] as const)("keeps direct tools that share an xdev device name in the %s inventory", async (_mode, nativeTools) => {
 		const { inventory } = await renderMountedWebSearch({ nativeTools, directDefinition: true });
 
 		expect(inventory).toContain(nativeTools ? "\nread, web_search" : "type web_search = (");
@@ -1017,7 +1017,7 @@ describe("system prompt tool inventory", () => {
 		expect(withTodo).toContain("Keep the todo list updated");
 	});
 
-	// A session without `read` cannot open `xd://read/urls`, so the grammar that link stands for must ship inline.
+	// A session without `read` cannot open `xdev://read/urls`, so the grammar that link stands for must ship inline.
 	it("links the internal URL reference only while read can fetch it", async () => {
 		const opts = {
 			cwd: tempDir,
@@ -1030,11 +1030,11 @@ describe("system prompt tool inventory", () => {
 			inlineToolDescriptors: false,
 		};
 		const withRead = (await buildSystemPrompt({ ...opts, toolNames: ["read", "bash"] })).systemPrompt.join("\n\n");
-		expect(withRead).toContain("xd://read/urls");
+		expect(withRead).toContain("xdev://read/urls");
 		expect(withRead).not.toContain("named service");
 
 		const withoutRead = (await buildSystemPrompt({ ...opts, toolNames: ["bash"] })).systemPrompt.join("\n\n");
-		expect(withoutRead).not.toContain("xd://read/urls");
+		expect(withoutRead).not.toContain("xdev://read/urls");
 		expect(withoutRead).toContain("named service");
 	});
 });

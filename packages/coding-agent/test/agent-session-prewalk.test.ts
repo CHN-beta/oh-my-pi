@@ -871,13 +871,13 @@ describe("AgentSession prewalk", () => {
 		{ tier: "read", tool: "lsp" },
 		{ tier: "exec", tool: "bun-test" },
 	])(
-		"does not switch on a $tier-tier xd:// device dispatched through write (issues #7312, #19002)",
+		"does not switch on a $tier-tier xdev:// device dispatched through write (issues #7312, #19002)",
 		async ({ tier, tool }) => {
 			const primary = modelOrThrow("claude-sonnet-4-5");
 			const target = modelOrThrow("claude-sonnet-4-6");
 
 			// A read-only lsp navigation or an exec-tier test run is dispatched as
-			// `write xd://<device>`; the write result carries the wrapped tool's tier.
+			// `write xdev://<device>`; the write result carries the wrapped tool's tier.
 			// Like a direct bash step, neither mutates the workspace through `write`,
 			// so neither may arm the hand-off — the model keeps investigating on the
 			// strong model. Mirrors the bounded-continuation flow: one continuation,
@@ -1057,7 +1057,7 @@ describe("AgentSession prewalk", () => {
 		expect(worker.session.model?.id).toBe(worker.target.id);
 	});
 
-	it("switches on a write-tier xd:// device dispatched through write (issue #7312)", async () => {
+	it("switches on a write-tier xdev:// device dispatched through write (issue #7312)", async () => {
 		const primary = modelOrThrow("claude-sonnet-4-5");
 		const target = modelOrThrow("claude-sonnet-4-6");
 

@@ -253,7 +253,7 @@ export class ExtensionToolWrapper<TParameters extends TSchema = TSchema, TDetail
 		// `beforeToolCall` wiring) so a handler revision lands before concurrency
 		// scheduling and `tool_execution_start`. Consume the marker
 		// unconditionally so it cannot go stale; emit here only for dispatches
-		// the loop never saw — nested xd:// device dispatches and direct
+		// the loop never saw — nested xdev:// device dispatches and direct
 		// (non-loop) execution such as Cursor exec handlers.
 		const inheritedLoopDispatch = (context as LoopAwareToolContext | undefined)?.[LOOP_DISPATCH_CONTEXT] === true;
 		const loopDispatchedToolCall =
@@ -373,7 +373,7 @@ export class ExtensionToolWrapper<TParameters extends TSchema = TSchema, TDetail
 			throw denyError(resolved, this.tool.name);
 		}
 		const pendingSafetyChecks = computerSafetyChecks(context);
-		// Outer approvals only cover the original input. `xd://` approval skips
+		// Outer approvals only cover the original input. `xdev://` approval skips
 		// tier-only prompts, and an explicit prompt under the policy key the outer
 		// gate already asked about, while the same object flows through; ACP
 		// approval also satisfies explicit prompts, but compares against a deep

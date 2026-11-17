@@ -385,7 +385,7 @@ export async function revivePersistedSubagent(spec: PersistedReviveSpec, expecte
 		: sessionLocalModel
 			? [sessionLocalModel, ...(spawnModelPattern === undefined ? [] : [spawnModelPattern].flat())]
 			: spawnModelPattern;
-	// Older session files persisted the synthetic xd:// write transport in the
+	// Older session files persisted the synthetic xdev:// write transport in the
 	// enabled set. A read-only agent definition could never grant full write,
 	// so remove that transport name before replaying tools as explicit grants.
 	const revivedToolNames =

@@ -22,7 +22,7 @@ import { createInMemoryAuthStorage } from "./helpers/agent-session-setup";
 // agent loop that would blur the deadline. Request contents are asserted at the provider.
 
 const MCP_TOOL_NAME = "mcp__probe_lookup";
-const MCP_ROUTE = `xd://${MCP_TOOL_NAME}`;
+const MCP_ROUTE = `xdev://${MCP_TOOL_NAME}`;
 /** Margin around the deadline: Bun's fake clock fires a timer 1 ms before it is due. */
 const DEADLINE_SLACK_MS = 5;
 /**

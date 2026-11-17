@@ -2,8 +2,8 @@
  * Canonical set of built-in tools that must stay top-level.
  *
  * These are the coding essentials the model always needs directly in its
- * callable schema. `read`/`write` are additionally the `xd://` transport
- * (`read xd://` lists devices, `write xd://<tool>` executes them), so demoting
+ * callable schema. `read`/`write` are additionally the `xdev://` transport
+ * (`read xdev://` lists devices, `write xdev://<tool>` executes them), so demoting
  * them under xdev makes every mounted device unreachable.
  *
  * Adapter boundaries (extension `registerTool`, SDK custom tools, RPC host

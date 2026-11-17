@@ -133,7 +133,7 @@
 
 ### Fixed
 
-- Fixed action metadata loss on xd://resolve, xd://reject, and xd://propose cards to ensure correct action badges are rendered.
+- Fixed action metadata loss on xdev://resolve, xdev://reject, and xdev://propose cards to ensure correct action badges are rendered.
 - Added proper rendering support for reject, propose, and hub-family aliases (irc, job, await, poll, cancel_job) to prevent them from falling back to generic JSON.
 
 ## [17.0.8] - 2026-07-22
@@ -153,7 +153,7 @@
 ### Changed
 
 - Consolidated the legacy irc and job tool renderers into a unified hub renderer for messaging, background jobs, and process supervision, while preserving existing visual styles.
-- Enhanced rendering for xd:// device dispatches to resolve through their inner tool's renderer, preserving generated-image thumbnails and MCP/autoresearch presentations under a unified xd://<tool> card label.
+- Enhanced rendering for xdev:// device dispatches to resolve through their inner tool's renderer, preserving generated-image thumbnails and MCP/autoresearch presentations under a unified xdev://<tool> card label.
 
 ### Removed
 

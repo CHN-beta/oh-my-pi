@@ -16,12 +16,12 @@ import { Snowflake } from "@oh-my-pi/pi-utils";
 
 // Regression for #8272: with plan.defaultOnStartup:true, a headless `omp -p`
 // used to arm plan mode before the initial prompt. The only headless plan-exit
-// was a watcher that fires on a successful `xd://propose` execute-dispatch, so a
+// was a watcher that fires on a successful `xdev://propose` execute-dispatch, so a
 // model that never emits exactly that dispatch (the natural plan-mode behavior:
 // keep trying to finalize the plan) left the turn hanging until the deadline.
 //
 // The mock below mirrors that: while plan mode is enabled it keeps attempting to
-// finalize a plan (write xd://propose) without a plan artifact, which errors and
+// finalize a plan (write xdev://propose) without a plan artifact, which errors and
 // never produces the propose/execute dispatch. Out of plan mode it answers.
 describe("print mode + plan.defaultOnStartup (#8272)", () => {
 	let tempDir: string;
@@ -63,7 +63,7 @@ describe("print mode + plan.defaultOnStartup (#8272)", () => {
 				if (holder.session?.getPlanModeState?.()?.enabled) {
 					return {
 						content: [
-							{ type: "toolCall", name: "write", arguments: { path: "xd://propose", content: "the-plan" } },
+							{ type: "toolCall", name: "write", arguments: { path: "xdev://propose", content: "the-plan" } },
 						],
 					};
 				}
@@ -99,7 +99,7 @@ describe("print mode + plan.defaultOnStartup (#8272)", () => {
 
 	it("completes the turn and prints output instead of hanging to the deadline", async () => {
 		// If the startup default re-armed plan mode, the mock would loop on
-		// `xd://propose` forever and this await would never resolve — the runner's
+		// `xdev://propose` forever and this await would never resolve — the runner's
 		// own per-test timeout then fails it, exactly the #8272 symptom.
 		await runPrintMode(session, { mode: "text", initialMessage: "Reply with exactly: OK" });
 

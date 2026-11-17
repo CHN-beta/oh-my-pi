@@ -51,7 +51,7 @@ import type {
 	ToolRenderer,
 } from "./renderer";
 import { splitUrlScheme } from "./url-scheme-host";
-import { couldBecomeXdUrl, parseXdUrl } from "./xd-url";
+import { couldBecomeXdevUrl, parseXdevUrl } from "./xdev-url";
 import {
 	describeXdevCall,
 	describeXdevResult,
@@ -78,7 +78,7 @@ export interface WriteToolDetails {
 	/** Absolute filesystem path the write resolved to. Used by the renderer to wrap
 	 * the (possibly cwd-relative) header path in an OSC 8 `file://` hyperlink. */
 	resolvedPath?: string;
-	/** Set when the write dispatched an `xd://` tool device; drives renderer delegation. */
+	/** Set when the write dispatched an `xdev://` tool device; drives renderer delegation. */
 	xdev?: XdevRenderDispatch;
 	message?: CoordinationDetails;
 	proc?: ProcWriteDetails;
@@ -426,7 +426,7 @@ function renderContentPreview(
 	});
 }
 
-/** Render context for the write tool: resolves an `xd://`-mounted tool so its live renderer drives device dispatch previews. */
+/** Render context for the write tool: resolves an `xdev://`-mounted tool so its live renderer drives device dispatch previews. */
 export interface WriteRenderContext {
 	resolveXdevMounted?: (name: string) => XdevMountedRenderer | undefined;
 	/** Original result metadata used only for filesystem link targets. */
@@ -591,7 +591,7 @@ export const writeToolRenderer = {
 		if (!rawPath) return { label: "Write" };
 		const routed = writeUrlCard(rawPath);
 		if (routed) return routed.card.activity(routed.target);
-		const xdev = parseXdUrl(rawPath);
+		const xdev = parseXdevUrl(rawPath);
 		if (xdev?.name) {
 			const resolveMounted = (context.renderContext as WriteRenderContext | undefined)?.resolveXdevMounted;
 			return xdevActivitySummary(xdev.name, writeArgs.content, resolveMounted);
@@ -607,10 +607,10 @@ export const writeToolRenderer = {
 		const rawPath =
 			typeof args.file_path === "string" ? args.file_path : typeof args.path === "string" ? args.path : "";
 		// Render NOTHING until the streamed path arrives and provably is not an
-		// xd:// device. Device writes then render as queued until execution starts,
+		// xdev:// device. Device writes then render as queued until execution starts,
 		// after which they delegate to the mounted tool's renderer.
 		// A present-but-malformed path (array/object from a bad provider parse)
-		// is definitively not xd:// — fall through to the legacy frame.
+		// is definitively not xdev:// — fall through to the legacy frame.
 		if (args.path === undefined && args.file_path === undefined) return undefined;
 		const pathSettled = args.content !== undefined || options.argsComplete === true;
 		const hasStringPath = typeof args.file_path === "string" || typeof args.path === "string";
@@ -618,8 +618,8 @@ export const writeToolRenderer = {
 		const routed = writeUrlCard(rawPath);
 		if (routed)
 			return routed.card.render(rawPath, routed.target, args.content, undefined, undefined, options, uiTheme);
-		if (rawPath && couldBecomeXdUrl(rawPath)) {
-			const xdev = parseXdUrl(rawPath);
+		if (rawPath && couldBecomeXdevUrl(rawPath)) {
+			const xdev = parseXdevUrl(rawPath);
 			// The path string is settled once the content field started streaming.
 			const pathSettled = args.content !== undefined;
 			if (!xdev?.name || !pathSettled) return undefined;
@@ -701,7 +701,7 @@ export const writeToolRenderer = {
 		const routed = writeUrlCard(cardPath, result.details);
 		if (routed)
 			return routed.card.render(cardPath, routed.target, args?.content, result, result.details, options, uiTheme);
-		// xd:// dispatch results render as the mounted tool's own result.
+		// xdev:// dispatch results render as the mounted tool's own result.
 		const xdev = result.details?.xdev;
 		if (xdev) {
 			const delegated = renderXdevResult(xdev, result, options, uiTheme, options.renderContext?.resolveXdevMounted);
@@ -806,8 +806,8 @@ export const writeToolRenderer = {
 		if (hasStringPath && !pathSettled && couldBecomeWriteCardUrl(rawPath.toLowerCase())) return undefined;
 		const routed = writeUrlCard(rawPath);
 		if (routed) return describeWriteUrl(routed, rawPath, args.content, undefined, undefined);
-		if (rawPath && couldBecomeXdUrl(rawPath)) {
-			const xdev = parseXdUrl(rawPath);
+		if (rawPath && couldBecomeXdevUrl(rawPath)) {
+			const xdev = parseXdevUrl(rawPath);
 			if (!xdev?.name || args.content === undefined) return undefined;
 			if (isResolutionDeviceName(xdev.name)) return describeResolutionDeviceCall(xdev.name, args.content);
 			if (xdev.name === REPORT_ISSUE_DEVICE_NAME) return describeReportIssueDeviceCall(args.content);

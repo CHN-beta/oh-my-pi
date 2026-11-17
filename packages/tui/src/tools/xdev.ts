@@ -89,7 +89,7 @@ const ACTIVITY_OBJECT_KEYS = ["query", "symbol", "path", "file", "pattern", "url
 /**
  * Compact `label · verb object` activity summary for a device write, so a
  * squeezed transcript row reads `LSP · references foo` instead of
- * `Write · xd://lsp`. Prose payloads (resolution devices, report_issue)
+ * `Write · xdev://lsp`. Prose payloads (resolution devices, report_issue)
  * surface their first line instead.
  */
 export function xdevActivitySummary(
@@ -119,7 +119,7 @@ function displayDeviceArgs(args: Record<string, unknown>): Record<string, unknow
 	return rest;
 }
 
-/** Pre-execution card so a streamed `xd://` write does not look like a hung MCP call. */
+/** Pre-execution card so a streamed `xdev://` write does not look like a hung MCP call. */
 function renderQueuedXdevCall(
 	label: string,
 	args: Record<string, unknown>,
@@ -137,7 +137,7 @@ function renderQueuedXdevCall(
 }
 
 /**
- * Streaming-safe call preview for an `xd://` write. Until the write actually
+ * Streaming-safe call preview for an `xdev://` write. Until the write actually
  * executes (`executionStarted` / `tool_execution_start`), show a queued/planning
  * card so Grok-style think-after-toolcall stalls do not look like a hung
  * inner tool. `argsComplete` alone is not enough: exclusive writes can sit
@@ -175,7 +175,7 @@ function resolveDeviceDescriber(
 	return rendererLookup?.(name);
 }
 
-/** TSP call view for an `xd://` write: queued card until execution, then the device renderer's own view. */
+/** TSP call view for an `xdev://` write: queued card until execution, then the device renderer's own view. */
 export function describeXdevCall(
 	name: string,
 	content: unknown,
@@ -196,7 +196,7 @@ export function describeXdevCall(
 	return describeDefaultToolExecution({ label: mounted?.label ?? name, args, options });
 }
 
-/** TSP result view for an `xd://` dispatch, forwarded to the device renderer. */
+/** TSP result view for an `xdev://` dispatch, forwarded to the device renderer. */
 export function describeXdevResult(
 	dispatch: XdevRenderDispatch,
 	result: { content: Array<{ type: string; text?: string }>; isError?: boolean },
@@ -225,7 +225,7 @@ export function describeXdevResult(
 	});
 }
 
-/** Forward an `xd://` dispatch result to the mounted tool's renderer. */
+/** Forward an `xdev://` dispatch result to the mounted tool's renderer. */
 export function renderXdevResult(
 	dispatch: XdevRenderDispatch,
 	result: { content: Array<{ type: string; text?: string }>; isError?: boolean },

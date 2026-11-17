@@ -30,4 +30,4 @@ export * from "./skill-protocol";
 export * from "./ssh-protocol";
 export type * from "./types";
 export * from "./vault-protocol";
-export * from "./xd-protocol";
+export * from "./xdev-protocol";

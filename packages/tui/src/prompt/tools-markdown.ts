@@ -1,6 +1,6 @@
 export interface ToolsMarkdownBindings {
 	tools: ReadonlyArray<{ description: string; name: string }>;
-	/** Tools mounted under `xd://` URLs, listed after the active set. */
+	/** Tools mounted under `xdev://` URLs, listed after the active set. */
 	xdevTools?: ReadonlyArray<{ name: string; summary: string }>;
 }
 
@@ -22,7 +22,7 @@ export function buildToolsMarkdown(bindings: ToolsMarkdownBindings): string {
 		rows.push(`| \`${tool.name}\` | ${description} |`);
 	}
 	for (const mounted of bindings.xdevTools ?? []) {
-		rows.push(`| \`xd://${mounted.name}\` | ${escapeTableCell(mounted.summary) || "No description provided."} |`);
+		rows.push(`| \`xdev://${mounted.name}\` | ${escapeTableCell(mounted.summary) || "No description provided."} |`);
 	}
 
 	return ["| Tool | Description |", "|------|-------------|", ...rows].join("\n");

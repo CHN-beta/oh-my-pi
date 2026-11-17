@@ -206,7 +206,7 @@ describe("tools.approvalMode setting", () => {
 		expect(textOf(result)).toContain("(no output, exit code 0)");
 	});
 
-	it("xd:// dispatch approval (xdevPolicyKey) suppresses the tier-only re-prompt", async () => {
+	it("xdev:// dispatch approval (xdevPolicyKey) suppresses the tier-only re-prompt", async () => {
 		// The write tool's outer gate already prompted at the device tool's tier;
 		// without the flag this exact call rejects (see the always-ask test above).
 		const settings = approvalSettings({ "tools.approvalMode": "always-ask" });
@@ -217,7 +217,7 @@ describe("tools.approvalMode setting", () => {
 		expect(textOf(result)).toContain("dispatched");
 	});
 
-	it("xd:// dispatch approval does not cover explicit prompts under another key, or deny policies", async () => {
+	it("xdev:// dispatch approval does not cover explicit prompts under another key, or deny policies", async () => {
 		// The outer gate resolved `tools.approval.<device>`; a policy keyed
 		// elsewhere was never asked about, so it must still prompt.
 		const promptSettings = approvalSettings({

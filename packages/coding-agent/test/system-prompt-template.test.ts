@@ -283,15 +283,15 @@ describe("system prompt Handlebars templates", () => {
 		expect(second.xdevCatalogNames).toBeUndefined();
 	});
 
-	it("claims the xdev catalog when a template renders the xd:// section", async () => {
+	it("claims the xdev catalog when a template renders the xdev:// section", async () => {
 		using tempDir = TempDir.createSync("@omp-system-prompt-template-xdev-");
 		const cwd = tempDir.path();
 
-		const result = await render(cwd, "devices:\n{{xdevDocs}}\nreference xd://fetch here", {
+		const result = await render(cwd, "devices:\n{{xdevDocs}}\nreference xdev://fetch here", {
 			xdevTools: [{ name: "fetch", summary: "fetches a source" }],
 			xdevDocs: "device docs",
 		});
-		expect(result.text).toContain("xd://fetch");
+		expect(result.text).toContain("xdev://fetch");
 		expect(result.xdevCatalogNames).toEqual(["fetch"]);
 	});
 

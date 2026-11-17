@@ -11,10 +11,10 @@ const tool = (name: string, parameters: TSchema = { type: "object", properties: 
 });
 
 describe("cursor buildMcpToolDefinitions", () => {
-	it("forwards the write transport alongside preview-staging devices so xd:// resolution stays reachable", () => {
+	it("forwards the write transport alongside preview-staging devices so xdev:// resolution stays reachable", () => {
 		// A Cursor session with xdev on: ast_edit is a mounted device, write is the
-		// xd:// transport carried top-level. ast_edit always stages a preview whose
-		// resolution rides `write xd://resolve` / `write xd://reject`.
+		// xdev:// transport carried top-level. ast_edit always stages a preview whose
+		// resolution rides `write xdev://resolve` / `write xdev://reject`.
 		const defs = buildMcpToolDefinitions([
 			tool("read"),
 			tool("write"),
@@ -36,7 +36,7 @@ describe("cursor buildMcpToolDefinitions", () => {
 		expect(names).not.toContain("todo");
 
 		// The forwarded write must be a routable pi-agent MCP tool, so Cursor
-		// dispatches it back through the coding-agent write tool's xd:// handler.
+		// dispatches it back through the coding-agent write tool's xdev:// handler.
 		const writeDef = defs.find(def => def.name === "write");
 		expect(writeDef?.providerIdentifier).toBe("pi-agent");
 		expect(writeDef?.toolName).toBe("write");

@@ -11,7 +11,7 @@ const rootHelpers: [name: string, kind: "function" | "object"][] = [
 	["compactText", "function"],
 	["rowsText", "function"],
 	["styledSpans", "function"],
-	["parseXdUrl", "function"],
+	["parseXdevUrl", "function"],
 	["cfgExtensionTranscriptPresenters", "object"],
 ];
 

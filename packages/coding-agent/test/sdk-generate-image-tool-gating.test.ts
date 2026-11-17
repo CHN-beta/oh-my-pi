@@ -142,9 +142,9 @@ describe("generate_image tool gating", () => {
 		expect(names).toContain("generate_image");
 	});
 
-	it("exposes generate_image as an xd:// device (not top-level) in a default session", async () => {
+	it("exposes generate_image as an xdev:// device (not top-level) in a default session", async () => {
 		// Default session (no explicit --tools) with tools.xdev on: image-gen is a
-		// discoverable custom tool, so it mounts as an xd:// device instead of
+		// discoverable custom tool, so it mounts as an xdev:// device instead of
 		// shipping its schema top-level.
 		const { session } = await createAgentSession({
 			...startupShortcuts(),
@@ -364,7 +364,7 @@ describe("generate_image tool gating", () => {
 		expect(session.getActiveToolNames()).toContain(rpcTool.name);
 		expect(session.getXdevToolEntries().map(entry => entry.name)).not.toContain(rpcTool.name);
 	});
-	it("mounts newly discovered RPC tools under xd:// when write was omitted", async () => {
+	it("mounts newly discovered RPC tools under xdev:// when write was omitted", async () => {
 		const { session } = await createAgentSession({
 			...startupShortcuts(),
 			cwd: registryDir,
@@ -401,7 +401,7 @@ describe("generate_image tool gating", () => {
 		expect(session.getActiveToolNames()).not.toContain("rpc_search");
 		expect(session.getXdevToolEntries().map(entry => entry.name)).toContain("rpc_search");
 
-		// The transport write rejects filesystem targets: the grant is xd:// only.
+		// The transport write rejects filesystem targets: the grant is xdev:// only.
 		const write = session.getToolByName("write");
 		expect(write).toBeDefined();
 		await expect(

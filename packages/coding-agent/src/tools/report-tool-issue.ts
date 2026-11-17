@@ -2,7 +2,7 @@
  * report_issue — automated QA backend for tracking unexpected tool behavior.
  *
  * No model-facing tool schema anymore: the write tool dispatches plain text to
- * `xd://report_issue`, and the system prompt tells the model to write
+ * `xdev://report_issue`, and the system prompt tells the model to write
  * `<tool>: <concise description>` there when auto-QA is enabled.
  *
  * Enabled by default (`dev.autoqa` defaults to true); `PI_AUTO_QA=0` or an
@@ -47,12 +47,12 @@ import { truncateHeadBytes } from "@oh-my-pi/pi-tui/tools/streaming-output";
 
 import { cfgDevAutoqa, cfgDevAutoqaConsent, cfgDevAutoqaPushEndpoint, cfgDevAutoqaPushToken } from "./settings";
 
-/** Usage text for `read xd://report_issue`. */
+/** Usage text for `read xdev://report_issue`. */
 export function reportIssueDeviceUsage(): string {
 	return `Write \`<tool>: <concise description>\` as plain text to ${REPORT_ISSUE_DEVICE_PATH}. A two-line fallback also works: tool name on line 1, report body below.`;
 }
 
-/** Whether a tool call writes to `xd://report_issue`. */
+/** Whether a tool call writes to `xdev://report_issue`. */
 export function isReportIssueToolCall(toolCall: { name: string; arguments?: Record<string, unknown> }): boolean {
 	if (toolCall.name !== "write") return false;
 	const args = toolCall.arguments;
@@ -134,7 +134,7 @@ function parseReportIssueBody(text: string): { tool: string; report: string } {
 		const report = body.slice(firstNewline + 1).trim();
 		if (tool && report) return normalizeGrievance(tool, report);
 	}
-	// Only a colon followed by whitespace separates, so a URI (`xd://tui`) or an
+	// Only a colon followed by whitespace separates, so a URI (`xdev://tui`) or an
 	// unspaced argument (`{name:'x'}`) in the tool name stays in the tool name.
 	const colon = body.search(/:\s/);
 	if (colon > 0) {
@@ -653,7 +653,7 @@ function recordToolIssue(session: ToolSession, tool: string, report: string): vo
 }
 
 /**
- * Execute `write xd://report_issue`. `text` must be either:
+ * Execute `write xdev://report_issue`. `text` must be either:
  * - `<tool>: <concise description>` on one line, or
  * - tool name on the first line with the report body below.
  */

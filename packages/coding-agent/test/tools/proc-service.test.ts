@@ -287,7 +287,7 @@ describe("proc:// background jobs", () => {
 			})
 			.find(line => line.startsWith("proc://"));
 		expect(help).toMatch(/\/kill[^;]*jobs, agents, and services/);
-		// Service controls live in the on-demand reference (`xd://read/urls`), never unqualified in the always-on line.
+		// Service controls live in the on-demand reference (`xdev://read/urls`), never unqualified in the always-on line.
 		expect(help).not.toContain("stdin");
 		const reference = router.reference().find(line => line.startsWith("proc://"));
 		expect(reference).toMatch(/stdin[^;]*services.only/);
@@ -390,7 +390,7 @@ describe("proc:// background jobs", () => {
 		const write = new WriteTool(session);
 		try {
 			await expect(write.execute("stdin", { path: `proc://${id}`, content: "go" })).rejects.toThrow(
-				deviceOnlyWrite ? "limited to the xd:// device transport" : "Plan mode",
+				deviceOnlyWrite ? "limited to the xdev:// device transport" : "Plan mode",
 			);
 			expect(manager.getJob(id)?.status).toBe("running");
 			const result = await write.execute("kill", { path: `proc://${id}/kill`, content: "" });

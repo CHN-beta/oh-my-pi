@@ -69,7 +69,7 @@ interface InFlight {
 
 /**
  * A non-forcing pending preview invoker. Registered by `queueResolveHandler`
- * (resolve previews) so a `write` to `xd://resolve` or `xd://reject` can
+ * (resolve previews) so a `write` to `xdev://resolve` or `xdev://reject` can
  * dispatch to a staged action WITHOUT this queue forcing `tool_choice`. The agent-loop's
  * SoftToolRequirement lifecycle (remind-then-escalate) owns any forcing.
  */
@@ -99,7 +99,7 @@ export class ToolChoiceQueue {
 	#lastResolvedLabel: string | undefined;
 	/**
 	 * Non-forcing pending preview invokers, stacked by UNIQUE id. The
-	 * `xd://resolve` or `xd://reject` dispatch runs the head; the agent-loop's
+	 * `xdev://resolve` or `xdev://reject` dispatch runs the head; the agent-loop's
 	 * soft-tool-requirement lifecycle drives resolution without this queue forcing `tool_choice`.
 	 */
 	#pendingInvokers: PendingInvoker[] = [];

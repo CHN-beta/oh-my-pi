@@ -2231,7 +2231,7 @@ describe("AgentSession TTSR resume gate", () => {
 		const modelResult = JSON.stringify(mock.calls[1]?.context.messages ?? []);
 		expect(modelResult.match(/Do not write FORBIDDEN_TOKEN\./g) ?? []).toHaveLength(1);
 	});
-	it("does not preflight a direct nested xd device dispatch", async () => {
+	it("does not preflight a direct nested xdev device dispatch", async () => {
 		const parameters = type({ path: "string", content: "string" });
 		const sessionManager = SessionManager.inMemory(tempDir);
 		const extensionRunner = new ExtensionRunner(
@@ -2256,7 +2256,7 @@ describe("AgentSession TTSR resume gate", () => {
 		const outerTool: AgentTool<typeof parameters> = {
 			name: "write",
 			label: "Write",
-			description: "Outer xd write",
+			description: "Outer xdev write",
 			parameters,
 			execute: (id, args, signal, onUpdate, context) =>
 				inner.execute(id, { path: "probe.ts", content: args.content }, signal, onUpdate, context),
@@ -2266,7 +2266,7 @@ describe("AgentSession TTSR resume gate", () => {
 			responses: [
 				{
 					content: [
-						{ type: "toolCall", name: "write", arguments: { path: "xd://lsp", content: "DEVICE_RULE_TOKEN" } },
+						{ type: "toolCall", name: "write", arguments: { path: "xdev://lsp", content: "DEVICE_RULE_TOKEN" } },
 					],
 				},
 			],

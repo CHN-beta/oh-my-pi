@@ -266,14 +266,14 @@ export interface AgentOptions {
 
 	/**
 	 * Resolve a tool call whose name matched no advertised tool. Lets hosts
-	 * route calls to tools exposed through side transports (e.g. `xd://`
+	 * route calls to tools exposed through side transports (e.g. `xdev://`
 	 * device mounts) instead of failing with "Tool not found".
 	 */
 	resolveFallbackTool?: (name: string, advertised: readonly AgentTool<any>[]) => AgentTool<any> | undefined;
 
 	/**
 	 * Names routable by {@link resolveFallbackTool} that the advertised set
-	 * omits (e.g. `xd://` device mounts), used only to suggest a target when a
+	 * omits (e.g. `xdev://` device mounts), used only to suggest a target when a
 	 * call misses.
 	 */
 	suggestFallbackToolNames?: () => Iterable<string>;

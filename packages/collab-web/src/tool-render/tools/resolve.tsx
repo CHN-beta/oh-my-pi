@@ -2,7 +2,7 @@
  * `resolve` / `reject` / `propose` — finalize a staged preview (apply/discard)
  * or submit a plan for approval.
  *
- * In collab-web these arrive as `write xd://<device>` calls that `ToolView`
+ * In collab-web these arrive as `write xdev://<device>` calls that `ToolView`
  * unwraps: the card model then lives on the unwrapped inner details
  * (`result.details`) and the device name (`props.name`). Historical top-level
  * `resolve` transcripts instead carried `action`/`reason` on `args`, so read

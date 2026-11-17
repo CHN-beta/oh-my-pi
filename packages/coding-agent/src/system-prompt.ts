@@ -40,7 +40,7 @@ import systemPromptTemplate from "./prompts/system/system-prompt.md" with { type
 import userAppendPromptTemplate from "./prompts/system/user-append.md" with { type: "text" };
 import type { SystemPromptSource, SystemPromptSources } from "@oh-my-pi/pi-tui/status-line/context-usage";
 import type { ActiveRepoContext } from "@oh-my-pi/pi-tui/status-line/host";
-import { XD_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xd-url";
+import { XDEV_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xdev-url";
 import { resolveActiveRepoContext } from "./utils/active-repo-context";
 import { normalizePromptPath } from "./utils/prompt-path";
 import { expandTilde } from "./tools/path-utils";
@@ -618,15 +618,15 @@ export interface BuildSystemPromptOptions {
 	encourageEdits?: boolean;
 	/** Pre-resolved nested active repo context. Undefined resolves from cwd. */
 	activeRepoContext?: ActiveRepoContext | null;
-	/** Tools mounted under `xd://`; renders the protocol section when non-empty. `dynamic` marks external devices whose summary is third-party metadata. */
+	/** Tools mounted under `xdev://`; renders the protocol section when non-empty. `dynamic` marks external devices whose summary is third-party metadata. */
 	xdevTools?: Array<{ name: string; summary: string; dynamic?: boolean }>;
-	/** Full docs + JSON schema for every `xd://`-mounted tool, inlined into the protocol section so no discovery `read` is needed. */
+	/** Full docs + JSON schema for every `xdev://`-mounted tool, inlined into the protocol section so no discovery `read` is needed. */
 	xdevDocs?: string;
-	/** Whether Auto-QA grievance reporting is enabled; renders the `xd://report_issue` note. */
+	/** Whether Auto-QA grievance reporting is enabled; renders the `xdev://report_issue` note. */
 	autoQaEnabled?: boolean;
 	/** ovnfs command when its binary is found (`ovnfsCommand`); renders the separate-checkout guidance. */
 	ovnfs?: string;
-	/** Whether active `write` is restricted to xd:// dispatch and the plan artifact sandbox. */
+	/** Whether active `write` is restricted to xdev:// dispatch and the plan artifact sandbox. */
 	writeTransportOnly?: boolean;
 	/**
 	 * Whether this prompt is for a subagent session. Replaces the Verify workflow with a hand-off:
@@ -642,7 +642,7 @@ export interface BuildSystemPromptResult {
 	/** Context files and skills located in `systemPrompt`; absent for prompts not built from templates. */
 	sources?: SystemPromptSources;
 	/**
-	 * Names of `xd://` devices whose catalog/protocol section this prompt renders.
+	 * Names of `xdev://` devices whose catalog/protocol section this prompt renders.
 	 * Empty/undefined when no catalog was emitted (no mounted devices, or a custom
 	 * prompt template that omits the section). Lets the session fold these devices
 	 * into its announced-mount baseline so a same-turn mount notice does not re-list
@@ -689,7 +689,7 @@ function trackedSources(
 }
 
 /**
- * Join generated append blocks (memory, auto-learn, `xd://` routes, MCP server
+ * Join generated append blocks (memory, auto-learn, `xdev://` routes, MCP server
  * instructions) with the user's append prompt. Keep the user text in its own
  * section so it is not misclassified as MCP server-controlled instructions.
  */
@@ -1002,11 +1002,11 @@ export async function buildSystemPrompt(options: BuildSystemPromptOptions = {}):
 	const toolListMode = !inlineToolDescriptors && nativeTools;
 	// Build tool descriptions for system prompt rendering.
 	const toolPromptNames = new Map<string, string>(toolNames.map(name => [name, tools?.get(name)?.wireName ?? name]));
-	// xd://-mounted tools count as present for prompt gates ({{#has tools "lsp"}})
-	// and resolve to their `xd://<name>` URL, the only way to reach them. The
+	// xdev://-mounted tools count as present for prompt gates ({{#has tools "lsp"}})
+	// and resolve to their `xdev://<name>` URL, the only way to reach them. The
 	// Tool Inventory list stays limited to real defs.
 	for (const mounted of xdevTools) {
-		if (!toolPromptNames.has(mounted.name)) toolPromptNames.set(mounted.name, `${XD_URL_PREFIX}${mounted.name}`);
+		if (!toolPromptNames.has(mounted.name)) toolPromptNames.set(mounted.name, `${XDEV_URL_PREFIX}${mounted.name}`);
 	}
 	const toolRefs = Object.fromEntries(toolPromptNames.entries());
 	const xdevToolNames = new Set(xdevTools.map(mounted => mounted.name));
@@ -1036,7 +1036,7 @@ export async function buildSystemPrompt(options: BuildSystemPromptOptions = {}):
 	// Filter skills for the rendered system prompt:
 	// - require an active tool that declares `skill://` read capability (any tool
 	//   name, not just `read`, so custom resolvers count once projected; mounted
-	//   xd:// tools count too when their metadata is projected);
+	//   xdev:// tools count too when their metadata is projected);
 	// - drop skills with frontmatter `hide: true` (still loadable via skill:// and /skill:<name>).
 	const hasSkillReader =
 		tools === undefined
@@ -1176,11 +1176,11 @@ export async function buildSystemPrompt(options: BuildSystemPromptOptions = {}):
 		systemPrompt.push(projectPrompt.text);
 	}
 
-	// Claim delivery only when the rendered block 0 actually carries the xd://
+	// Claim delivery only when the rendered block 0 actually carries the xdev://
 	// section, so a template that references {{xdevDocs}} keeps mount-notice
 	// dedupe while one that omits it stays honest.
 	const xdevCatalogNames =
-		!resolvedCustomPrompt && xdevTools.length > 0 && rendered.text.includes("xd://")
+		!resolvedCustomPrompt && xdevTools.length > 0 && rendered.text.includes("xdev://")
 			? xdevTools.map(mounted => mounted.name)
 			: undefined;
 	return { systemPrompt, xdevCatalogNames, sources: { blocks: systemPrompt.slice(), sources } };

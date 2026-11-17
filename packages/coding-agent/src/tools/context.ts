@@ -10,7 +10,7 @@ declare module "@oh-my-pi/pi-agent-core" {
 		hasUI?: boolean;
 		toolNames?: string[];
 		toolCall?: ToolCallContext;
-		/** Set after the write tool's outer gate approves an `xd://` device call:
+		/** Set after the write tool's outer gate approves an `xdev://` device call:
 		 *  the `tools.approval` key that gate resolved (the canonical tool name). While the
 		 *  input flows through unchanged, the inner wrapper skips its tier-only
 		 *  prompt and an explicit prompt policy under this same key; overrides and
@@ -21,7 +21,7 @@ declare module "@oh-my-pi/pi-agent-core" {
 		 *  remains equal; deny policies and provider safety checks still apply. */
 		acpApprovedArgs?: unknown;
 		/** Reports the approval tier resolved after an extension rewrites an
-		 *  xd:// device call, so dispatch metadata describes the input that ran. */
+		 *  xdev:// device call, so dispatch metadata describes the input that ran. */
 		xdevTierResolved?(tier: "read" | "write" | "exec"): void;
 		/** Set only after an interactive prompt approves provider computer safety checks. */
 		providerSafetyApproved?: boolean;

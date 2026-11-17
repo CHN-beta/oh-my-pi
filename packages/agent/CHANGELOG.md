@@ -504,7 +504,7 @@
 
 ### Changed
 
-- `Tool <name> not found` now also suggests mounted `xd://` devices, not just the advertised tool set, via the new `suggestFallbackToolNames` option ([#11516](https://github.com/can1357/oh-my-pi/issues/11516), [#10109](https://github.com/can1357/oh-my-pi/issues/10109) by [@oldschoola](https://github.com/oldschoola)).
+- `Tool <name> not found` now also suggests mounted `xdev://` devices, not just the advertised tool set, via the new `suggestFallbackToolNames` option ([#11516](https://github.com/can1357/oh-my-pi/issues/11516), [#10109](https://github.com/can1357/oh-my-pi/issues/10109) by [@oldschoola](https://github.com/oldschoola)).
 
 ### Fixed
 
@@ -812,11 +812,11 @@
 
 - Replaced the irc, job, and launch tools with a unified hub tool.
 - Removed the tool discovery system (including the search-tool-bm25 tool) and its associated configuration settings (tools.discoveryMode, tools.essentialOverride, mcp.discoveryMode, and mcp.discoveryDefaultServers).
-- Removed the resolve tool; plan approval and preview actions now use writes to the xd://propose virtual device path.
+- Removed the resolve tool; plan approval and preview actions now use writes to the xdev://propose virtual device path.
 
 ### Added
 
-- Introduced the xd:// virtual device protocol for mounting tools as URLs readable/writable via read/write tools, configurable via the new tools.xdev setting (defaults to true).
+- Introduced the xdev:// virtual device protocol for mounting tools as URLs readable/writable via read/write tools, configurable via the new tools.xdev setting (defaults to true).
 - Added the hub tool, consolidating agent peer messaging, background job control, and supervised long-running processes.
 - Added the edit.enforceSeenLines configuration setting (defaults to false) to optionally reject edits on lines that have not been fully displayed.
 - Added the ToolLoadMode type and an optional satisfies predicate to SoftToolRequirement to support compliance checks against specific invocation shapes (such as writing to a virtual device path).

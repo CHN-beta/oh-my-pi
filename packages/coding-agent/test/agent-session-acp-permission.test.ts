@@ -259,7 +259,7 @@ it("eval applies direct-only restrictions to the resolved tool rather than its w
 	expect(tool.executeCalls).toBe(1);
 });
 
-it("eval resolves xd:// and Claude Code MCP spellings over enabled tools only", async () => {
+it("eval resolves xdev:// and Claude Code MCP spellings over enabled tools only", async () => {
 	const tools = ["read", "mcp__srv_active", "mcp__srv_idle", "lsp", "ast_grep"].map(makeFakeTool);
 	const xdev: XdevState = {
 		tools: new Map(tools.map(tool => [tool.name, tool])),
@@ -275,14 +275,14 @@ it("eval resolves xd:// and Claude Code MCP spellings over enabled tools only", 
 	toolSession.getToolByName = name => session!.getToolByName(name);
 
 	await callSessionTool("mcp__srv__active", {}, { session: toolSession });
-	await callSessionTool("xd://lsp", {}, { session: toolSession });
-	await callSessionTool("xd://read", {}, { session: toolSession });
+	await callSessionTool("xdev://lsp", {}, { session: toolSession });
+	await callSessionTool("xdev://read", {}, { session: toolSession });
 	expect(tools.map(tool => tool.executeCalls)).toEqual([1, 1, 0, 1, 0]);
 
 	await expect(callSessionTool("mcp__srv__idle", {}, { session: toolSession })).rejects.toThrow(
 		"registered but not available",
 	);
-	await expect(callSessionTool("xd://ast_grep", {}, { session: toolSession })).rejects.toThrow(
+	await expect(callSessionTool("xdev://ast_grep", {}, { session: toolSession })).rejects.toThrow(
 		"registered but not available",
 	);
 	await expect(callSessionTool("nope", {}, { session: toolSession })).rejects.toThrow("Unknown tool");
@@ -581,7 +581,7 @@ it("startup-mounted destructive tools gain the ACP permission gate when the brid
 	expect(deleteTool.executeCalls).toBe(1);
 });
 
-it("xd wire aliases keep edit's approval tier and cannot bypass ACP rejection", async () => {
+it("xdev wire aliases keep edit's approval tier and cannot bypass ACP rejection", async () => {
 	const requests: ClientBridgePermissionToolCall[] = [];
 	const bridge: ClientBridge = {
 		capabilities: { requestPermission: true },
@@ -607,8 +607,8 @@ it("xd wire aliases keep edit's approval tier and cannot bypass ACP rejection", 
 	const content = JSON.stringify({ input });
 
 	for (const name of ["edit", "apply_patch"]) {
-		expect(write.approval({ path: `xd://${name}`, content })).toEqual({ tier: "write", policyKey: "edit" });
-		const result = await write.execute(`xd-permission-${name}`, { path: `xd://${name}`, content });
+		expect(write.approval({ path: `xdev://${name}`, content })).toEqual({ tier: "write", policyKey: "edit" });
+		const result = await write.execute(`xd-permission-${name}`, { path: `xdev://${name}`, content });
 		expect(result.isError).toBe(true);
 		expect(result.content.find(entry => entry.type === "text")?.text).toContain("rejected by user");
 		expect(await Bun.file(target).text()).toBe("keep\n");

@@ -149,10 +149,10 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			expect(session.getAllToolNames()).toEqual(
 				expect.arrayContaining(["default_active_tool", "default_inactive_tool"]),
 			);
-			// Discoverable extension tools mount as xd:// devices, not top-level active tools.
+			// Discoverable extension tools mount as xdev:// devices, not top-level active tools.
 			const deviceNames = session.getXdevToolEntries().map(entry => entry.name);
 			expect(deviceNames).toContain("default_active_tool");
-			expect(session.getToolByName("xd://default_active_tool")?.name).toBe("default_active_tool");
+			expect(session.getToolByName("xdev://default_active_tool")?.name).toBe("default_active_tool");
 			expect(session.getActiveToolNames()).not.toContain("default_active_tool");
 			expect(deviceNames).not.toContain("default_inactive_tool");
 			expect(session.getActiveToolNames()).not.toContain("default_inactive_tool");
@@ -163,13 +163,13 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			// historical prefixed calls retain their canonical renderer.
 			await session.setActiveToolPresentation(session.getActiveToolNames(), []);
 			expect(session.getMountedXdevToolNames()).not.toContain("default_active_tool");
-			expect(session.getToolByName("xd://default_active_tool")?.name).toBe("default_active_tool");
+			expect(session.getToolByName("xdev://default_active_tool")?.name).toBe("default_active_tool");
 		} finally {
 			await session.dispose();
 		}
 	});
 
-	it("mounts discoverable tools under xd:// for explicit tool lists omitting write", async () => {
+	it("mounts discoverable tools under xdev:// for explicit tool lists omitting write", async () => {
 		const tempDir = makeTempDir();
 
 		const { session } = await createAgentSession({
@@ -179,16 +179,16 @@ describe("createAgentSession defaultInactive tool activation", () => {
 		});
 
 		try {
-			// The device-only xd:// transport write is surfaced in the active set...
+			// The device-only xdev:// transport write is surfaced in the active set...
 			expect(session.getActiveToolNames()).toEqual(expect.arrayContaining(["read", "grep", "glob", "write"]));
-			// ...so a discoverable extension tool mounts under xd:// instead of
+			// ...so a discoverable extension tool mounts under xdev:// instead of
 			// shipping its full schema top-level on every request.
 			const deviceNames = session.getXdevToolEntries().map(entry => entry.name);
 			expect(deviceNames).toContain("default_active_tool");
 			expect(session.getActiveToolNames()).not.toContain("default_active_tool");
 			expect(session.getActiveToolNames()).not.toContain("default_inactive_tool");
 
-			// The transport write rejects filesystem targets: the grant is xd:// only.
+			// The transport write rejects filesystem targets: the grant is xdev:// only.
 			const write = session.getToolByName("write");
 			expect(write).toBeDefined();
 			await expect(
@@ -1601,7 +1601,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 		}
 	});
 
-	it("forwards built-in and external xd:// devices to Cursor provider contexts", async () => {
+	it("forwards built-in and external xdev:// devices to Cursor provider contexts", async () => {
 		const tempDir = makeTempDir();
 		const cursorModel = getBundledModel("cursor", "composer-1.5");
 		if (!cursorModel) throw new Error("expected bundled Cursor model");
@@ -1731,7 +1731,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 				expect.arrayContaining(["read", "default_inactive_tool", "write"]),
 			);
 			// The explicitly requested inactive tool stays top-level. The ambient
-			// default-active tool mounts through the device-only xd:// transport.
+			// default-active tool mounts through the device-only xdev:// transport.
 			expect(session.getActiveToolNames()).not.toContain("default_active_tool");
 			expect(session.getXdevToolEntries().map(entry => entry.name)).toContain("default_active_tool");
 			expect(session.systemPrompt.join("\n")).toContain("default_inactive_tool");
@@ -1805,9 +1805,9 @@ describe("createAgentSession defaultInactive tool activation", () => {
 	});
 
 	it("keeps the write tool registered for plan mode even when no deferrable tool is requested", async () => {
-		// Regression for #1428 (adapted to the xd://propose device): plan mode
+		// Regression for #1428 (adapted to the xdev://propose device): plan mode
 		// submits its finalized plan by writing the chosen slug/title to
-		// xd://propose, dispatched through the plan-proposal handler
+		// xdev://propose, dispatched through the plan-proposal handler
 		// (interactive-mode.ts: `setPlanProposalHandler`). With an explicit
 		// read-only `toolNames` (e.g. `read`, `search`, `find`, `web_search`)
 		// the registry has no `write` and no `deferrable` tool; dropping it would
@@ -1839,7 +1839,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 		});
 
 		try {
-			// The dormant transport remains registered for later xd:// discovery,
+			// The dormant transport remains registered for later xdev:// discovery,
 			// but does not add an inert schema to a pure read-only surface.
 			expect(session.getActiveToolNames()).not.toContain("write");
 			const write = session.getToolByName("write");
@@ -2035,7 +2035,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 
 		try {
 			expect(session.getToolByName("tts")).toBeDefined();
-			// tts is a discoverable custom tool → mounted as an xd:// device, not top-level.
+			// tts is a discoverable custom tool → mounted as an xdev:// device, not top-level.
 			expect(session.getXdevToolEntries().map(entry => entry.name)).toContain("tts");
 			expect(session.getActiveToolNames()).not.toContain("tts");
 		} finally {
@@ -2224,8 +2224,8 @@ describe("createAgentSession defaultInactive tool activation", () => {
 		});
 
 		try {
-			expect(normal.systemPrompt.join("\n")).toContain("xd://report_issue");
-			expect(restricted.systemPrompt.join("\n")).not.toContain("xd://report_issue");
+			expect(normal.systemPrompt.join("\n")).toContain("xdev://report_issue");
+			expect(restricted.systemPrompt.join("\n")).not.toContain("xdev://report_issue");
 		} finally {
 			await Promise.all([normal.dispose(), restricted.dispose()]);
 		}
@@ -2624,17 +2624,17 @@ describe("createAgentSession defaultInactive tool activation", () => {
 	it.each([
 		// Anthropic tool names cannot carry `://`, so Claude substitutes one
 		// underscore per dropped character, or fewer.
-		["xd_probe_only", "probe_only"],
-		["xd__probe", "probe"],
-		["xd___probe", "probe"],
+		["xdev_probe_only", "probe_only"],
+		["xdev__probe", "probe"],
+		["xdev___probe", "probe"],
 		// A device whose real name starts with `xd_` keeps its exact dispatch
 		// instead of being read as the alias of `probe`.
-		["xd_probe", "xd_probe"],
+		["xdev_probe", "xdev_probe"],
 	])("dispatches a %s call to the mounted %s device", async (callName, device) => {
 		const tempDir = makeTempDir();
 		const executed: string[] = [];
 		const devices: ExtensionFactory = pi => {
-			for (const name of ["probe", "probe_only", "xd_probe"]) {
+			for (const name of ["probe", "probe_only", "xdev_probe"]) {
 				pi.registerTool({
 					name,
 					label: name,
@@ -2652,10 +2652,10 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			const { session } = await createAgentSession({ ...baseOptions(tempDir), extensions: [devices] });
 			try {
 				expect(session.getMountedXdevToolNames()).toEqual(
-					expect.arrayContaining(["probe", "probe_only", "xd_probe"]),
+					expect.arrayContaining(["probe", "probe_only", "xdev_probe"]),
 				);
 
-				const toolCallId = "xd-underscore-spelling-1";
+				const toolCallId = "xdev-underscore-spelling-1";
 				const mock = createMockModel({
 					responses: [
 						{ content: [{ type: "toolCall", id: toolCallId, name: callName, arguments: {} }] },

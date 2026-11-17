@@ -562,7 +562,7 @@ def _run_rpc_blocking(
     def _on_tool_end(event: ToolExecutionEndEvent) -> None:
         tool_name = event.tool_name
         # `tool_name` is transport-normalized by omp_rpc for top-level and
-        # xd:// device dispatches, but an eval-bridged host tool only surfaces
+        # xdev:// device dispatches, but an eval-bridged host tool only surfaces
         # as the enclosing `eval`; terminal-action detection therefore relies
         # on `_on_host_tool_completed`. A failed execution (`is_error`) does
         # not count — a rejected submit must still trigger the reminder.
@@ -579,7 +579,7 @@ def _run_rpc_blocking(
         )
 
     def _on_host_tool_completed(event: HostToolCompletedEvent) -> None:
-        # Fires for every dispatch path (top-level, `write xd://X`, eval
+        # Fires for every dispatch path (top-level, `write xdev://X`, eval
         # bridge) once the host tool's `execute()` returned, so a terminal
         # action reached from inside `eval` still ends the task (#13583).
         tools_called.add(event.tool_name)

@@ -355,9 +355,9 @@ export interface AgentSessionConfig {
 	rebuildSystemPrompt?: SystemPromptRebuilder;
 	/** Sources of the initial base prompt, as returned by `buildSystemPrompt`. */
 	systemPromptSources?: SystemPromptSources;
-	/** Tools mounted under `xd://`, for `/tools` display. */
+	/** Tools mounted under `xdev://`, for `/tools` display. */
 	getXdevToolEntries?: () => Array<{ name: string; summary: string }>;
-	/** `xd://` presentation state backed by the canonical tool map. */
+	/** `xdev://` presentation state backed by the canonical tool map. */
 	xdev?: XdevState;
 	/** Names pinned top-level during runtime repartitioning. */
 	presentationPinnedToolNames?: ReadonlySet<string>;

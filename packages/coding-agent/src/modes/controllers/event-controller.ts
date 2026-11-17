@@ -1721,7 +1721,7 @@ export class EventController {
 				if (renderToolName === "read") {
 					if (!readArgsHaveTarget(content.arguments)) {
 						// Args still streaming — defer until path is parseable so we can route to the
-						// read group (files + xd:// devices) vs ToolExecutionComponent (other internal URLs).
+						// read group (files + xdev:// devices) vs ToolExecutionComponent (other internal URLs).
 						// Creating either component now would lock the read into the wrong shape.
 						continue;
 					}
@@ -2368,7 +2368,7 @@ export class EventController {
 				{ hideWithToolActivity: true },
 			);
 		}
-		// Plan approval rides a `write` to xd://propose: the dispatch metadata on
+		// Plan approval rides a `write` to xdev://propose: the dispatch metadata on
 		// the write details carries the approval payload as `inner`.
 		if (!event.isError) {
 			const dispatch = writeDeviceDispatch(event.toolName, event.result);

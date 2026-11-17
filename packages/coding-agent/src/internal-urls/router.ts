@@ -49,7 +49,7 @@ import type {
 	WriteContext,
 } from "./types";
 import { VaultProtocolHandler } from "./vault-protocol";
-import { XdProtocolHandler } from "./xd-protocol";
+import { XdevProtocolHandler } from "./xdev-protocol";
 
 setInternalUrlCompletionHost({
 	completionSchemes: () => InternalUrlRouter.instance().completionSchemes(),
@@ -127,7 +127,7 @@ export class InternalUrlRouter {
 		this.register(new MrProtocolHandler());
 		this.register(resourceFallback);
 		// this.register(new OmpProtocolHandler());
-		this.register(new XdProtocolHandler());
+		this.register(new XdevProtocolHandler());
 		this.register(new AttachmentProtocolHandler());
 		this.register(new ConflictProtocolHandler());
 		this.#builtinSchemes = new Set(this.#handlers.keys());
@@ -272,8 +272,8 @@ export class InternalUrlRouter {
 	 * A mutating tool's URL target ({@link normalize}d) with a whole-file display selector
 	 * (`:raw`/`:conflicts`) peeled, so it names the file `read` does. Any other selector — a line
 	 * range, `raw:1-20`, a malformed `:-10` — throws ToolError: the tool addresses a whole file, and
-	 * dropping the selector would mutate a file the caller never named. Device URLs (xd://) refuse
-	 * every selector: write approval judges the unpeeled URL, so peeling `xd://ast_edit:raw` would
+	 * dropping the selector would mutate a file the caller never named. Device URLs (xdev://) refuse
+	 * every selector: write approval judges the unpeeled URL, so peeling `xdev://ast_edit:raw` would
 	 * dispatch a device the gate never judged. Non-URLs pass through.
 	 */
 	peelWriteSelector(input: string, tool: string): string {
@@ -443,7 +443,7 @@ export class InternalUrlRouter {
 		return lines;
 	}
 
-	/** Rendered promptReference entries, registration order: the body of `xd://read/urls`. */
+	/** Rendered promptReference entries, registration order: the body of `xdev://read/urls`. */
 	reference(): string[] {
 		const lines: string[] = [];
 		for (const handler of this.#handlers.values()) {

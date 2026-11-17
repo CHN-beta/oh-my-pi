@@ -1261,8 +1261,8 @@ export class ReadTool implements AgentTool<typeof readSchema, ReadToolDetails> {
 		});
 	}
 	/**
-	 * `xd://read/sources`: selector reference for the sources the description only names.
-	 * `xd://read/urls`: internal-URL grammar the system prompt's one-line entries leave out.
+	 * `xdev://read/sources`: selector reference for the sources the description only names.
+	 * `xdev://read/urls`: internal-URL grammar the system prompt's one-line entries leave out.
 	 */
 	docTopics(): Record<string, string> {
 		return {

@@ -606,7 +606,7 @@ export class WriteTool implements AgentTool<typeof writeSchema, WriteToolDetails
 		const targetPath = typeof params.path === "string" ? params.path : "(missing)";
 		const content = typeof params.content === "string" ? params.content : "";
 		const unwrapped = unwrapHashlineHeaderPath(targetPath);
-		if (extractUriScheme(unwrapped) === "xd") {
+		if (extractUriScheme(unwrapped) === "xdev") {
 			try {
 				const parsed: unknown = JSON.parse(content);
 				return [`Path: ${truncateForPrompt(targetPath)}`, ...formatApprovalArguments(parsed, { showEmpty: true })];
@@ -630,7 +630,7 @@ export class WriteTool implements AgentTool<typeof writeSchema, WriteToolDetails
 	readonly label = "Write";
 	get description(): string {
 		const deviceOnly = this.session.deviceOnlyWrite === true && this.session.pendingFullWriteDescription !== true;
-		// The archive/SQLite target grammar lives in `xd://read/sources`; inline it when that doc is unreachable.
+		// The archive/SQLite target grammar lives in `xdev://read/sources`; inline it when that doc is unreachable.
 		return prompt.render(deviceOnly ? writeDeviceOnlyDescription : writeDescription, {
 			readActive: docTopicsReadable(this.session),
 		});
@@ -979,7 +979,7 @@ export class WriteTool implements AgentTool<typeof writeSchema, WriteToolDetails
 			!(await targetsLocalSandbox(this.session, path, signal))
 		) {
 			// A device-only session that still has `yield` is the read-only subagent
-			// shape: `write` is present only as the xd:// transport, yet the parent's
+			// shape: `write` is present only as the xdev:// transport, yet the parent's
 			// briefing names a file path. Without naming the channel that does work,
 			// the rejection reads as a dead end (#14308). Keyed on `yield` being
 			// active rather than on an `isReadOnlyAgent` flag, which never reaches

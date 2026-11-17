@@ -46,7 +46,7 @@ Shared AST pattern grammar and language catalog: see [`ast_grep`](./ast-grep.md#
 - `details` includes aggregate preview metadata:
    - `totalReplacements`, `filesTouched`, `filesSearched`, `applied`, `limitReached`
    - optional `parseErrors`, `parseErrorsTotal`, `scopePath`, `files`, `fileReplacements`, `displayContent`, `searchPath`, `cwd`, `meta`
-- The tool always previews first (`applied: false` in the direct result). Actual file writes happen only later through a plain-text `write` to `xd://resolve`; the body is the reason.
+- The tool always previews first (`applied: false` in the direct result). Actual file writes happen only later through a plain-text `write` to `xdev://resolve`; the body is the reason.
 - When preview produced replacements, `ast_edit` also queues a pending resolve action. Successful apply returns a separate resolve dispatch result (on the `write` call), not another `ast_edit` result.
 
 ## Flow
@@ -68,9 +68,9 @@ Shared AST pattern grammar and language catalog: see [`ast_grep`](./ast-grep.md#
    - compiles each rewrite for every discovered language; a rule that cannot parse in one language skips that language's files and reports parse issues,
    - parses each file, skips files with syntax-error trees, collects `replace_by(...)` edits for every match, enforces replacement and file caps, and returns textual before/after slices plus source ranges.
 7. The TS wrapper deduplicates and caps parse errors, groups changes by file, and renders preview diff lines.
-8. If preview found replacements and `applied` is false, `queueResolveHandler(...)` registers a non-forcing pending resolve invoker. While it is pending the session surfaces a `SoftToolRequirement` (`toolName: "write"` with an `xd://resolve` or `xd://reject` `satisfies` predicate) carrying the resolve reminder; the agent runtime injects the reminder and forces `write` only if the model declines that turn.
-9. On a `write xd://resolve` dispatch, the queued callback reruns the same rewrite set with `dryRun: false`, recomputes counts, and returns an error result if the live result no longer matches the preview (`stalePreview`). The current implementation compares replacement totals and per-file counts after the rerun; if the new run has already written different counts, the result is marked error.
-10.   On a non-stale apply, the callback returns `Applied N replacements in M files.` (in hashline mode followed by fresh `[path#tag]` snapshot headers re-recorded from the post-apply content); on discard (`write xd://reject`), the dispatch returns a discard message without mutating files.
+8. If preview found replacements and `applied` is false, `queueResolveHandler(...)` registers a non-forcing pending resolve invoker. While it is pending the session surfaces a `SoftToolRequirement` (`toolName: "write"` with an `xdev://resolve` or `xdev://reject` `satisfies` predicate) carrying the resolve reminder; the agent runtime injects the reminder and forces `write` only if the model declines that turn.
+9. On a `write xdev://resolve` dispatch, the queued callback reruns the same rewrite set with `dryRun: false`, recomputes counts, and returns an error result if the live result no longer matches the preview (`stalePreview`). The current implementation compares replacement totals and per-file counts after the rerun; if the new run has already written different counts, the result is marked error.
+10.   On a non-stale apply, the callback returns `Applied N replacements in M files.` (in hashline mode followed by fresh `[path#tag]` snapshot headers re-recorded from the post-apply content); on discard (`write xdev://reject`), the dispatch returns a discard message without mutating files.
 
 ## Modes / Variants
 
@@ -79,7 +79,7 @@ Shared AST pattern grammar and language catalog: see [`ast_grep`](./ast-grep.md#
 - Multiple explicit paths/globs: wrapper unions them into one synthetic scope or runs per-target native calls when paths only meet at root.
 - Internal URL inputs: only file-writable schemes (`local://`); read-only and handler-written schemes are refused upfront. Native preview and apply read and write them through the URL filesystem, which redirects to their host files; the apply pass builds its own filesystem (no call signal) at the same tier. Approval is the highest write tier among the targeted schemes; hits are named by full URL and hashline snapshots bind to the located host file.
 - Preview mode: always the direct `ast_edit` tool result.
-- Apply mode: only reachable through the queued resolve callback (a `write` to `xd://resolve` or `xd://reject`) after a preview.
+- Apply mode: only reachable through the queued resolve callback (a `write` to `xdev://resolve` or `xdev://reject`) after a preview.
 - Hashline output mode vs plain line/column mode: controlled by `resolveFileDisplayMode()`.
 
 ## Side Effects
@@ -92,7 +92,7 @@ Shared AST pattern grammar and language catalog: see [`ast_grep`](./ast-grep.md#
    - Surfaces a `SoftToolRequirement` (with the resolve reminder) while pending; the agent runtime forces `write` only on non-compliance — no steering message and no per-preview forced tool choice.
 - User-visible prompts / interactive UI
    - Direct `ast_edit` results are previews.
-   - Follow-up apply/discard is exposed through writes to `xd://resolve` and `xd://reject`.
+   - Follow-up apply/discard is exposed through writes to `xdev://resolve` and `xdev://reject`.
 - Background work / cancellation
    - Native preview/apply work runs on a blocking worker via `task::blocking(...)`.
    - Cancellation and optional native timeout are cooperative through `CancelToken::heartbeat()`.

@@ -655,7 +655,7 @@ export function canonicalMCPToolNameCandidates(name: string): string[] {
  * main-session tool it was never offered. Naming the source at every call site
  * makes that mistake unrepresentable.
  *
- * A caller whose tools span several presentation sets (mounted `xd://` devices
+ * A caller whose tools span several presentation sets (mounted `xdev://` devices
  * plus advertised top-level tools) MUST pass one lookup covering the union.
  * Checking each set with its own call and taking the first hit would let set
  * order silently break the uniqueness rule below.
