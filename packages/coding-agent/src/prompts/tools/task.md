@@ -1,65 +1,65 @@
 {{#if asyncEnabled}}
 {{#if batchEnabled}}
-Spawn `tasks[]` concurrently; IDs return immediately.
+Launch `tasks[]` in parallel; IDs return immediately.
 {{else}}
-Spawn one agent; ID returns immediately.
+Launch a single agent; its ID returns immediately.
 {{/if}}
 {{#if hasBlockingAgents}}
-BLOCKING agents return inline.
+BLOCKING agents return their output inline.
 {{/if}}
 {{else}}
 {{#if batchEnabled}}
-Run `tasks[]` synchronously.
+Execute `tasks[]` synchronously.
 {{else}}
-Run one agent synchronously.
+Execute a single agent synchronously.
 {{/if}}
 {{/if}}
 {{#if asyncEnabled}}
 {{#ifAny structured hasStructuredAgents}}
 
 # Results
-{{#if structured}}`outputSchema`{{else}}STRUCTURED agents'{{/if}} parsed payload, even invalid: agent://<id> (field /<field>, nested /reports/0/data); invalid preview inline.
+{{#if structured}}`outputSchema`{{else}}STRUCTURED agents'{{/if}} parsed JSON payload (even when invalid): `agent://<id>` (field `/<field>`, nested `/reports/0/data`); invalid payload preview appears inline.
 {{/ifAny}}
 
 {{asyncGuidance}}
 {{/if}}
 
 # Inputs
-- `agent`: most specific{{#if batchEnabled}}, inside each `tasks[]` item, NEVER at the top level{{/if}}.
-  - Omit only for the default (`{{defaultAgent}}`); NEVER name it.
+- `agent`: pick the most specific agent{{#if batchEnabled}}, set inside each `tasks[]` entry and NEVER at the top level{{/if}}.
+  - Leave unset only for the default (`{{defaultAgent}}`); NEVER specify its name explicitly.
 {{#if scoutAvailable}}
-  - Read-only research MUST use `scout` only when files unknown.
+  - Read-only exploration MUST select `scout`, and only when target files are unknown.
 {{/if}}
-  - Prefer one agent to investigate + edit.
+  - Favor assigning one agent to both investigate and edit.
 {{#if batchEnabled}}
-- `context`: shared (`# Goal`, `# Contract` interfaces); NEVER repeat per task.
+- `context`: shared background (`# Goal`, `# Contract` interfaces); NEVER duplicate across tasks.
 {{/if}}
 {{#if steps}}
-- `steps`: ordered stages for one agent; each is sent only after it finishes the previous one. Earlier stages' reports arrive as progress messages; the last stage's result is returned.
-  - First step carries `# Target` files/non-goals{{#if batchEnabled}} beyond `context`{{/if}}.
-  - Each step: one `# Change` stage.
-  - Last step adds `# Acceptance` observable result.
-  - Children start blank;{{#if ircEnabled}} parent IRC steers immediately;{{/if}} large payloads via local://<path>, NEVER inline.
-  - Independent work → separate tasks.
+- `steps`: sequential phases for a single agent; each phase is dispatched only after the prior phase completes. Earlier phases deliver progress notices; the final phase yields the result.
+  - First step specifies `# Target` files and non-goals{{#if batchEnabled}} not already in `context`{{/if}}.
+  - Each step defines one `# Change` phase.
+  - Final step includes `# Acceptance` observable verification criteria.
+  - Subagents start with blank context;{{#if ircEnabled}} parent IRC messages steer immediately;{{/if}} pass large payloads via `local://<path>`, NEVER inline.
+  - Unrelated work → split into independent tasks.
 {{else}}
-- `task`: self-contained (`# Target` files/non-goals, `# Change` steps/APIs, `# Acceptance` observable result).
-  - Children start blank;{{#if ircEnabled}} parent IRC steers immediately;{{/if}} large payloads via local://<path>, NEVER inline.
+- `task`: self-contained prompt (`# Target` files/non-goals, `# Change` steps/APIs, `# Acceptance` observable outcome).
+  - Subagents start with blank context;{{#if ircEnabled}} parent IRC messages steer immediately;{{/if}} pass large payloads via `local://<path>`, NEVER inline.
 {{/if}}
-- `name`: CamelCase ≤32, auto-generated if omitted; address agent by name.{{#if structured}} `outputSchema` overrides agent/session schemas.{{/if}}
-- `solutionSpace`: how open-ended the child's problem is: fix or design given, or which causes or designs remain open.
-  - Volume of work does not widen it; NEVER mention sibling agents or coordination.
+- `name`: CamelCase identifier ≤32 chars, auto-assigned if omitted; used to address the agent.{{#if structured}} `outputSchema` overrides agent/session schemas.{{/if}}
+- `solutionSpace`: describes how open-ended the subagent's task is: whether the fix/design is fixed or which causes/designs remain open.
+  - Sheer work size does not widen it; NEVER mention sibling agents or coordination.
   - Examples: `one fix: rename, names given`; `one fix: slice end in paginate`; `single-flight cache load; races easy to miss`;
     `several retry API shapes; error classes to choose`; `deadlock cause open, no repro`
 {{#if evalToolsEnabled}}
-- `tools`: eval-defined, run in your kernel.
+- `tools`: custom eval-defined tools executed in your kernel.
 {{/if}}
 {{#if effortEnabled}}
-- `effort`: `"lo"`|`"med"`|`"hi"` by how open-ended the problem is.
+- `effort`: `"lo"`|`"med"`|`"hi"` matching how open-ended the problem is.
 {{/if}}
 {{#if perCallModelEnabled}}
-- `model`: one exact `provider/model-id[@upstream][:level]` string for this spawn only{{#if batchEnabled}}; per `tasks[]` item{{/if}}.
-  - `@upstream` pins an aggregator route and is part of the model identity.
-  - Only operator-approved models; no roles, arrays, globs or partial IDs.
+- `model`: single exact `provider/model-id[@upstream][:level]` string scoped to this spawn only{{#if batchEnabled}}; set per `tasks[]` entry{{/if}}.
+  - `@upstream` locks an aggregator route and forms part of the model identity.
+  - Restricted to operator-approved models; roles, arrays, globs, and partial IDs are disallowed.
   - Approved:
 {{#each perCallModelAdvertisement.roles}}
     - {{#list patterns join=", "}}`{{this}}`{{/list}} ({{role}})
@@ -67,32 +67,32 @@ Run one agent synchronously.
 {{#unless perCallModelAdvertisement.parentModelWithheld}}
     - your own current model
 {{/unless}}
-    - the selected bundled/user agent's own configured model
-  - A listed glob approves matching exact IDs; write the exact ID, NEVER the glob.
+    - the chosen bundled/user agent's own configured model
+  - A listed glob authorizes matching exact model IDs; supply the exact ID, NEVER the glob itself.
 {{#if perCallModelAdvertisement.allowlist.length}}
   - Allowlist: {{#list perCallModelAdvertisement.allowlist join=", "}}`{{this}}`{{/list}} (must also be approved).
 {{/if}}
-  - An agent's `task.agentModelOverrides` entry or user-chosen effort conflicts with `model`.
-  - Omit unless needed.
-  - Requested model unavailable → stop and report; NEVER substitute another.
-  - Every request requires an approved model; retry fallback, context promotion and prewalk are off.
+  - Conflicts with an agent's `task.agentModelOverrides` entry or user-chosen effort.
+  - Leave unset unless required.
+  - If the requested model is unavailable → stop and report; NEVER fall back to another model.
+  - Approved model required on every request; retry fallback, context promotion, and prewalk are disabled.
 {{/if}}
 {{#if structured}}
-- `schemaMode`: default permissive warns after retries; strict fails.
+- `schemaMode`: permissive (default) warns after retries; strict fails immediately.
 {{/if}}
 {{#if isolationEnabled}}
 {{#if applyIsolatedChanges}}
-- `isolated`: worktree; successful changes apply to parent.
+- `isolated`: runs in a git worktree; successful changes merge back into the parent.
 {{else}}
-- `isolated`: worktree; changes retained, not applied.
+- `isolated`: runs in a git worktree; changes are preserved without applying to parent.
 {{/if}}
 {{/if}}
 
-Shared edits need one integration owner; give each task its files{{#unless batchEnabled}} and interfaces{{/unless}}.
-Every task MUST skip build/lint/tests/formatters mid-flight; run once afterward.
+Shared-file edits require a single integration owner; assign distinct files{{#unless batchEnabled}} and interfaces{{/unless}} per task.
+All tasks MUST skip build/lint/test/formatter runs mid-flight; execute verification once afterward.
 
 # Available Agents
 {{#if spawningDisabled}}Agent spawning is currently disabled.
-{{else}}{{#if hasModelMentions}}`m<N>` = user-tagged model (`<model agent="m<N>" name="…"/>`), not specialist; spawn only when user names it.
+{{else}}{{#if hasModelMentions}}`m<N>` = user-tagged model (`<model agent="m<N>" name="…"/>`), not a specialist; spawn only when explicitly named by the user.
 {{/if}}{{#list agents join=""}}- `{{name}}`{{#if readOnly}} (read-only, no edits){{/if}}{{#if blocking}} (BLOCKING; inline result){{/if}}{{#if structured}} (STRUCTURED; schema result){{/if}}: {{description}}
 {{/list}}{{/if}}

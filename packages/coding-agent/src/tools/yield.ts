@@ -129,7 +129,7 @@ const yieldTypeSchema: Record<string, unknown> = {
 			items: { type: "string" },
 		},
 	],
-	description: "Optional result type. A non-empty string array is incremental; a string is terminal.",
+	description: "Optional outcome type. A non-empty string array submits incrementally; a string finalizes.",
 };
 
 function isYieldType(value: unknown): value is string | string[] {
@@ -275,14 +275,14 @@ function wrapWorkPoolYieldParameters(items: readonly WorkPoolYieldItem[]): Recor
 	return {
 		type: "object",
 		additionalProperties: false,
-		description: "submit one workpool item outcome",
+		description: "report one workpool item result",
 		properties: {
 			key: {
 				enum: items.map(item => item.index),
-				description: "1-based workpool item number",
+				description: "1-indexed workpool item index",
 			},
-			data: { description: "Self-contained outcome and evidence for this item" },
-			error: { type: "string", description: "Failure reason for this item" },
+			data: { description: "Self-contained result and supporting evidence for this item" },
+			error: { type: "string", description: "Reason this item failed" },
 		},
 		required: ["key"],
 	};
@@ -326,11 +326,11 @@ function buildYieldParameters(dataSchema: Record<string, unknown>): Record<strin
 	return {
 		type: "object",
 		additionalProperties: false,
-		description: "submit data or error",
+		description: "report data or error",
 		properties: {
 			type: yieldTypeSchema,
 			data: dataSchema,
-			error: { type: "string", description: "Failure reason; mutually exclusive with data" },
+			error: { type: "string", description: "Reason for failure; cannot be combined with data" },
 		},
 		required: [],
 	};
@@ -419,8 +419,8 @@ export class YieldTool implements AgentTool<TSchema, YieldDetails> {
 
 			const schemaHint = formatSchema(normalizedSchema ?? session.outputSchema);
 			const schemaDescription = schemaError
-				? `Structured JSON output (output schema invalid; accepting unconstrained object): ${schemaError}`
-				: `Structured output matching the schema:\n${schemaHint}`;
+				? `Structured JSON output (provided output schema invalid; accepting arbitrary object): ${schemaError}`
+				: `Structured output conforming to the schema:\n${schemaHint}`;
 			let sanitizedSchema: Record<string, unknown> | undefined;
 			if (!schemaError && normalizedSchema !== undefined) {
 				const strictProbe = tryEnforceStrictSchema(normalizedSchema);
@@ -452,7 +452,7 @@ export class YieldTool implements AgentTool<TSchema, YieldDetails> {
 			} else {
 				this.#schemaStrict = false;
 				dataSchema = looseRecordSchema(
-					schemaError ? schemaDescription : "Structured JSON output (no schema specified)",
+					schemaError ? schemaDescription : "Structured JSON output (no schema provided)",
 				);
 			}
 			parameters = buildYieldParameters(dataSchema);
@@ -461,7 +461,7 @@ export class YieldTool implements AgentTool<TSchema, YieldDetails> {
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : String(err);
 			parameters = buildYieldParameters(
-				looseRecordSchema(`Structured JSON output (schema processing failed: ${errorMsg})`),
+				looseRecordSchema(`Structured JSON output (schema compilation failed: ${errorMsg})`),
 			);
 			validate = undefined;
 			normalizeData = undefined;

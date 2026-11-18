@@ -1,5 +1,5 @@
-`{{toolRefs.reflect}}`: synthesizes a coherent response from relevant long-term memories; unlike `{{toolRefs.recall}}`, blends them.
+`{{toolRefs.reflect}}`: composes a unified answer from relevant long-term memories; unlike `{{toolRefs.recall}}`, it synthesizes them together.
 
-Use for open-ended questions spanning many stored facts: "What do you know about this user?", "Summarize project decisions.", "What are my preferences for X?"
+Choose it for broad questions spanning multiple stored facts: "What do you know about this user?", "Summarize project decisions.", "What are my preferences for X?"
 
-`context` optional; focuses synthesis on a specific angle or sub-topic.
+`context` is optional and narrows synthesis to a particular angle or sub-topic.

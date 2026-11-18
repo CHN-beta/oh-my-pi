@@ -3,7 +3,7 @@
 {{text}}
 {{/each}}
 {{#if last}}
-Last {{#if multiple}}steps{{else}}step{{/if}}: your {{#if structured}}terminal `yield`{{else}}final message{{/if}} is the result of the whole assignment and MUST cover every step.
+Final {{#if multiple}}steps{{else}}step{{/if}}: your {{#if structured}}terminal `yield`{{else}}closing message{{/if}} serves as the output for the entire task and MUST address all steps.
 {{else}}
-Do ONLY {{#if multiple}}these steps{{else}}this step{{/if}}, then report {{#if structured}}with a terminal `yield`{{else}}as your final message{{/if}}. Step {{next}} arrives after; NEVER start it early.
+Execute ONLY {{#if multiple}}these steps{{else}}this step{{/if}}, then report {{#if structured}}via a terminal `yield`{{else}}in your closing message{{/if}}. Step {{next}} will be delivered afterward; NEVER begin it prematurely.
 {{/if}}

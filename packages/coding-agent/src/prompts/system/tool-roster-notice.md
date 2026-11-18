@@ -1,3 +1,3 @@
 <system-notice>
-Tool availability changed.{{#if added}} Now available: {{added}}.{{/if}}{{#if removed}} No longer available: {{removed}}.{{/if}} This lists only what changed; any tool not named here is unaffected. Your current tool schema is authoritative for the full set.
+Available tools updated.{{#if added}} Added: {{added}}.{{/if}}{{#if removed}} Removed: {{removed}}.{{/if}} Only changes appear here; any tool not listed remains unchanged. Rely on your active tool schema as authoritative for the complete roster.
 </system-notice>

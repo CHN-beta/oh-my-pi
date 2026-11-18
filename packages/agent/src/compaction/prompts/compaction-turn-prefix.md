@@ -1,17 +1,17 @@
-Turn prefix too large; recent-work suffix retained.
+Turn prefix exceeded size limit; recent-work suffix was kept.
 
-MUST summarize prefix for retained suffix:
+MUST summarize the prefix for the kept suffix:
 
 ## Original Request
 
-[What did the user ask for in this turn?]
+[What did the user ask for during this turn?]
 
 ## Early Progress
-- [Key decisions and work done in the prefix]
+- [Major decisions and work completed in the prefix]
 
 ## Context for Suffix
-- [Information needed to understand the retained recent work]
+- [Details required to understand the kept recent work]
 
-MUST output only the structured summary; NEVER extra text.
+MUST emit only the structured summary; NEVER add extra text.
 
-MUST concise. MUST preserve exact file paths, function names, error messages, relevant tool outputs, and command results if present. MUST focus on information needed to understand the retained suffix.
+MUST remain brief. MUST retain exact file paths, function names, error messages, pertinent tool outputs, and command outputs when present. MUST center on details needed to interpret the kept suffix.

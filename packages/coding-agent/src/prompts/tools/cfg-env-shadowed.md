@@ -1,1 +1,1 @@
-`{{path}}` is {{effective}} from the environment variable `{{env}}`, which takes precedence over session overrides and the global config, so a session change cannot take effect; the user was not asked. Tell the user to unset or change `{{env}}` instead; NEVER retry.
+`{{path}}` resolves to {{effective}} via environment variable `{{env}}`, which overrides both session overrides and global configuration, so a session-level edit cannot apply; no user prompt was shown. Instruct the user to unset or update `{{env}}` instead; NEVER retry.

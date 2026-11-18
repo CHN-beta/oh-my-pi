@@ -1,1 +1,1 @@
-Loaded context-file instructions: PNG image(s) attached below at the first user message start. At this marker, read every frame in order; apply as if original context-file text remained here.
+Loaded context-file instructions: PNG frame(s) attached below at the opening of the first user message. At this placeholder, inspect every frame sequentially and follow them just as if the original context-file text were inline here.

@@ -136,7 +136,7 @@ describe("PDF archive members", () => {
 		const result = await new ReadTool(makeSession(temp.path())).execute("scanned-pdf", {
 			path: `${archivePath}:${MEMBER}`,
 		});
-		expect(textOf(result)).toContain("Text extraction is incomplete for PDF pages 2, 3");
+		expect(textOf(result)).toContain("Extracted text is incomplete on PDF pages 2, 3");
 		expect(textOf(result)).toContain(":page2.png");
 	});
 

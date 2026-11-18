@@ -1,1 +1,1 @@
-This session was moved to {{to}} and continues there. This copy stops here.
+This session has been transferred to {{to}} and resumes there. This instance ends here.

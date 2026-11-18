@@ -1,16 +1,16 @@
-Generate a speech audio file from text and write it to output_path.
+Synthesize speech audio from text and save it to `output_path`.
 
-Models are selected through the speech role and its fallback chain:
-- local-inference: on-device neural TTS (Kokoro-82M via the bundled ONNX runtime)
-  - no network; always WAV/PCM16
-  - voice set by tts.localVoice — {{localVoices}}
-- xai-tts: xAI Grok Voice; MP3 or WAV
-  - built-in voices: {{xaiVoices}}; custom voice IDs accepted
-- openai-speech: the selected model's compatible cloud endpoint; MP3 or WAV
-  - voice_id is forwarded only when explicitly set
+Model selection follows the speech role and its fallback chain:
+- `local-inference`: offline neural TTS (Kokoro-82M running on the bundled ONNX runtime)
+  - requires no network; always outputs WAV/PCM16
+  - voice configured via `tts.localVoice` — {{localVoices}}
+- `xai-tts`: xAI Grok Voice; supports MP3 or WAV
+  - built-in voices: {{xaiVoices}}; custom voice IDs supported
+- `openai-speech`: compatible cloud endpoint for the selected model; supports MP3 or WAV
+  - `voice_id` is sent only when explicitly provided
 
-Ordering and output:
-- MP3 request: unconfigured cloud candidates are tried before unconfigured local candidates; explicitly configured speech candidates keep their order.
-- Chain reaches local for a non-WAV path → output is written to the sibling .wav file.
-- Cloud codec is inferred from the output_path suffix.
-- Max {{maxLength}} characters.
+Chain ordering and output format:
+- For an MP3 request, unconfigured cloud candidates precede unconfigured local candidates; explicitly configured speech entries preserve their order.
+- If fallback reaches `local-inference` with a non-WAV target path → writes to a sibling `.wav` file instead.
+- Cloud audio codec is determined from the `output_path` file extension.
+- Maximum {{maxLength}} characters.

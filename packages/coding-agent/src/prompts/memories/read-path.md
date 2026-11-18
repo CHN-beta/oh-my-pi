@@ -2,18 +2,18 @@
 Root: memory://root
 Rules:
 {{#if memory_summary}}
-- Read `memory://root/memory_summary.md` first.
-- If needed, inspect `memory://root/MEMORY.md` and `memory://root/skills/<name>/SKILL.md`.
+- Start by reading `memory://root/memory_summary.md`.
+- When further detail is needed, read `memory://root/MEMORY.md` and `memory://root/skills/<name>/SKILL.md`.
 {{/if}}
-- Memory: heuristics/process context; current repo files, runtime output, user instruction: factual state/final decisions.
-- Memory changes plan → cite artifact path (e.g. `memory://root/skills/<name>/SKILL.md`) and current-repo evidence.
-- Memory disagreement with repo state/user instruction → stale; corrected behavior, then update/regenerate memory artifacts.
-- Confidence only after repository verification; memory alone NEVER sufficient proof.
+- Treat memory as heuristics and workflow context; rely on actual repository files, runtime output, and user instructions for current facts and authoritative decisions.
+- Whenever memory alters your plan → reference the memory path (e.g. `memory://root/skills/<name>/SKILL.md`) alongside current repository evidence.
+- If memory conflicts with repository state or user directives → treat memory as outdated, follow the right behavior, and refresh or rebuild memory artifacts.
+- Claim certainty only after checking the repository directly; memory on its own is NEVER enough proof.
 {{#if memory_summary}}
 Memory summary:
 {{memory_summary}}
 {{/if}}
 {{#if learned}}
-Learned lessons (`learn`-captured; durable but may be stale—verify against repo before relying):
+Learned takeaways (captured via `learn`; persistent yet potentially outdated—confirm against the repo before trusting):
 {{learned}}
 {{/if}}

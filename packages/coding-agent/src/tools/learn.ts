@@ -14,23 +14,23 @@ import { cfgMemoryBackend } from "../memory-backend/settings";
 
 const learnSkillSchema = type({
 	action: "'create' | 'update'",
-	name: type("string").describe("kebab-case skill name"),
-	description: type("string").describe("one-line description of when to use the skill"),
-	body: type("string").describe("the SKILL.md body in markdown (no frontmatter)"),
-}).describe("also create or enhance a managed skill in the same call");
+	name: type("string").describe("kebab-case identifier for the skill"),
+	description: type("string").describe("single-line summary of when to apply the skill"),
+	body: type("string").describe("markdown body of SKILL.md (omitting frontmatter)"),
+}).describe("optionally create or update a managed skill in the same invocation");
 
 const learnSchemaBase = type({
-	memory: type("string").describe("the durable, self-contained lesson to remember (what, when, why)"),
-	"context?": type("string").describe("optional source context for the lesson"),
+	memory: type("string").describe("self-contained, durable lesson to store (what, when, why)"),
+	"context?": type("string").describe("optional background context for the lesson"),
 	"skill?": learnSkillSchema,
 });
 
 /** Offered only where every project recalls a global item; see {@link isGlobalMemoryScopeAvailable}. */
 const learnSchemaWithScope = type({
-	memory: type("string").describe("the durable, self-contained lesson to remember (what, when, why)"),
-	"context?": type("string").describe("optional source context for the lesson"),
+	memory: type("string").describe("self-contained, durable lesson to store (what, when, why)"),
+	"context?": type("string").describe("optional background context for the lesson"),
 	"scope?": type("'project' | 'global'").describe(
-		"storage scope; defaults to project, global is for durable cross-project knowledge",
+		"storage scope; defaults to project, whereas global holds durable cross-project knowledge",
 	),
 	"skill?": learnSkillSchema,
 });
@@ -64,7 +64,7 @@ export class LearnTool implements AgentTool<LearnSchema> {
 	}
 	readonly strict = true;
 	readonly loadMode = "essential" as const;
-	readonly summary = "Capture a reusable lesson to memory (and optionally a managed skill)";
+	readonly summary = "Record a reusable lesson into memory (and optionally a managed skill)";
 
 	constructor(private readonly session: ToolSession) {}
 

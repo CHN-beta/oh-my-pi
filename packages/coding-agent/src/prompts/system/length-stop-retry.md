@@ -1,6 +1,6 @@
 <system-injection>
-Previous response hit the {{outputTokens}}-token output limit while still reasoning; it was discarded unseen, with every tool call it planned. Re-planning the whole task in reasoning fails the same way.
-- Reason only about the next step, then call the tool.
-- Large deliverable (file, document, long answer): write a minimal working version now, extend it with further edits over later turns.
-Attempt #{{retryCount}}/{{maxRetries}}
+Your last response hit the {{outputTokens}}-token output cap mid-reasoning and was discarded unseen along with all planned tool calls. Re-planning the entire task in reasoning will hit the same cap.
+- Reason solely about the immediate next step, then invoke the tool.
+- For large outputs (files, docs, lengthy replies): produce a minimal working core first, then build it out across subsequent edits.
+Retry #{{retryCount}}/{{maxRetries}}
 </system-injection>

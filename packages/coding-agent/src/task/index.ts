@@ -733,7 +733,7 @@ export class TaskTool implements AgentTool<TaskToolSchemaInstance, TaskToolDetai
 		return lines;
 	};
 	readonly label = "Task";
-	readonly summary = "Spawn subagents to complete delegated tasks";
+	readonly summary = "Launch subagents to handle delegated tasks";
 	readonly strict = false;
 	readonly loadMode = "essential";
 	// Arktype validates model calls against the active wire schema, but the flat

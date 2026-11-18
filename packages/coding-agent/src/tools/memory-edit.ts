@@ -8,11 +8,11 @@ import type { ToolSession } from ".";
 import { cfgMemoryBackend } from "../memory-backend/settings";
 
 const memoryEditSchema = type({
-	op: type("'update' | 'forget' | 'invalidate'").describe("memory edit operation"),
-	id: type("string").describe("memory id from recall output"),
-	"content?": type("string").describe("replacement content for update"),
-	"importance?": type("number").describe("replacement importance for update (0–1)"),
-	"replacement_id?": type("string").describe("replacement memory id for invalidate"),
+	op: type("'update' | 'forget' | 'invalidate'").describe("memory edit action"),
+	id: type("string").describe("memory identifier from recall output"),
+	"content?": type("string").describe("updated content for update"),
+	"importance?": type("number").describe("updated importance score for update (0–1)"),
+	"replacement_id?": type("string").describe("superseding memory identifier for invalidate"),
 });
 
 export type MemoryEditParams = typeof memoryEditSchema.infer;
@@ -29,7 +29,7 @@ export class MemoryEditTool implements AgentTool<typeof memoryEditSchema> {
 	readonly parameters = memoryEditSchema;
 	readonly strict = true;
 	readonly loadMode = "discoverable";
-	readonly summary = "Update, forget, or invalidate Mnemopi memories";
+	readonly summary = "Modify, forget, or invalidate Mnemopi memories";
 
 	constructor(private readonly session: ToolSession) {}
 

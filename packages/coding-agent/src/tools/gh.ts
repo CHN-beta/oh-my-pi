@@ -80,29 +80,29 @@ const GITHUB_READONLY_OPS: ReadonlySet<string> = new Set([
 const githubSchema = type({
 	op: type(
 		"'repo_view' | 'file_read' | 'pr_create' | 'pr_checkout' | 'pr_push' | 'search_issues' | 'search_prs' | 'search_code' | 'search_commits' | 'search_repos' | 'run_watch'",
-	).describe("github operation"),
-	"repo?": type("string").describe("owner/repo"),
-	"branch?": type("string").describe("branch"),
-	"path?": type("string").describe("repository-relative file path"),
-	"pr?": type("string | string[]").describe("pr number, url, or branch"),
-	"force?": type("boolean").describe("reset existing local branch"),
-	"forceWithLease?": type("boolean").describe("force-with-lease push"),
-	"title?": type("string").describe("pr title"),
-	"body?": type("string").describe("pr body markdown"),
-	"base?": type("string").describe("pr base branch"),
-	"head?": type("string").describe("pr head branch"),
-	"draft?": type("boolean").describe("open pr as draft"),
-	"fill?": type("boolean").describe("auto-fill pr title/body from commits"),
-	"reviewer?": type("string[]").describe("reviewers"),
-	"assignee?": type("string[]").describe("assignees"),
-	"label?": type("string[]").describe("labels"),
-	"query?": type("string").describe("search query"),
-	"since?": type("string").describe("lower-bound date filter"),
-	"until?": type("string").describe("upper-bound date filter"),
-	"dateField?": type("'created' | 'updated'").describe("date field"),
-	"limit?": type("number").describe("max results"),
-	"run?": type("string").describe("actions run id or url"),
-	"tail?": type("number").describe("log lines per failed job"),
+	).describe("GitHub action"),
+	"repo?": type("string").describe("owner/repo slug"),
+	"branch?": type("string").describe("branch name"),
+	"path?": type("string").describe("repo-relative file path"),
+	"pr?": type("string | string[]").describe("PR number, URL, or branch"),
+	"force?": type("boolean").describe("overwrite existing local branch"),
+	"forceWithLease?": type("boolean").describe("push with --force-with-lease"),
+	"title?": type("string").describe("PR title"),
+	"body?": type("string").describe("PR markdown body"),
+	"base?": type("string").describe("PR target base branch"),
+	"head?": type("string").describe("PR source head branch"),
+	"draft?": type("boolean").describe("create PR as draft"),
+	"fill?": type("boolean").describe("populate PR title/body from commit history"),
+	"reviewer?": type("string[]").describe("requested reviewers"),
+	"assignee?": type("string[]").describe("assigned users"),
+	"label?": type("string[]").describe("issue/PR labels"),
+	"query?": type("string").describe("search query string"),
+	"since?": type("string").describe("start date filter"),
+	"until?": type("string").describe("end date filter"),
+	"dateField?": type("'created' | 'updated'").describe("timestamp field to filter"),
+	"limit?": type("number").describe("maximum result count"),
+	"run?": type("string").describe("Actions workflow run id or URL"),
+	"tail?": type("number").describe("trailing log lines per failed job"),
 });
 
 type GithubInput = typeof githubSchema.infer;
@@ -142,7 +142,7 @@ export class GithubTool implements AgentTool<typeof githubSchema, GhToolDetails>
 		const op = typeof rawOp === "string" ? rawOp : "";
 		return GITHUB_READONLY_OPS.has(op) ? "read" : "exec";
 	};
-	readonly summary = "Interact with GitHub repositories, files, pull requests, and Actions";
+	readonly summary = "Work with GitHub repositories, files, pull requests, and Actions";
 	readonly loadMode = "discoverable";
 	readonly label = "GitHub";
 	readonly description = prompt.render(githubDescription);

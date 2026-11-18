@@ -1,39 +1,38 @@
 <omfg>
-The user is frustrated about recurring agent behavior.
-Author ONE Time Traveling Stream Rule (TTSR) that would have caught the offending behavior earlier in this conversation.
+The user is frustrated by a recurring agent pattern.
+Write ONE Time Traveling Stream Rule (TTSR) that would have intercepted the problematic output earlier in this session.
 
-TTSR mechanics:
-- A rule is a markdown file with YAML frontmatter. Its body is injected as correction guidance when the rule triggers.
-- `scope` is a comma-separated allowlist of checked outputs:
-  - `text` = assistant prose. `thinking` = reasoning summaries. `tool` = every tool call.
-  - `tool:<name>(<glob>)` = one tool, only when its file path matches the glob, e.g. `tool:write(*.rb)`, `tool:edit(*.ts)`.
-- edit/write calls are checked as the source text they write; other tool calls as JSON-serialized arguments.
-- Three trigger kinds:
-  - `condition`: JavaScript regex patterns, matched while output streams. A hit interrupts the stream.
-  - `astCondition`: ast-grep patterns (`$X` = one node, `$$$ARGS` = many), matched against edit/write source; language comes from the file extension, so scope MUST be `tool:edit(<glob>)`/`tool:write(<glob>)` with an extension.
-  - `question`: a natural-language yes/no question a small classifier answers after the output completes. Never interrupts: the offending output already took effect, and the body arrives later as a warning. Costs a classifier call per in-scope output.
+How TTSR works:
+- Each rule is a markdown file carrying YAML frontmatter; its markdown body is injected as corrective guidance whenever the rule fires.
+- `scope` is a comma-separated allowlist selecting which outputs to inspect:
+  - `text` = assistant text. `thinking` = reasoning summaries. `tool` = all tool calls.
+  - `tool:<name>(<glob>)` = a specific tool, restricted to matching file paths, e.g. `tool:write(*.rb)`, `tool:edit(*.ts)`.
+- edit/write calls are inspected as the source content they write; other tool calls are inspected as JSON-serialized arguments.
+- Trigger types (three kinds):
+  - `condition`: JavaScript regex patterns evaluated mid-stream; a match aborts the stream immediately.
+  - `astCondition`: ast-grep patterns (`$X` = single node, `$$$ARGS` = variadic nodes) evaluated against edit/write content; language is inferred from the file extension, so `scope` MUST be `tool:edit(<glob>)` or `tool:write(<glob>)` with an extension.
+  - `question`: a natural-language binary question answered by a small classifier once output finishes. Does not interrupt mid-stream: the bad output has already occurred and the guidance arrives afterward as a warning. Incurs a classifier call for every in-scope output.
 
-Trigger choice:
-- You MUST prefer `condition` or `astCondition`. They are exact, free, and interrupt before damage.
-- Code structure (call shapes, nesting, argument patterns) → `astCondition`. Literal tokens or phrases → `condition`.
-- Use `question` ONLY when no pattern can catch the behavior without false positives: semantic claims, tone, reasoning quality, intent (e.g. "claims tests pass without running them").
-- `question` MUST be answerable from the output alone; yes MUST mean the rule is violated.
-- With `question`, you SHOULD add a `condition` prefilter when the offending output always contains some literal cue: the question is then asked only when the cue appears.
+Choosing a trigger:
+- MUST favor `condition` or `astCondition`—they are deterministic, zero-cost, and halt before harm occurs.
+- Structural code patterns (call forms, nesting, argument shapes) → `astCondition`. Exact tokens or wording → `condition`.
+- Reach for `question` SOLELY when no pattern can detect the issue without false positives: semantic claims, tone, reasoning quality, or intent (e.g. "claims tests pass without running them").
+- `question` MUST be decidable solely from the inspected output, where "yes" MUST indicate a rule violation.
+- Alongside `question`, SHOULD specify a `condition` prefilter whenever the problematic output reliably includes a literal marker so the classifier runs only when that marker appears.
 
-Output contract:
-- Emit exactly one JSON object and nothing else.
-- JSON fields: `name`, `description`, `scope`, `body`, and at least one of `condition`, `astCondition`, `question`.
-- `name` MUST be kebab-case.
-- `description` MUST be a one-line summary.
-- `condition` / `astCondition`: string or string array. `question`: one string.
-- Triggers MUST catch the specific offending assistant output visible earlier in this conversation.
-- Escape regex backslashes for JSON exactly once: use `"\\beval\\s*\\("`, NEVER `"\\\\beval\\\\s*\\\\("`.
-- Keep triggers precise; NEVER use broad catch-alls.
-- `scope` MUST be a string or string array, as narrow as the complaint allows. NEVER use `tool, text` unless the same bad behavior occurred in both tool calls and prose.
-- Code complaints SHOULD use file-specific tool scopes: Ruby written through `write` → `tool:write(*.rb)`, not bare `tool` or `text`.
-- `body` MUST be markdown guidance explaining the right behavior concisely.
-- The caller assembles YAML frontmatter. NEVER emit markdown frontmatter or a fenced code block around the JSON.
-
+Output requirements:
+- Return strictly a single JSON object and nothing else.
+- Required JSON keys: `name`, `description`, `scope`, `body`, plus at least one of `condition`, `astCondition`, `question`.
+- `name` MUST use kebab-case.
+- `description` MUST fit on one summary line.
+- `condition` / `astCondition`: string or array of strings. `question`: single string.
+- Triggers MUST match the concrete problematic assistant output shown earlier in this session.
+- Escape regex backslashes for JSON once only: write `"\\beval\\s*\\("`, NEVER `"\\\\beval\\\\s*\\\\("`.
+- Keep triggers narrow; NEVER write overly broad catch-all patterns.
+- `scope` MUST be a string or array of strings, kept as tight as the complaint permits. NEVER specify `tool, text` unless the identical mistake appeared in both tool calls and prose.
+- File-type-specific complaints SHOULD use matching tool scopes: Ruby written via `write` → `tool:write(*.rb)`, not bare `tool` or `text`.
+- `body` MUST concisely state the corrective guidance in markdown.
+- The caller generates YAML frontmatter; NEVER include markdown frontmatter or code fences around the JSON.
 Example shapes:
 {
   "name": "ts-no-any",
@@ -62,12 +61,12 @@ Complaint:
 {{complaint}}
 
 {{#if feedback}}
-Failed attempts or requested amendments so far:
+Prior failed attempts or user-requested revisions:
 {{feedback}}
 
-Latest candidate JSON:
+Most recent candidate JSON:
 {{previousRule}}
 
-Regenerate one corrected rule. Fix the listed validation failures or user amendment. NEVER repeat failed scopes or triggers.
+Produce one revised rule addressing the validation errors or user revisions listed above. NEVER reuse rejected scopes or triggers.
 {{/if}}
 </omfg>

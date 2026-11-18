@@ -7,14 +7,14 @@
 
 ### Repository
 
-`{{repository}}` — not the session cwd. File paths are relative to it; reviewers MUST run version-control commands there and resolve `read` paths against it.
+`{{repository}}` — distinct from the session cwd. Listed file paths are relative to it; reviewers MUST execute VCS commands inside it and resolve `read` paths relative to it.
 {{/if}}
 
 ### Changed Files ({{len files}} files, +{{totalAdded}}/-{{totalRemoved}} lines)
 
 {{#if files.length}}
 {{#if prDiffUrl}}
-Index is the file's 1-based position in the full PR diff; excluded files leave gaps. Assign each file with its exact Diff URL below.
+Index denotes the file's 1-based offset in the complete PR diff; omitted files leave gaps. Pair every file with its exact Diff URL listed below.
 
 {{#table files headers="Index|File|+/-|Type|Diff URL"}}
 {{diffIndex}} | {{path}} | +{{linesAdded}}/-{{linesRemoved}} | {{ext}} | `{{diffUrl}}`
@@ -38,27 +38,27 @@ _No files to review._
 
 ### Distribution Guidelines
 
-Use the `task` tool with a `tasks` array. Set `agent: "reviewer"` inside every `tasks[]` item (`tasks[].agent`), never at the top level or omitted.
-{{#when agentCount "==" 1}}Create exactly **1 reviewer task**.{{else}}Spawn **{{agentCount}} reviewer agents** in parallel.{{/when}}
+Invoke `task` using a `tasks` array. Specify `agent: "reviewer"` inside each `tasks[]` entry (`tasks[].agent`), never at the top level and never omitted.
+{{#when agentCount "==" 1}}Spawn exactly **1 reviewer task**.{{else}}Launch **{{agentCount}} reviewer agents** concurrently.{{/when}}
 {{#if multiAgent}}
-Group files by locality, e.g.:
-- Same directory/module → same agent
-- Related functionality → same agent
-- Tests with their implementation files → same agent
+Partition files by locality, for instance:
+- Same directory or module → same agent
+- Related features → same agent
+- Tests alongside their corresponding implementation files → same agent
 {{/if}}
 
 ### Reviewer Instructions
 
-Reviewer MUST:
-1. Focus ONLY on assigned files
-2. {{#if skipDiff}}{{#if prDiffUrl}}MUST read assigned PR file diffs using the exact Diff URL in the Changed Files table or `{{prDiffUrl}}/all{{prDiffQuery}}`; NEVER use local `git diff`/`git show` for PR diff content{{else}}{{#if diffInstruction}}{{diffInstruction}}{{else}}MUST run `git diff`/`git show` for assigned files{{/if}}{{/if}}{{else}}MUST use diff hunks below (NEVER re-run git diff){{/if}}
-3. {{#if suppliedPatch}}NEVER read local workspace files for file context; the supplied diff may not match the checkout{{else}}{{#if prDiffUrl}}NEVER read local workspace files for PR file context; use the fetched PR diff, the exact Diff URL in the Changed Files table, or `{{prDiffUrl}}/all{{prDiffQuery}}` only{{else}}{{#if contextInstruction}}{{contextInstruction}}{{else}}MAY read full file context as needed via `read`{{/if}}{{/if}}{{/if}}
-4. Use incremental `yield` sections for findings and verdict fields; do NOT call a separate finding tool
+Each reviewer MUST:
+1. Review ONLY its assigned files
+2. {{#if skipDiff}}{{#if prDiffUrl}}MUST inspect assigned PR file diffs via the exact Diff URL in the Changed Files table or `{{prDiffUrl}}/all{{prDiffQuery}}`; NEVER run local `git diff`/`git show` for PR diff content{{else}}{{#if diffInstruction}}{{diffInstruction}}{{else}}MUST execute `git diff`/`git show` on its assigned files{{/if}}{{/if}}{{else}}MUST rely on the diff hunks provided below (NEVER re-run git diff){{/if}}
+3. {{#if suppliedPatch}}NEVER read local checkout files for context; the provided diff may differ from the working tree{{else}}{{#if prDiffUrl}}NEVER read local checkout files for PR context; rely strictly on the fetched PR diff, the exact Diff URL in the Changed Files table, or `{{prDiffUrl}}/all{{prDiffQuery}}`{{else}}{{#if contextInstruction}}{{contextInstruction}}{{else}}MAY inspect full file context as needed with `read`{{/if}}{{/if}}{{/if}}
+4. Emit findings and verdict fields via incremental `yield` sections; do NOT invoke a separate finding tool
 
 {{#if skipDiff}}
 ### Diff Previews
 
-_Full diff too large ({{len files}} files). Showing first ~{{linesPerFile}} lines per file._
+_Complete diff exceeds size limit ({{len files}} files). Displaying the first ~{{linesPerFile}} lines per file._
 
 {{#list files join="\n\n"}}
 #### {{path}}

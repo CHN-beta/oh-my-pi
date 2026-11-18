@@ -1,11 +1,11 @@
 ## MCP Tool Routes
 
 {{#if tools.length}}
-Execute each mounted tool: write JSON arguments to its path.{{#if hasCatalogOnlyTools}} Paths with a summary: read for docs + JSON schema before first use.{{/if}}
+Invoke any mounted tool by writing JSON arguments to its path.{{#if hasCatalogOnlyTools}} For paths with a summary: read docs + JSON schema before first invocation.{{/if}}
 {{#each tools}}
 - {{mcpToolName}} → `{{path}}`{{#if summary}} — {{summary}}{{/if}}
 {{/each}}
 {{/if}}
 {{#if hasOmittedTools}}
-Additional mounted MCP tool mappings omitted: prompt bounded. Inspect `xdev://` for exact current paths.
+Extra mounted MCP tool routes were omitted to keep the prompt bounded. Check `xdev://` for the full current path list.
 {{/if}}

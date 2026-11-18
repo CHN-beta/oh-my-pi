@@ -1,12 +1,12 @@
 ## Code Review Request
 
-Mode: headless review request.
+Mode: headless code review.
 {{#if repository}}
 
-Repository: `{{repository}}` — not the session cwd; the reviewer MUST run version-control commands there and resolve `read` paths against it.
+Repository: `{{repository}}` — distinct from the session cwd; the reviewer MUST execute VCS commands inside it and resolve `read` paths relative to it.
 {{/if}}
 
-Distribution: Use `task` with a `tasks` array. Set `agent: "reviewer"` inside the `tasks[]` item (`tasks[].agent`), never at the top level or omitted. Create exactly **1 reviewer task** for recent code changes.
+Distribution: Invoke `task` using a `tasks` array. Specify `agent: "reviewer"` inside the `tasks[]` entry (`tasks[].agent`), never at the top level and never omitted. Spawn exactly **1 reviewer task** covering recent code changes.
 
 {{#if focus}}
 Focus: {{focus}}

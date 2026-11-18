@@ -1,72 +1,72 @@
-One cell per call; top-level state persists, including across compaction.{{#if spawns}} Subagents have separate kernels.{{/if}}
+Executes one cell per invocation; top-level bindings persist across calls and compaction.{{#if spawns}} Subagents run in separate kernels.{{/if}}
 {{#if spawns}}
 {{#if eagerDelegation}}
-For 2+ independent items, use a named `workpool()`; results auto-deliver.
+When processing 2+ independent items, prefer a named `workpool()`; results deliver automatically.
 {{#if waitTool}}
-If blocked, leave `eval` and call `wait`.
+If blocked, exit `eval` and call `wait`.
 {{/if}}
 {{/if}}
 {{/if}}
 {{#if py}}
-Python: plain Python subprocess, not IPython (no `get_ipython()`, `obj?`, or %matplotlib).
-Magics like %pip, %load, %time and `!cmd` are rewritten to Python.
-Top-level `await` works; `asyncio.run(…)` fails.
+Python: standard Python subprocess rather than IPython (no `get_ipython()`, `obj?`, or `%matplotlib`).
+Magics such as `%pip`, `%load`, `%time`, and `!cmd` are translated to Python.
+Top-level `await` is supported; calling `asyncio.run(…)` fails.
 {{/if}}
-{{#if js}}JS: Bun (Bun.file, Bun.write, Bun.$); top-level `await`/`return` work.{{/if}}
-On error, retry only the failed step; earlier steps may have taken effect.
-Printing an image{{#if py}} or figure{{/if}} attaches it.
+{{#if js}}JS: Bun runtime (`Bun.file`, `Bun.write`, `Bun.$`); top-level `await` and `return` are supported.{{/if}}
+If a step fails, re-run only that step; earlier statements may already have executed.
+Printing an image{{#if py}} or figure{{/if}} attaches it to the response.
 
 <prelude>
 {{#ifAll py js}}
-Python helpers take kwargs; JS helpers take the same parameters (camelCase) as positional args or ONE trailing options object.
-`await` marks async helpers; the rest are sync.
+Python helpers accept keyword arguments; JS helpers accept identical parameters (camelCase) either positionally or in ONE trailing options object.
+Async helpers are marked with `await`; others run synchronously.
 ```
 print(value, ...)  log(message)  phase(title)  env(key?, value?)
 read(path, offset?, limit?)  write(path, content)  output(*ids, format?, query?, offset?, limit?); JS: await read(…)  await write(…)  await output(…)
-wait(handles, timeout?=None, raise_errors?=True); JS: await wait(…) — agent/completion barrier, ordered results; raise_errors=False retains failures
-await tool.<name>(args) — session tool; `args` is its parameter object
-sh(command, cwd?, timeout?); JS: await sh(…) or await sh`cmd ${arg}` — embedded bash engine, runs to completion (never backgrounded)
+wait(handles, timeout?=None, raise_errors?=True); JS: await wait(…) — barrier for agents/completions returning ordered results; raise_errors=False preserves failures
+await tool.<name>(args) — invoke a session tool with its parameter object `args`
+sh(command, cwd?, timeout?); JS: await sh(…) or await sh`cmd ${arg}` — embedded bash engine; runs synchronously to completion (never backgrounded)
   returns stdout+stderr; non-zero exit raises ShellError (.exit_code/.exitCode, .output)
-  JS interpolations are shell-quoted; starts in the session cwd unless cwd is given
+  JS template interpolations are shell-escaped; defaults to session cwd unless cwd is specified
 ```
 {{else}}
-`await` marks async helpers; the rest are sync.
+Async helpers are marked with `await`; others run synchronously.
 {{#if py}}
-Python (kwargs):
+Python (keyword arguments):
 ```py
 print(value, ...)  log(message)  phase(title)  env(key?, value?)
 read(path, offset?, limit?)  write(path, content)  output(*ids, format?, query?, offset?, limit?)
-wait(handles, timeout?=None, raise_errors?=True) — agent/completion barrier, ordered results; `raise_errors=False` retains failures.
-await tool.<name>(args) — session tool; `args` is its parameter object
-sh(command, cwd?, timeout?) — embedded bash engine, runs to completion (never backgrounded)
-  returns stdout+stderr; non-zero exit raises ShellError (`.exit_code`, `.output`); starts in the session cwd unless `cwd` is given
+wait(handles, timeout?=None, raise_errors?=True) — barrier for agents/completions returning ordered results; `raise_errors=False` preserves failures.
+await tool.<name>(args) — invoke a session tool with its parameter object `args`
+sh(command, cwd?, timeout?) — embedded bash engine; runs synchronously to completion (never backgrounded)
+  returns stdout+stderr; non-zero exit raises ShellError (`.exit_code`, `.output`); defaults to session cwd unless `cwd` is specified
 ```
 {{/if}}
 {{#if js}}
-JS (positional args or ONE trailing options object):
+JS (positional arguments or ONE trailing options object):
 ```js
 print(value, ...)  log(message)  phase(title)  env(key?, value?)
 await read(path, offset?, limit?)  await write(path, content)  await output(...ids, { format?, query?, offset?, limit? })
-await wait(handles, { timeout?, raiseErrors? }) — agent/completion barrier, ordered results; `raiseErrors: false` retains failures.
-await tool.<name>(args) — session tool; `args` is its parameter object
-await sh(command, { cwd?, timeout? })  await sh`cmd ${arg}` — embedded bash engine, runs to completion (never backgrounded)
+await wait(handles, { timeout?, raiseErrors? }) — barrier for agents/completions returning ordered results; `raiseErrors: false` preserves failures.
+await tool.<name>(args) — invoke a session tool with its parameter object `args`
+await sh(command, { cwd?, timeout? })  await sh`cmd ${arg}` — embedded bash engine; runs synchronously to completion (never backgrounded)
   resolves to stdout+stderr; non-zero exit throws ShellError (`.exitCode`, `.output`)
-  interpolations are shell-quoted; starts in the session cwd unless `cwd` is given
+  template interpolations are shell-escaped; defaults to session cwd unless `cwd` is specified
 ```
 {{/if}}
 {{/ifAll}}
-{{#if toolNames}}Session tool names: {{#each toolNames}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}.{{/if}}
+{{#if toolNames}}Available session tools: {{#each toolNames}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}.{{/if}}
 </prelude>
 
 {{#if inlineTopics}}
 {{{inlineTopics}}}
 {{else}}
 <namespaces>
-More globals; `read` the linked docs before first use:
-- `judge`, `{{#if py}}judge_batch{{else}}judgeBatch{{/if}}`, `completion`: classification, bulk judgment, model calls → xdev://eval/judge
-- `%load`{{#if py}}, `%pip`{{/if}}{{#if js}}, `%bun add`{{/if}}, `budget`{{#if evalTools}}, `@tool`/`tool(fn)`{{/if}}: setup, installs, utilities → xdev://eval/helpers
+Additional globals; `read` the linked docs before first use:
+- `judge`, `{{#if py}}judge_batch{{else}}judgeBatch{{/if}}`, `completion`: classification, batch judgment, and model calls → xdev://eval/judge
+- `%load`{{#if py}}, `%pip`{{/if}}{{#if js}}, `%bun add`{{/if}}, `budget`{{#if evalTools}}, `@tool`/`tool(fn)`{{/if}}: setup scripts, package installs, and utilities → xdev://eval/helpers
 {{#if spawns}}
-- `agent`, `workpool`: background subagents, DAG waves → xdev://eval/agents
+- `agent`, `workpool`: background subagents and DAG waves → xdev://eval/agents
 {{/if}}
 {{#each preludes}}
 - `{{name}}`: {{summary}} → xdev://eval/{{name}}
@@ -75,17 +75,17 @@ More globals; `read` the linked docs before first use:
 {{#each inlinePreludes}}
 
 <{{name}}>
-Global `{{name}}`, documented here in full (no `read` needed):
+Global `{{name}}` (full docs inline, no `read` required):
 {{{documentation}}}
 </{{name}}>
 {{/each}}
 {{/if}}
 
 <critical>
-NEVER repeat successful setup. Kernel-loss notice means reload setup.
+NEVER re-run setup that already succeeded. A kernel-loss notice means you must reload setup.
 </critical>
 
 {{#if autoBackgroundEnabled}}
-Long cells may auto-background and deliver later; the kernel stays busy.
-`timeout: 0` disables the cell deadline, not the foreground wait.
+Long-running cells may move to background and deliver results later while keeping the kernel busy.
+`timeout: 0` removes the cell deadline, not the foreground wait threshold.
 {{/if}}

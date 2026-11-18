@@ -1326,7 +1326,7 @@ describe("runEvalAgent isolation", () => {
 				},
 				{ session: isolatedSession() },
 			),
-		).rejects.toThrow(/isolated apply failed.*Patch apply failed.*Captured patch preserved at \/artifacts\//s);
+		).rejects.toThrow(/isolated apply failed.*Patch apply failed.*Saved captured patch to \/artifacts\//s);
 	});
 
 	it("surfaces the preserved patch path when branch-mode transfer fails before merge runs", async () => {
@@ -1343,7 +1343,7 @@ describe("runEvalAgent isolation", () => {
 
 		const session = isolatedSession({ "task.isolation.merge": "branch" });
 		await expect(runEvalAgentAndWait({ prompt: "scout", isolated: true }, { session })).rejects.toThrow(
-			/Merge failed.*garbage at end of loose object.*Captured patch preserved at \/artifacts\//s,
+			/Merge failed.*garbage at end of loose object.*Saved captured patch to \/artifacts\//s,
 		);
 		expect(mergeSpy).not.toHaveBeenCalled();
 	});
@@ -1366,7 +1366,7 @@ describe("runEvalAgent isolation", () => {
 
 		const session = isolatedSession({ "task.isolation.merge": "branch" });
 		await expect(runEvalAgentAndWait({ prompt: "scout", isolated: true }, { session })).rejects.toThrow(
-			/isolated apply failed.*Branch merge failed.*Captured branch preserved as omp\/task\//s,
+			/isolated apply failed.*Branch merge failed.*Saved captured branch as omp\/task\//s,
 		);
 	});
 
@@ -1528,7 +1528,9 @@ describe("runEvalAgent isolation", () => {
 
 		// The headline fix: a 0-byte root patch is not reported as "changes
 		// captured at …"; the nested file that holds the work is named instead.
-		expect(result.text).toContain("Isolation: changes captured for 1 nested repository (apply=false). Not applied.");
+		expect(result.text).toContain(
+			"Isolation: modifications saved across 1 nested repository (apply=false); not applied.",
+		);
 		expect(result.text).toContain(`- nested repository patch: \`${nestedPatchPath}\``);
 		expect(result.text).not.toContain("changes captured at");
 		expect(result.details.nestedPatchPaths).toEqual([nestedPatchPath]);

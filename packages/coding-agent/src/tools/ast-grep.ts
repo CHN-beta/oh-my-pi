@@ -40,12 +40,12 @@ import { toolResult } from "./tool-result";
 import { cfgTaskDisabledAgents } from "../task/settings";
 
 const astGrepSchema = type({
-	pat: type("string").describe("ast pattern"),
+	pat: type("string").describe("AST pattern"),
 	"path?": type("string").describe(
-		'file, directory, glob, or internal URL to search; pass several as a semicolon-delimited list ("src; tests"). Omitted -> searches the workspace root (".")',
+		'target file, directory, glob, or internal URL to search; supply multiple as a semicolon-separated list ("src; tests"). Defaults to the workspace root (".") when omitted',
 	),
-	"lang?": type("string").describe("language override, e.g. cpp for ambiguous .h files"),
-	"skip?": type("number").describe("matches to skip"),
+	"lang?": type("string").describe("explicit language override, e.g. cpp for ambiguous .h headers"),
+	"skip?": type("number").describe("leading matches to skip"),
 });
 
 function compareAstFindMatch(left: AstFindMatch, right: AstFindMatch): number {
@@ -152,7 +152,7 @@ export class AstGrepTool implements AgentTool<typeof astGrepSchema, AstGrepToolD
 			entry => parseSearchPath(entry).basePath,
 		);
 	readonly label = "AST Grep";
-	readonly summary = "Search code with AST patterns (SHOULD be preferred for structural search)";
+	readonly summary = "Query code using AST patterns (SHOULD be favored for structural search)";
 	get description(): string {
 		const eagerDelegation = sessionDelegationBias(this.session) === "eager";
 		const scoutAvailable = isScoutSpawnable(

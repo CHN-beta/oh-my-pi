@@ -1,12 +1,12 @@
-This `write` tool is limited to the xdev:// device transport and local:// session scratch:
-- call it with path `xdev://<tool>` and the device's JSON arguments in `content` (`read xdev://` lists mounted devices), or
-- write a `local://<name>` file.
+Here `write` is restricted to the `xdev://` device protocol and `local://` session scratch files:
+- invoke with `path` set to `xdev://<tool>` and the device's JSON arguments in `content` (`read xdev://` enumerates mounted devices), or
+- write to a `local://<name>` path.
 
-Other filesystem paths are refused{{#if diskPath}}, but a `local://<name>` file is a real file on disk at {{diskPath}}{{/if}}.
+All other filesystem paths are rejected{{#if diskPath}}, though a `local://<name>` file maps to an actual file on disk at {{diskPath}}{{/if}}.
 {{#if canYield}}
-To deliver results to the caller, return {{#if diskPath}}that path, or the content itself, in `yield`{{else}}the content in `yield` instead{{/if}}.
+To pass results back to the caller, include {{#if diskPath}}that path, or the content directly, in `yield`{{else}}the content directly in `yield`{{/if}}.
 {{else}}
 {{#if diskPath}}
-Give that path to whoever needs to read or copy it.
+Share that path with anyone who needs to read or copy the output.
 {{/if}}
 {{/if}}

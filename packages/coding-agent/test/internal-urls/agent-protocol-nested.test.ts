@@ -215,7 +215,7 @@ it("agent:// marks a published output as the previous run while the agent stream
 
 	const handler = new AgentProtocolHandler();
 	const whileRunning = await handler.resolve(new URL("agent://Visuals") as never);
-	expect(whileRunning.content).toStartWith("> `Visuals` is running a newer turn.");
+	expect(whileRunning.content).toStartWith("> `Visuals` has moved on to a newer turn.");
 	expect(whileRunning.content).toContain("PREVIOUS run");
 	expect(whileRunning.content.endsWith(published)).toBe(true);
 	// `read` reads a located file directly, skipping resolve(): a superseded

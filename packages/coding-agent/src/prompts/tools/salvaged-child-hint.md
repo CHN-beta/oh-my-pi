@@ -1,6 +1,6 @@
-The child finished before this failure: {{#if aborted}}aborted{{#if abortReason}} ({{abortReason}}){{/if}}{{else}}exit {{exitCode}}{{#if error}} ({{error}}){{/if}}{{/if}}.
+The child terminated prior to this failure: {{#if aborted}}aborted{{#if abortReason}} ({{abortReason}}){{/if}}{{else}}exit {{exitCode}}{{#if error}} ({{error}}){{/if}}{{/if}}.
 {{#if outputPath}}
-Its output is at `agent://{{id}}` ({{outputPath}}); read it before rerunning this work.
+Its output was saved at `agent://{{id}}` ({{outputPath}}); inspect it before retrying this task.
 {{else}}
-It wrote no output artifact.
+No output artifact was written.
 {{/if}}

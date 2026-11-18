@@ -1,11 +1,11 @@
 <system-injection>
-Your last turn stopped during a streamed `edit` call: the harness's final patch preview for the target file reported an error, so the patch was never applied. The turn was cut short on purpose; this continuation replaces it.
+Your previous turn halted during a streamed `edit` invocation: the harness's final patch preview for the target file failed validation, so no patch was applied. The turn was aborted intentionally; this continuation supersedes it.
 
-Preview error: {{diagnostic}}
+Preview failure: {{diagnostic}}
 
-Act on the error now instead of re-sending the same payload:
-- Read the target file again so line anchors match its current content.
-- Then re-issue the edit with corrected anchors, or use `write` when the change is large.
+Address the failure now rather than re-submitting the identical payload:
+- Re-read the target file so your line anchors reflect its current state.
+- Re-issue the edit using corrected anchors, or switch to `write` if the edit spans most of the file.
 
-Internal coding-agent auto-recovery after a failed streaming edit preview, not a user instruction.
+Internal runtime auto-recovery triggered by a failed streaming edit preview, not a user message.
 </system-injection>

@@ -1,34 +1,34 @@
 <critical>
-MUST continue until current branch CI green; NEVER stop after one fix attempt.
+MUST keep iterating until CI on the current branch is green; NEVER stop after a single fix attempt.
 </critical>
 
 <instruction>
-SHOULD use `github` with `op: run_watch` and no other args, if available; else `gh` cli.
-Workflow runs for current HEAD: source of truth after each push.
+SHOULD prefer `github` with `op: run_watch` and no extra arguments when available; otherwise fall back to the `gh` CLI.
+Workflow runs targeting the current HEAD serve as the authoritative signal after every push.
 </instruction>
 
 <procedure>
-1. Watch workflow runs for current HEAD commit.
-2. Failed run → inspect failing job output and logs.
-3. Identify root cause; make minimal correct fix.
-4. Run local verification if it reduces chance of another failed push.
-{{#if headTag}}5. Push branch and tag `{{headTag}}` atomically: `git push --atomic "{{remote}}" "{{branch}}" "+refs/tags/{{headTag}}"`.{{else}}5. Push branch.{{/if}}
-6. Watch workflow runs for new HEAD commit.
-7. Repeat until workflow runs for latest HEAD commit succeed.
+1. Monitor workflow runs for the current HEAD commit.
+2. On a failed run → examine the failing job output and logs.
+3. Diagnose the root cause and apply the smallest sound fix.
+4. Verify locally whenever doing so lowers the odds of another failed push.
+{{#if headTag}}5. Push both the branch and tag `{{headTag}}` atomically: `git push --atomic "{{remote}}" "{{branch}}" "+refs/tags/{{headTag}}"`.{{else}}5. Push the branch.{{/if}}
+6. Monitor workflow runs for the updated HEAD commit.
+7. Loop until all workflow runs on the latest HEAD commit pass.
 </procedure>
 
 <caution>
-Each push: fresh CI attempt; immediately re-watch new HEAD.
-Insufficient watcher output → inspect underlying workflow or job context before code changes.
+Every push triggers a new CI run; monitor the updated HEAD right away.
+If watcher output is unclear → inspect the underlying workflow or job logs before modifying code.
 </caution>
 
 {{#if headTag}}
 <instruction>
-Push branch/tag together: tag NEVER points at un-pushed or non-green commit. `--atomic`: branch/tag updates succeed or fail as one ref transaction; `+refs/tags/{{headTag}}`: force-moves tag to new HEAD. NEVER push branch first and retag later.
+Push the branch and tag together so the tag NEVER points at an unpushed or failing commit. `--atomic` ensures branch and tag updates succeed or fail as a single ref transaction; `+refs/tags/{{headTag}}` moves the tag forcefully to the updated HEAD. NEVER push the branch separately and retag afterward.
 </instruction>
 {{/if}}
 
 <critical>
-Complete only when workflow runs for latest HEAD commit succeed.
-{{#if headTag}}Latest HEAD commit MUST carry tag `{{headTag}}`, pushed atomically with branch via `git push --atomic`.{{/if}}
+Finish only once workflow runs for the latest HEAD commit pass.
+{{#if headTag}}The latest HEAD commit MUST bear tag `{{headTag}}`, pushed atomically alongside the branch via `git push --atomic`.{{/if}}
 </critical>

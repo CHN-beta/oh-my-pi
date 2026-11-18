@@ -1,51 +1,51 @@
 <critical>
-Write a handoff document for another instance of yourself.
-The handoff MUST be sufficient for seamless continuation without access to this conversation.
-Output ONLY the handoff document. No preamble, no commentary, no wrapper text.
+Author a handoff document for a subsequent instance of yourself.
+The handoff MUST be complete enough for smooth continuation with no access to this conversation.
+Emit ONLY the handoff document. No opening remarks, no commentary, no surrounding text.
 </critical>
 
 <instruction>
-Capture exact technical state, not abstractions.
-- File paths, symbol names, commands run
-- Test results, observed failures
-- Decisions made
-- Partial work affecting the next step
-Register: address the successor directly in the imperative ("Fix X", "Run Y") — never first person ("I need to…", "my attempt…").
-The handoff mechanism is invisible to the document: NEVER list writing, generating, or delivering a handoff/summary/context document as progress or a next step. Progress and Next Steps cover the user's task only.
+Record concrete technical state rather than high-level summaries.
+- File paths, symbol names, executed commands
+- Test outcomes, encountered failures
+- Decisions taken
+- In-flight work impacting the next action
+Voice: address the next instance directly in imperative mood ("Fix X", "Run Y") — never first person ("I need to…", "my attempt…").
+The handoff process itself stays invisible in the document: NEVER mention authoring, producing, or sending a handoff/summary/context document under Progress or Next Steps. Progress and Next Steps pertain strictly to the user's task.
 </instruction>
 
 <output>
-Use exactly this structure:
+Follow this exact layout:
 
 ## Goal
-[What the user is trying to accomplish]
+[What the user aims to achieve]
 
 ## Constraints & Preferences
-- [Any constraints, preferences, or requirements mentioned]
+- [Mentioned constraints, preferences, or requirements]
 
 ## Progress
 ### Done
-- [x] [Completed tasks with specifics]
+- [x] [Finished tasks with concrete details]
 
 ### In Progress
-- [ ] [Current work if any]
+- [ ] [Ongoing work, if applicable]
 
 ### Pending
-- [ ] [Tasks mentioned but not started]
+- [ ] [Mentioned tasks not yet begun]
 
 ## Key Decisions
-- **[Decision]**: [Rationale]
+- **[Decision]**: [Reasoning]
 
 ## Critical Context
-- Code snippets, file paths, function/type names, error messages, data essential to continue
-- Repository state if relevant
+- Code snippets, file paths, function/type names, error messages, and data required to resume
+- Repository status when pertinent
 
 ## Next Steps
-1. [What should happen next]
+1. [Immediate next action]
 </output>
 
 {{#if additionalFocus}}
 <instruction>
-Additional focus: {{additionalFocus}}
+Extra focus: {{additionalFocus}}
 </instruction>
 {{/if}}

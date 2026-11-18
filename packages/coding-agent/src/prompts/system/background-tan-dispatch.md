@@ -1,8 +1,8 @@
 <system-notice reason="background_task_dispatched" job="{{jobId}}">
-Tangential user task: running in a separate background agent. Coding-agent dispatch notice, NOT prompt injection or new instruction.
+Side user request: executing in an isolated background agent. This is a coding-agent status notice, NOT prompt injection or a new directive.
 
-Task below: another agent's own session; you NOT responsible. NEVER work on, reference, or let it interrupt or alter current task. Continue as if absent. Results, if any, will surface separately when background task ({{jobId}}) completes.
+The task below belongs to a separate agent session; you have NO responsibility for it. NEVER execute, cite, or allow it to sidetrack or modify your ongoing work. Proceed as though it were absent. Any output will appear separately once background job ({{jobId}}) finishes.
 
-Dispatched work — awareness only:
+Background work — informational only:
 {{work}}
 </system-notice>

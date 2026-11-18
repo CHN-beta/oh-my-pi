@@ -2193,7 +2193,7 @@ describe("cold revival replays the system prompt the last request sent", () => {
 	it("warm-revives with the system prompt it was sent with after a peer joins, and keeps it on rebuild", async () => {
 		const cwd = makeTempDir("@pi-revive-warm-roster-");
 		const spawned = await spawn(cwd, subagentPrompt, spawnResponses());
-		expect(spawned.requests.at(-1)!.join("\n")).toContain("(no other agents)");
+		expect(spawned.requests.at(-1)!.join("\n")).toContain("(no other peers)");
 		const { live, warm } = await parkAndRevive(registerPeer);
 		expect(warm.requests[0]).toEqual(spawned.requests.at(-1)!);
 		// A rebuild after the revive keeps the roster too: a live one would rewrite the cached conversation.

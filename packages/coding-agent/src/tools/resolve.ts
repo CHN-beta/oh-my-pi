@@ -49,17 +49,17 @@ export const PROPOSE_DEVICE_PATH = `${XDEV_URL_PREFIX}${PROPOSE_DEVICE_NAME}`;
  * byte-identical to applied-edit output — without this line the model reads
  * the result as an already-applied change.
  */
-export const PREVIEW_PENDING_NOTICE = `Staged as a proposal — files NOT modified yet. To apply: write a one-sentence reason to ${RESOLVE_DEVICE_PATH}. To discard: write to ${REJECT_DEVICE_PATH}.`;
+export const PREVIEW_PENDING_NOTICE = `Staged as a preview — files NOT altered yet. To apply: write a one-sentence justification to ${RESOLVE_DEVICE_PATH}. To discard: write to ${REJECT_DEVICE_PATH}.`;
 
 /** One-line usage string returned by `read xdev://<device>` — the only "docs" these devices carry. */
 export function resolutionDeviceUsage(device: ResolutionDeviceName): string {
 	switch (device) {
 		case RESOLVE_DEVICE_NAME:
-			return `Write a one-sentence reason as plain text to ${RESOLVE_DEVICE_PATH} to APPLY the pending staged action (e.g. a tool preview).`;
+			return `Write a single-sentence justification as plain text to ${RESOLVE_DEVICE_PATH} to APPLY the staged pending action (e.g. a tool preview).`;
 		case REJECT_DEVICE_NAME:
-			return `Write a one-sentence reason as plain text to ${REJECT_DEVICE_PATH} to DISCARD the pending staged action (e.g. a tool preview).`;
+			return `Write a single-sentence justification as plain text to ${REJECT_DEVICE_PATH} to DISCARD the staged pending action (e.g. a tool preview).`;
 		case PROPOSE_DEVICE_NAME:
-			return `Write your plan's <slug> (matching local://<slug>-plan.md) as plain text to ${PROPOSE_DEVICE_PATH} to submit the plan for approval. Valid only while plan mode is active.`;
+			return `Write your plan's <slug> (matching local://<slug>-plan.md) as plain text to ${PROPOSE_DEVICE_PATH} to send the plan for approval. Permitted only while plan mode is enabled.`;
 	}
 }
 

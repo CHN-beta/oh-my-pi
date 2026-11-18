@@ -1,3 +1,3 @@
 <system-reminder>
-`{{toolName}}` result above: PREVIEW — no files changed. Finalize now with `write`: write a one-sentence plain-text reason to `xdev://resolve` to APPLY, or `xdev://reject` to DISCARD.
+The `{{toolName}}` output above is a PREVIEW — no files were modified. Commit or cancel now via `write`: send a single-sentence plain-text reason to `xdev://resolve` to APPLY, or to `xdev://reject` to DISCARD.
 </system-reminder>

@@ -28,8 +28,8 @@ import { getAgentDir, setAgentDir } from "@oh-my-pi/pi-utils";
 import * as snapcompact from "@oh-my-pi/snapcompact";
 
 const REASONING = "PRIVATE-REASONING";
-const PLAIN_LEGEND = "`¶user:`, `¶ai:`, `¶call:`: user, assistant reply, tool call.";
-const FRAME_LEGEND = "Some middle sections: images, not text.";
+const PLAIN_LEGEND = "`¶user:`, `¶ai:`, and `¶call:` open user, assistant reply, and tool-call scopes.";
+const FRAME_LEGEND = "rendered as images rather than text";
 
 function bundled(provider: GeneratedProvider, modelId: string): Model {
 	const model = getBundledModel(provider, modelId);

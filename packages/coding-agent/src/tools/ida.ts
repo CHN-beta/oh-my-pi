@@ -35,15 +35,17 @@ const IDA_EDIT_TIMEOUT_MS = 120_000;
 
 const idaSchema = type({
 	action: type.enumerated("list", "open", "save", "close", "exec", "rename", "comment", "set_type", "make_function"),
-	"db?": type("string").describe("binary or .i64/.idb path, or open db id; optional when exactly one db is open"),
-	"target?": type("string").describe("symbol name or 0x address"),
-	"name?": type("string").describe("new name (rename)"),
-	"text?": type("string").describe("comment text"),
-	"repeatable?": type("boolean").describe("repeatable comment"),
-	"decl?": type("string").describe("C declaration (set_type)"),
-	"code?": type("string").describe("Python for exec; `db` is the ida_domain Database; namespace persists per db"),
-	"save?": type("boolean").describe("close: save first (default true)"),
-	"timeout?": type("number").describe("exec timeout seconds"),
+	"db?": type("string").describe("binary or .i64/.idb file path, or open db id; optional when a single db is open"),
+	"target?": type("string").describe("symbol name or 0x hex address"),
+	"name?": type("string").describe("new symbol name (rename)"),
+	"text?": type("string").describe("annotation comment text"),
+	"repeatable?": type("boolean").describe("mark comment as repeatable"),
+	"decl?": type("string").describe("C type declaration (set_type)"),
+	"code?": type("string").describe(
+		"Python snippet for exec; `db` is the ida_domain Database; namespace persists per db",
+	),
+	"save?": type("boolean").describe("close: save prior to closing (default true)"),
+	"timeout?": type("number").describe("exec deadline in seconds"),
 });
 
 /** Parameters accepted by the `ida` tool. */
@@ -95,7 +97,7 @@ export class IdaTool implements AgentTool<typeof idaSchema, IdaToolDetails> {
 		return lines;
 	};
 	readonly label = "IDA";
-	readonly summary = "Open, edit, and script IDA Pro databases shared across agents";
+	readonly summary = "Inspect, modify, and script IDA Pro databases shared across agents";
 	readonly description: string;
 	readonly parameters = idaSchema;
 	readonly strict = true;

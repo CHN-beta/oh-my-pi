@@ -1,6 +1,6 @@
 <active-repo-context>
-Session cwd: outside git.
-Exactly one direct-child git repo detected: `{{relativeRepoRoot}}`.
-Active project: paths under `{{relativeRepoRoot}}/`.
-Parent-cwd misses inconclusive until checking under `{{relativeRepoRoot}}/`.
+Current working directory is not inside git.
+A single direct child git repository was found: `{{relativeRepoRoot}}`.
+Target project files reside under `{{relativeRepoRoot}}/`.
+Missing paths in the parent cwd remain inconclusive until checked beneath `{{relativeRepoRoot}}/`.
 </active-repo-context>

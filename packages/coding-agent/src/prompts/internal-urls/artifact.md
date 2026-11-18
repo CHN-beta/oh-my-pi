@@ -1,1 +1,1 @@
-artifact://<id>: spilled output; page :N-M or :raw:N-M.
+artifact://<id>: overflow output; paginate with `:N-M` or `:raw:N-M`.

@@ -898,7 +898,7 @@ function isMediaQuestionTarget(readPath: string): boolean {
 const MAX_IMAGE_SIZE = MAX_IMAGE_INPUT_BYTES;
 
 const readSchema = type({
-	path: type("string").describe("Local path, internal URI, or URL; selectors inline."),
+	path: type("string").describe("Filesystem path, internal URI, or URL with optional inline selectors."),
 });
 
 export type ReadToolInput = typeof readSchema.infer;

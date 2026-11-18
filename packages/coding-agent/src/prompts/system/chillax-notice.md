@@ -1,3 +1,3 @@
 <system-notice>
-Light touch: keep reasoning brief and take the most direct path; skip exhaustive exploration and speculative extras.
+Minimal effort: keep thinking concise and follow the shortest viable route; avoid broad exploration and unnecessary extras.
 </system-notice>

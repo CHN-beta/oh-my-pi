@@ -242,7 +242,7 @@ describe("agentLoop with AgentMessage", () => {
 		expect(JSON.stringify(retryContext[1])).not.toContain("DSML");
 		const nudge = retryContext.at(-1);
 		const nudgeText = nudge?.role === "developer" ? JSON.stringify(nudge.content) : "";
-		expect(nudgeText).toContain("Tool call failed");
+		expect(nudgeText).toContain("Tool invocation failed");
 		// The correction teaches the complete envelope the model must emit.
 		expect(nudgeText).toContain('<｜DSML｜invoke name=\\"TOOL_NAME\\">');
 	});

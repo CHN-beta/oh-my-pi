@@ -23,7 +23,7 @@ import { cfgTodoEnabled } from "@oh-my-pi/pi-coding-agent/tools/settings";
 // the delegate-via-tasks / phased-todo guidance. The post-compaction auto-continuation
 // turn must carry the gated reminders again (reminder-only — never a forced tool_choice).
 
-const TASK_DELEGATION_MARKER = "Task delegation enabled";
+const TASK_DELEGATION_MARKER = "Task delegation is active";
 
 type ObservedPromptCall = {
 	callIndex: number;
@@ -352,7 +352,7 @@ describe("AgentSession eager prelude re-injection after compaction", () => {
 
 		const continuation = await runToContinuation(session, waitForCall);
 
-		expect(continuation.messageTexts.some(text => text.includes("Consider calling"))).toBe(true);
+		expect(continuation.messageTexts.some(text => text.includes("Consider invoking"))).toBe(true);
 		expect(continuation.toolChoice).toBeUndefined();
 	});
 
@@ -367,7 +367,7 @@ describe("AgentSession eager prelude re-injection after compaction", () => {
 		const continuation = await runToContinuation(session, waitForCall);
 
 		// `always` keeps the strong forced wording in the reminder text...
-		expect(continuation.messageTexts.some(text => text.includes("You MUST call"))).toBe(true);
+		expect(continuation.messageTexts.some(text => text.includes("You MUST invoke"))).toBe(true);
 		// ...but post-compaction never attaches the forced todo tool_choice.
 		expect(continuation.toolChoice).toBeUndefined();
 	});

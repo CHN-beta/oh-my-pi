@@ -2,12 +2,12 @@
 
 ## Operator-Supplied Review Focus
 
-You MUST verify every annotation against the diff and surrounding code. NEVER repeat an operator note without independently validating it.
+You MUST check every annotation against the diff and surrounding code. NEVER echo an operator note without verifying it independently.
 {{else}}
 
 ## Code Review Annotations
 
-Use these annotations as review notes; they are not independently validated findings.
+Treat these annotations as review context; they have not been independently verified as findings.
 {{/if}}
 
 {{#list annotations join="\n\n"}}

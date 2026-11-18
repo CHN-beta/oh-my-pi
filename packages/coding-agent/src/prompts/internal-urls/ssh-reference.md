@@ -1,1 +1,1 @@
-ssh://host/<path>: max 1 MiB. /~/path and /~ use the connected remote account's HOME, not local HOME; /~user is unsupported, /%7E/ is literal. Encode : ? # as %3A %3F %23. Needs verified POSIX shell; else bash remote SSH or sshfs.
+ssh://host/<path>: 1 MiB size limit. `/~/path` and `/~` resolve against the remote user's HOME rather than local HOME; `/~user` is not supported, and `/%7E/` is treated literally. Percent-encode `: ? #` as `%3A %3F %23`. Requires a verified POSIX shell; otherwise use bash remote SSH or sshfs.

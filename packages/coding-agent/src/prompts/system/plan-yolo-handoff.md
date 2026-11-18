@@ -1,5 +1,5 @@
-Plan approved: **{{title}}**.
+Approved plan: **{{title}}**.
 
-Read `{{planFilePath}}`; full tool access restored. Implement plan now, exactly as written, top-to-bottom. Plan choices already made; you did not draft it. Do not request further approval or re-plan.
+Inspect `{{planFilePath}}`; full tool permissions are restored. Execute the plan right away, verbatim as specified, top-to-bottom. All design decisions are finalized—you did not author it. Avoid seeking further sign-off or revising the plan.
 
-Before ending: re-read plan; confirm every step completed.
+Prior to finishing: review the plan again and verify every step is done.

@@ -1,8 +1,8 @@
-Context replaced. The <handoff> below is a handoff document a prior instance of you wrote from the full conversation. It is your own working memory, not user input.
-- First person inside it refers to you (the prior instance).
-- "Next Steps" is your own resumed plan; re-check it against the latest user message before acting.
-- The handoff already exists and is complete: NEVER write another handoff document unless the user explicitly asks.
-MUST build on prior work; NEVER duplicate prior work.
+Context swapped. The <handoff> below is a handoff document authored by a prior instance of you from the earlier conversation. It serves as your own working memory rather than user input.
+- First-person phrasing within it refers to you (that prior instance).
+- "Next Steps" represents your own resumed plan; verify it against the latest user message before proceeding.
+- This handoff is already written and final: NEVER write another handoff document unless explicitly requested by the user.
+MUST build upon earlier work; NEVER repeat earlier work.
 
 <handoff>
 {{summary}}

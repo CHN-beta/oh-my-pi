@@ -193,7 +193,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			expect(write).toBeDefined();
 			await expect(
 				write!.execute("device-only-fs", { path: path.join(tempDir, "nope.txt"), content: "x" }),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 		} finally {
 			await session.dispose();
 		}
@@ -216,7 +216,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 					path: path.join(tempDir, "before.txt"),
 					content: "x",
 				}),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 
 			await session.setActiveToolsByName(session.getEnabledToolNames());
 
@@ -225,7 +225,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 					path: path.join(tempDir, "after.txt"),
 					content: "x",
 				}),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 		} finally {
 			await session.dispose();
 		}
@@ -288,7 +288,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			await session.setModel(fable);
 			expect(session.getToolByName("think")).toBeDefined();
 			expect(session.getActiveToolNames()).toContain("think");
-			expect(session.systemPrompt.join("\n")).toContain("other tools become callable when it completes");
+			expect(session.systemPrompt.join("\n")).toContain("You MUST call it to plan before invoking other tools.");
 
 			await session.setModel(responses);
 			expect(session.getActiveToolNames()).toContain("think");
@@ -517,7 +517,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			if (!write) throw new Error("expected dormant write transport");
 			await expect(
 				write.execute("late-device-fs", { path: path.join(tempDir, "nope.txt"), content: "x" }),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 		} finally {
 			await session.dispose();
 		}
@@ -1846,7 +1846,7 @@ describe("createAgentSession defaultInactive tool activation", () => {
 			expect(write).toBeDefined();
 			await expect(
 				write!.execute("device-only-fs", { path: path.join(tempDir, "nope.txt"), content: "x" }),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 		} finally {
 			await session.dispose();
 		}

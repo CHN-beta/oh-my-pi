@@ -77,22 +77,22 @@ const getComputerParamsSchema: () => ComputerParamsSchema = once(() =>
 	type({
 		action: "'run'",
 		"code?": type("string").describe(
-			"JavaScript executed in the persistent computer session; top-level await allowed; `desktop`, `wait`, `assert` in scope",
+			"JavaScript run inside the persistent computer session; top-level await supported; `desktop`, `wait`, `assert` in scope",
 		),
-		"fn?": type("string").describe("serialized function receiving the computer run scope and positional args"),
-		"args?": type("unknown[]").describe("positional function arguments"),
+		"fn?": type("string").describe("serialized function accepting the computer run scope and positional args"),
+		"args?": type("unknown[]").describe("positional arguments for fn"),
 		"read_only?": type("boolean").describe(
-			"true = desktop inspection only: screenshots and ax reads allowed, desktop input/mutation blocked",
+			"true = desktop inspection only: permits screenshots and ax reads while blocking desktop input/mutations",
 		),
-		"timeout?": type("number").describe("run budget in seconds"),
+		"timeout?": type("number").describe("execution budget in seconds"),
 		"+": "reject",
 	})
 		.or({
 			action: "'call'",
 			chain: type({ method: "string", args: "unknown[]" })
 				.array()
-				.describe("desktop helper invocation with at most one window/element handle hop"),
-			"timeout?": type("number").describe("run budget in seconds"),
+				.describe("desktop helper call allowing at most one window/element handle hop"),
+			"timeout?": type("number").describe("execution budget in seconds"),
 			"+": "reject",
 		})
 		.or({ action: "'capabilities'", "+": "reject" })

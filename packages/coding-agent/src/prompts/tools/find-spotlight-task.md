@@ -1,3 +1,3 @@
-Find the source files in this repository that implement the following.
+Locate the repository source files that implement the behavior described below.
 
 {{query}}

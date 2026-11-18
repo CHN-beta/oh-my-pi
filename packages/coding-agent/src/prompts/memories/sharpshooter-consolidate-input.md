@@ -1,4 +1,4 @@
-## Current memory files
+## Existing memory files
 
 <architecture.md>
 {{architecture}}
@@ -12,14 +12,14 @@
 {{style}}
 </style.md>
 
-## Project docs digest (already documented — EXCLUDE anything covered here)
+## Summary of project docs (already covered — OMIT anything already stated here)
 
 <project-docs>
 {{projectDocs}}
 </project-docs>
 
-## Queued decision deltas, grouped per session, oldest session first
+## Pending decision deltas, grouped by session from oldest to newest
 
 {{sessions}}
 
-Apply the queued deltas to the current files under the admission law and call `replace_memory_files` once with all three complete files.
+Fold these pending deltas into the existing files according to the admission law, then invoke `replace_memory_files` once passing all three full files.

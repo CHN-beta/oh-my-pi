@@ -44,10 +44,10 @@ try {
 	// The date/cwd reminder is built per request in the startup local timezone;
 	// the system prompt no longer embeds the date (#7404).
 	const reminder = renderDateCwdReminder(formatLocalCalendarDate(), "/cwd");
-	if (!reminder.includes(\`Today: \${process.env.OMP_EXPECTED_DATE}\`)) {
+	if (!reminder.includes(\`Current date: \${process.env.OMP_EXPECTED_DATE}\`)) {
 		throw new Error(\`Reminder did not contain expected local date:\\n\${reminder}\`);
 	}
-	if (reminder.includes(\`Today: \${process.env.OMP_REJECTED_DATE}\`)) {
+	if (reminder.includes(\`Current date: \${process.env.OMP_REJECTED_DATE}\`)) {
 		throw new Error(\`Reminder contained rejected UTC date:\\n\${reminder}\`);
 	}
 } finally {

@@ -15,11 +15,11 @@ import { cfgAutolearnEnabled } from "../autolearn/settings";
 
 const manageSkillSchema = type({
 	action: "'create' | 'update' | 'delete'",
-	name: type("string").describe("kebab-case skill name"),
+	name: type("string").describe("kebab-case identifier for the skill"),
 	"description?": type("string").describe(
-		"one-line description of when to use the skill (required for create/update)",
+		"single-line summary of when to apply the skill (mandatory for create/update)",
 	),
-	"body?": type("string").describe("the SKILL.md body in markdown, no frontmatter (required for create/update)"),
+	"body?": type("string").describe("markdown body of SKILL.md, omitting frontmatter (mandatory for create/update)"),
 }).narrow(
 	(p, ctx) =>
 		p.action === "delete" ||
@@ -45,7 +45,7 @@ export class ManageSkillTool implements AgentTool<typeof manageSkillSchema> {
 	readonly parameters = manageSkillSchema;
 	readonly strict = true;
 	readonly loadMode = "essential" as const;
-	readonly summary = "Create, update, or delete an isolated managed skill";
+	readonly summary = "Create, modify, or remove an isolated managed skill";
 
 	constructor(private readonly refreshSkills?: () => Promise<void>) {}
 

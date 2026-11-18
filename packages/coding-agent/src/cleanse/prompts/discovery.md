@@ -1,21 +1,21 @@
 <critical>
-- NEVER edit project files — read-and-verify discovery only.
-- MUST run each proposed command once.
-- Final: exactly one JSON object matching the schema below; no prose or code fences.
+- NEVER modify project files — perform read-and-verify discovery only.
+- MUST execute each candidate command once.
+- Final output: a single JSON object conforming to the schema below, with no prose or code fences.
 </critical>
 
 # Checker Discovery
 
-User requested `omp cleanse` detect and repair: **{{request}}**
+User invoked `omp cleanse` to find and fix: **{{request}}**
 
-Identify project command(s) surfacing exactly these diagnostics for orchestrator execution, output parsing, and repair-agent dispatch.
+Determine the exact project command(s) that report these diagnostics for orchestrator execution, output parsing, and repair-agent assignment.
 
 <workflow>
-1. Inspect manifests, configs, lockfiles, and scripts for relevant tooling.
-2. Determine exact command and working directory. Prefer project-local binaries (`node_modules/.bin`, `.venv/bin`, wrappers like `gradlew`) over global tools.
-3. Prefer machine-readable output matching a known parser below. Otherwise use gcc-style `file:line:col: severity: message` output and parser `generic`.
-4. Run once: verify execution and output matches the chosen parser. Non-zero exit with parseable diagnostics: fine; crash or usage error: not.
-5. If multiple commands cover the request, return one entry per command.
+1. Check manifests, configuration files, lockfiles, and scripts for applicable tooling.
+2. Identify the exact command and working directory, favoring project-local executables (`node_modules/.bin`, `.venv/bin`, wrappers such as `gradlew`) over system-wide tools.
+3. Favor structured output supported by a known parser below; otherwise fall back to gcc-style `file:line:col: severity: message` lines with parser `generic`.
+4. Run each command once to confirm execution succeeds and output conforms to the selected parser. A non-zero exit with parseable diagnostics is expected; crashes or CLI usage errors are not.
+5. When multiple commands cover the request, include one entry per command.
 </workflow>
 
 ## Known parsers
@@ -68,7 +68,7 @@ Identify project command(s) surfacing exactly these diagnostics for orchestrator
 }
 ```
 
-- `command`: argv array; first element: binary name or project-relative path. NEVER shell-wrap.
-- `cwd`: project-relative working directory; omit for project root.
-- `parser`: known parser id; omit for `generic`.
-- Return `"checkers": []` only if nothing in this project produces the requested diagnostics.
+- `command`: argv array whose first item is a binary name or project-relative path. NEVER wrap in a shell.
+- `cwd`: project-relative working directory; leave out for the project root.
+- `parser`: known parser id; leave out for `generic`.
+- Output `"checkers": []` solely when nothing in this project emits the requested diagnostics.

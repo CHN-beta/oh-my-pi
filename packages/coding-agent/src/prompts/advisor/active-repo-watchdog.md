@@ -1,5 +1,5 @@
 <attention>
-Session cwd: outside git; exactly 1 direct-child git repo: `{{relativeRepoRoot}}`.
-Active project: paths under `{{relativeRepoRoot}}/`.
-Before claiming work missing, destroyed, or absent at parent cwd, check `{{relativeRepoRoot}}/`.
+Current working directory is not inside git; there is a single direct child git repository: `{{relativeRepoRoot}}`.
+Target project files live under `{{relativeRepoRoot}}/`.
+Verify `{{relativeRepoRoot}}/` before concluding that files are missing, deleted, or nonexistent in the parent cwd.
 </attention>

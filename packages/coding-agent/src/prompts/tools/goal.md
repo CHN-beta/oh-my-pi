@@ -1,10 +1,10 @@
-Manage active goal-mode objective.
+Manage the active goal-mode objective.
 
-Single `op` field:
-- `create`: starts goal; enables goal mode. Requires `objective`; optional positive `token_budget`. Only when no goal exists and none is paused.
-- `get`: returns current active/paused goal and remaining token budget.
-- `resume`: re-activates paused goal for continued work.
-- `complete`: marks goal complete only when actually done and every deliverable verified against current evidence. NEVER because budget low or turn ending.
-- `drop`: discards current goal without completing it and ends goal mode; `goal` tool leaves your tool set immediately, so you cannot `create` a replacement (not even later in the same turn or eval cell). To change the objective, NEVER drop; ask the user to set the new goal.
+Single `op` parameter:
+- `create`: creates a goal and turns on goal mode. Requires `objective`, with an optional positive `token_budget`. Valid only when no goal is active or paused.
+- `get`: fetches the current active or paused goal along with its remaining token budget.
+- `resume`: reactivates a paused goal so work can continue.
+- `complete`: marks the goal finished only once work is genuinely complete and all deliverables are verified against live evidence. NEVER invoke just because budget is low or a turn is ending.
+- `drop`: abandons the current goal without finishing it and exits goal mode; the `goal` tool is removed from your toolset immediately, preventing you from calling `create` for a replacement (even later in the same turn or eval cell). To revise the objective, NEVER drop it; ask the user to set the updated goal.
 
-Paused goal from `get` → MUST `resume` before continuing work.
+If `get` returns a paused goal → MUST call `resume` before proceeding with work.

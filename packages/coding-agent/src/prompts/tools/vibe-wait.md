@@ -1,8 +1,8 @@
-Blocks until ONE watched session finishes its current turn, the timeout elapses, or you are interrupted — not until all finish. Re-issue to keep waiting.
+Waits until ONE monitored session completes its active turn, the timeout expires, or an interruption occurs—not until every session finishes. Call again to keep waiting.
 
-Turn results normally deliver themselves; you NEVER need this to receive output. Use it only when you are completely blocked and cannot direct any other session.
+Turn outputs normally arrive automatically; you NEVER need `vibe_wait` to collect results. Invoke it only when completely blocked and unable to direct any other session.
 
-- `sessions` — ids to watch. Omit to watch every session with a turn in flight.
-- `timeout` — seconds to wait (default 30).
+- `sessions` — session IDs to monitor. Omit to monitor all sessions currently mid-turn.
+- `timeout` — wait duration in seconds (defaults to 30).
 
-A finished turn's full result (activity trace + response) is returned here and will not be re-delivered separately.
+The completed turn's full output (activity trace plus response) is returned directly here and will not be delivered a second time.

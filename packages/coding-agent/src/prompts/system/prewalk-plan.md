@@ -1,12 +1,12 @@
-STOP: In NEXT reply, before further exploration, write complete plan. Enough known; do not defer.
+STOP: In your NEXT response, prior to exploring further, lay out the full plan. You have enough context; stop deferring.
 
-Plan first; explicit, comprehensive; reference for remainder:
-- Remaining execution-order steps: exact files, symbols, commands, checks.
-- Risks, edge cases; verify each landed: specific commands, expected outputs. NEVER modify tests or verification assets to pass checks.
-- Already done, brief; prevent repetition.
+Draft the plan first—concrete, explicit, and complete—as the roadmap for the rest of the work:
+- Remaining steps in execution order: specific files, symbols, commands, and validation checks.
+- Risks and edge cases, plus how each step is confirmed: exact commands and expected results. NEVER alter tests or validation criteria just to force a pass.
+- Summarize what is already complete briefly to avoid redoing work.
 
-Thorough, concrete. Tools may verify details only after plan.
+Be thorough and specific. You may invoke tools to confirm details only after writing out the plan.
 
-Then, same reply and only after complete plan, use todo tool to capture 5–9 items: one per MEANINGFUL step; each concrete target + verification. Only code-changing or code-verifying steps; exclude reporting, bookkeeping, cleanup-ceremony, release-note items. Todo serves task, not reverse: reality/item conflict → fix actual problem, not checklist.
+Next, inside the same response and strictly after the full plan, invoke the todo tool to record 5–9 items—one per SUBSTANTIVE step, each stating a concrete target and verification check. Include only code-editing or code-verifying items; omit reporting, bookkeeping, cleanup chores, and release-note items. The todo list serves the task, never the reverse: if reality conflicts with an item, fix the underlying issue rather than forcing the checklist.
 
-Checkpoint, not final answer: after todo list, continue task; do not stop on plan alone.
+This is a checkpoint, not a conclusion: once the todo list is saved, immediately press ahead with the task instead of stopping on the plan alone.

@@ -1,3 +1,3 @@
 <system-notice>
-Multi-step reasoning: think carefully through the problem before responding.
+Deep multi-step reasoning: analyze the problem thoroughly before answering.
 </system-notice>

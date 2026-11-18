@@ -7,7 +7,7 @@ import {
 } from "@oh-my-pi/pi-coding-agent/tools/browser/prelude-definition";
 import { cfgBrowserCdpUrl } from "@oh-my-pi/pi-coding-agent/tools/browser/settings";
 
-const X11_NOTE = "On Linux under X11";
+const X11_NOTE = "On Linux X11";
 
 describe("browserDocumentation", () => {
 	it("carries the Linux X11 click note on Linux hosts and for a configured browser on another machine", () => {

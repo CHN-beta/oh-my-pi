@@ -1,1 +1,1 @@
-Cache benchmark suffix {{variant}}.
+Benchmark suffix variant for prompt caching: {{variant}}.

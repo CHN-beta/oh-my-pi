@@ -1,1 +1,1 @@
-Write an uninterrupted stream of plain prose recounting {{topic}}, decade by decade, in chronological order. No headings, lists, code fences, or preamble. Do not summarize or conclude early; keep adding new detail until the token limit cuts you off. Output the prose only.
+Produce a continuous flow of plain paragraphs chronicling {{topic}} in chronological order, decade by decade. Omit headings, lists, code blocks, and opening remarks. Avoid summarizing or wrapping up prematurely; keep expanding with fresh details until hitting the token limit. Return only the narrative text.

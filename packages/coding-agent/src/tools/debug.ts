@@ -98,43 +98,45 @@ const debugActionSchema = type.enumerated(
 );
 const debugSchema = type({
 	action: debugActionSchema,
-	"program?": type("string").describe("debug target path; Delve accepts Go package directories"),
-	"args?": type("string[]").describe("program arguments"),
-	"adapter?": type("string").describe("configured adapter id (gdb, lldb-dap, debugpy, dlv, rdbg, or dap.json entry)"),
+	"program?": type("string").describe("executable or target path to debug; Delve supports Go package directories"),
+	"args?": type("string[]").describe("target program arguments"),
+	"adapter?": type("string").describe(
+		"configured debug adapter id (gdb, lldb-dap, debugpy, dlv, rdbg, or dap.json entry)",
+	),
 	cwd: "string?",
-	"file?": type("string").describe("source file"),
-	"line?": type("number").describe("source line"),
-	"function?": type("string").describe("function name"),
-	"name?": type("string").describe("variable or data name"),
-	"condition?": type("string").describe("breakpoint condition"),
+	"file?": type("string").describe("source file path"),
+	"line?": type("number").describe("source line number"),
+	"function?": type("string").describe("target function name"),
+	"name?": type("string").describe("variable or symbol name"),
+	"condition?": type("string").describe("breakpoint trigger condition"),
 	hit_condition: "string?",
-	"expression?": type("string").describe("expression to evaluate"),
-	"context?": type("string").describe("evaluate context: watch | repl | hover | variables | clipboard"),
+	"expression?": type("string").describe("expression to inspect"),
+	"context?": type("string").describe("evaluation context: watch | repl | hover | variables | clipboard"),
 	frame_id: "number?",
-	"scope_id?": type("number").describe("scope variables reference"),
-	"variable_ref?": type("number").describe("variable reference"),
-	"pid?": type("number").describe("process id for attach"),
-	"port?": type("number").describe("remote attach port"),
-	"host?": type("string").describe("remote attach host"),
-	"levels?": type("number").describe("max stack frames"),
+	"scope_id?": type("number").describe("scope variables handle"),
+	"variable_ref?": type("number").describe("variable reference handle"),
+	"pid?": type("number").describe("process ID to attach to"),
+	"port?": type("number").describe("remote attach TCP port"),
+	"host?": type("string").describe("remote attach hostname"),
+	"levels?": type("number").describe("maximum stack frames"),
 	"memory_reference?": type("string").describe("memory reference or address"),
 	instruction_reference: "string?",
 	instruction_count: "number?",
 	instruction_offset: "number?",
-	"count?": type("number").describe("bytes to read"),
-	"data?": type("string").describe("base64 memory payload"),
-	"data_id?": type("string").describe("data breakpoint id"),
+	"count?": type("number").describe("byte count to read"),
+	"data?": type("string").describe("base64-encoded memory payload"),
+	"data_id?": type("string").describe("data breakpoint identifier"),
 	"access_type?": "'read' | 'write' | 'readWrite'",
-	"command?": type("string").describe("custom dap request command"),
+	"command?": type("string").describe("custom DAP request command"),
 	"arguments?": type({
 		"[string]": "unknown",
-	}).describe("custom request arguments"),
+	}).describe("custom request payload arguments"),
 	offset: "number?",
 	resolve_symbols: "boolean?",
 	allow_partial: "boolean?",
 	start_module: "number?",
 	module_count: "number?",
-	"timeout?": type("number").describe("per-request timeout seconds"),
+	"timeout?": type("number").describe("per-request deadline in seconds"),
 });
 
 export type DebugParams = typeof debugSchema.infer;
@@ -556,7 +558,7 @@ export class DebugTool implements AgentTool<typeof debugSchema, DebugExecutionDe
 		return lines;
 	};
 	readonly label = "Debug";
-	readonly summary = "Debug a running process with DAP (debugger adapter protocol)";
+	readonly summary = "Debug a live process via DAP (debugger adapter protocol)";
 	readonly description: string;
 	readonly parameters = debugSchema;
 	readonly strict = true;

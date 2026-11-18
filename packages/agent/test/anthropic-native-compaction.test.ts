@@ -268,10 +268,10 @@ describe("compact() Anthropic native lane", () => {
 		const instructions = options.anthropicCompaction?.instructions ?? "";
 		expect(instructions).toContain("<additional-context>\n- Branch: main\n- Fresh memory\n</additional-context>");
 		expect(instructions).toContain("## Goal");
-		expect(instructions).toContain("The conversation above is the complete history to summarize.");
+		expect(instructions).toContain("The conversation above constitutes the entire history to summarize.");
 		expect(instructions).not.toContain("retained");
-		expect(instructions.endsWith("respond with the summary text only.")).toBe(true);
-		expect(instructions).toContain("MUST NOT call any tools");
+		expect(instructions.endsWith("output only the summary text.")).toBe(true);
+		expect(instructions).toContain("MUST NOT invoke any tools");
 
 		// The API's summary is the entry text, with the file lists the local
 		// summarizer appends. The replay payload stays verbatim so the block

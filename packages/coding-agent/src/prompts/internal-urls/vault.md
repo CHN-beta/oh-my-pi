@@ -1,1 +1,1 @@
-vault://<vault>/<path>: Obsidian read/edit; bare lists vaults, vault://_/ active; ?op= queries.
+vault://<vault>/<path>: read or edit Obsidian notes; bare URL lists vaults, `vault://_/` targets the active vault, and `?op=` runs queries.

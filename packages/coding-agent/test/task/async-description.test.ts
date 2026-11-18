@@ -22,9 +22,9 @@ it("updates async guidance when wait or background execution availability change
 	for (const waitTool of [true, false]) {
 		waitActive = waitTool;
 		const description = tool.description;
-		expect(description).toContain("Results auto-deliver");
-		expect(description.includes("Call `wait`")).toBe(waitTool);
+		expect(description).toContain("Results deliver automatically");
+		expect(description.includes("Invoke `wait`")).toBe(waitTool);
 	}
 	cfgAsyncEnabled.override(settings, false);
-	expect(tool.description).not.toContain("Results auto-deliver");
+	expect(tool.description).not.toContain("Results deliver automatically");
 });

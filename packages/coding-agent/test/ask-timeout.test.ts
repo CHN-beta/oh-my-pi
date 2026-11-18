@@ -177,7 +177,7 @@ describe("AskTool timeout", () => {
 		expect(select).toHaveBeenCalledTimes(2);
 		expect(outcome.result?.content[0]).toEqual({
 			type: "text",
-			text: `No answer before the timeout; submitted the form's current values:\n${JSON.stringify(
+			text: `Timed out before a response; submitted the form's existing values:\n${JSON.stringify(
 				{ db: "sqlite", auth: "jwt", notes: "none" },
 				null,
 				2,

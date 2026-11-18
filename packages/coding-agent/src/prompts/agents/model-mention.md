@@ -1,1 +1,1 @@
-{{name}} ({{selector}}) — general-purpose agent pinned to this model, tagged by the user.{{#if effort}} The user chose its effort: omit `effort` and `model` for it.{{/if}}
+{{name}} ({{selector}}) — user-tagged general-purpose agent locked to this model.{{#if effort}} Its effort level was set by the user: leave out `effort` and `model` when spawning it.{{/if}}

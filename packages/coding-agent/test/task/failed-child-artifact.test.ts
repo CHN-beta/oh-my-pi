@@ -159,7 +159,7 @@ describe("failed child evidence", () => {
 		expect(salvaged?.outputPath).toBe(artifactPath);
 		const failure = text?.type === "text" ? text.text : "";
 		expect(failure).toContain("exit 0.");
-		expect(failure).toContain(`Its output is at \`agent://${salvaged?.id}\``);
+		expect(failure).toContain(`Its output was saved at \`agent://${salvaged?.id}\``);
 		// The artifact the failure points at survives the run's cleanup.
 		const resolved = await new AgentProtocolHandler().resolve(parseInternalUrl(`agent://${salvaged?.id}`));
 		expect(resolved.content).toBe("Findings: 42 rows.");

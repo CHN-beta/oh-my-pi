@@ -596,7 +596,7 @@ export class GrepTool implements AgentTool<typeof searchSchema, GrepToolDetails>
 	};
 	readonly label = "Grep";
 	readonly loadMode = "discoverable";
-	readonly summary = "Search file contents by regex";
+	readonly summary = "Find regex matches across file contents";
 	get description(): string {
 		const displayMode = resolveFileDisplayMode(this.session);
 		const isHlMode = displayMode.hashLines;

@@ -1,12 +1,12 @@
-Edit Mnemopi long-term memories by id. Only ids returned by `{{toolRefs.recall}}`.
+Modify Mnemopi long-term memory entries by ID, using only IDs obtained from `{{toolRefs.recall}}`.
 
-Operations:
-- `update`: working memory; replace content and/or importance.
-- `forget`: permanently delete working memory.
-- `invalidate`: softly supersede working or episodic memory; optional `replacement_id`.
+Supported operations:
+- `update`: working memory; overwrite content and/or importance.
+- `forget`: permanently erase working memory.
+- `invalidate`: soft-retire working or episodic memory, with optional `replacement_id`.
 
-Fact ids — `{{toolRefs.recall}}` results marked `[facts]`: read-only. Inspect with `read memory://<id>`; any edit op → `not_editable`.
+Fact IDs — `{{toolRefs.recall}}` entries tagged `[facts]` — are read-only. View them via `read memory://<id>`; attempting any edit returns `not_editable`.
 
-Prefer `invalidate` for stale memory whose history may still be useful. Use `forget` only for content requiring hard deletion.
+Use `invalidate` for outdated memories worth keeping in history; reserve `forget` for entries requiring permanent removal.
 
-MUST read full memory before `update`. Recall previews clipped: trailing `…` marks truncation; `full_length` original size. `update` replaces content wholesale → updating a preview deletes its unseen tail. First `read memory://<id>`; pass merged content in `content`.
+MUST fetch the complete memory prior to `update`. Recall snippets are truncated: a trailing `…` indicates truncation and `full_length` reports the full length. Because `update` replaces content entirely, updating from a snippet drops the unshown tail. Always `read memory://<id>` first, then submit the combined text in `content`.

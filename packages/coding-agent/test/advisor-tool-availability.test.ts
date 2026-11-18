@@ -102,7 +102,7 @@ test("advisor tool availability follows that advisor's grant, not the primary", 
 		const primaryBash = session.getToolByName("bash");
 		expect(primaryBash).toBeDefined();
 		expect(schemaText(primaryBash!)).not.toContain('"ready"');
-		expect(primaryBash!.description).not.toContain("Long-lived services");
+		expect(primaryBash!.description).not.toContain("Long-running services");
 
 		const rich = factory!.create(new Set(["bash", "task", "wait", "grep", "find", "lsp"]));
 		const narrow = factory!.create(new Set(["bash", "task", "grep"]));
@@ -115,12 +115,12 @@ test("advisor tool availability follows that advisor's grant, not the primary", 
 		const narrowGrep = requireTool(narrow.tools, "grep");
 
 		expect(schemaText(richBash)).toContain('"ready"');
-		expect(richBash.description).toContain("Long-lived services");
-		expect(richTask.description).toContain("Call `wait`");
-		expect(richGrep.description).toContain("Behavior/unknown symbol → `find`");
+		expect(richBash.description).toContain("Long-running services");
+		expect(richTask.description).toContain("Invoke `wait`");
+		expect(richGrep.description).toContain("Unknown symbols or behavior queries → `find`");
 		expect(schemaText(narrowBash)).toContain('"ready"');
-		expect(narrowBash.description).toContain("Long-lived services");
-		expect(narrowTask.description).not.toContain("Call `wait`");
+		expect(narrowBash.description).toContain("Long-running services");
+		expect(narrowTask.description).not.toContain("Invoke `wait`");
 		expect(narrowGrep.description).not.toContain("`find`");
 
 		const launch = await outcomeText(richBash);
@@ -132,21 +132,21 @@ test("advisor tool availability follows that advisor's grant, not the primary", 
 		expect(bridgeGrep).toBeDefined();
 		expect(richBridgeGrep).toBeDefined();
 		expect(bridgeGrep!.description).not.toContain("`find`");
-		expect(richBridgeGrep!.description).toContain("Behavior/unknown symbol → `find`");
+		expect(richBridgeGrep!.description).toContain("Unknown symbols or behavior queries → `find`");
 
 		await session.setActiveToolsByName(["read", "wait", "find"]);
 		expect(session.getActiveToolNames()).toContain("wait");
 		expect(session.getActiveToolNames()).toContain("find");
 		expect(session.getActiveToolNames()).not.toContain("bash");
-		expect(narrowTask.description).not.toContain("Call `wait`");
+		expect(narrowTask.description).not.toContain("Invoke `wait`");
 		expect(narrowGrep.description).not.toContain("`find`");
-		expect(narrowBash.description).toContain("Long-lived services");
-		expect(richTask.description).toContain("Call `wait`");
+		expect(narrowBash.description).toContain("Long-running services");
+		expect(richTask.description).toContain("Invoke `wait`");
 		expect(schemaText(richBash)).toContain('"ready"');
 
 		await session.setActiveToolsByName(["read"]);
-		expect(richTask.description).toContain("Call `wait`");
-		expect(richGrep.description).toContain("Behavior/unknown symbol → `find`");
+		expect(richTask.description).toContain("Invoke `wait`");
+		expect(richGrep.description).toContain("Unknown symbols or behavior queries → `find`");
 		expect(schemaText(primaryBash!)).not.toContain('"ready"');
 	} finally {
 		await session!.dispose();

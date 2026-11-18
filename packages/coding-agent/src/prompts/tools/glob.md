@@ -1,6 +1,6 @@
-Glob files/dirs: `;`-separated paths or internal URLs (local://*.md); default workspace root.
-`gitignore` and `hidden` default true; ignored dotfiles need `gitignore: false`. Newest-first by directory; dirs end `/`.
+Match files and directories by glob: `;`-separated paths or internal URLs (`local://*.md`); defaults to workspace root.
+`gitignore` and `hidden` default to true; set `gitignore: false` to include ignored dotfiles. Sorted newest-first within each directory; directories carry a trailing `/`.
 {{#ifAny eagerDelegation hasFind}}
-{{#if hasFind}}Behavior search → `find`.{{/if}}
-{{#if eagerDelegation}}Multi-round discovery → {{#if scoutAvailable}}Task + scout{{else}}Task{{/if}}.{{/if}}
+{{#if hasFind}}Behavioral search → `find`.{{/if}}
+{{#if eagerDelegation}}Multi-step exploration → {{#if scoutAvailable}}Task + scout{{else}}Task{{/if}}.{{/if}}
 {{/ifAny}}

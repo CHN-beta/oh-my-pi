@@ -1,3 +1,3 @@
 <system-reminder>
-Today: {{date}}; current working directory: '{{cwd}}'. Do not repeat this information in your reply.
+Current date: {{date}}; working directory: '{{cwd}}'. Omit repeating this in your response.
 </system-reminder>

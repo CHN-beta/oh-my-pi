@@ -37,9 +37,9 @@ export function supportsExternalThinking(model: Model | null | undefined): boole
 }
 
 const thinkSchema = type({
-	thoughts: type("string").describe("private scratchpad; not shown to user"),
+	thoughts: type("string").describe("internal scratchpad; hidden from the user"),
 	"+": "reject",
-}).describe("private scratchpad; not shown to user");
+}).describe("internal scratchpad; hidden from the user");
 
 type ThinkParams = typeof thinkSchema.infer;
 
@@ -52,8 +52,8 @@ export class ThinkTool implements AgentTool<typeof thinkSchema, ThinkToolDetails
 	readonly name = "think";
 	readonly approval = "read" as const;
 	readonly label = "Think";
-	readonly summary = "Record private scratchpad thoughts";
-	readonly description = "private scratchpad; not shown to user";
+	readonly summary = "Jot down private scratchpad thoughts";
+	readonly description = "internal scratchpad; hidden from the user";
 	readonly parameters = thinkSchema;
 	readonly strict = true;
 	readonly intent = "omit" as const;

@@ -1,1 +1,1 @@
-The user pressed Escape to stop computer use; this call stopped and its input may be partial. Do not use the computer again this turn: tell the user what you did and what remains.
+The user pressed Escape to abort computer control; this call was interrupted and its input may have been only partially delivered. Do not use the computer again during this turn; report to the user what was done and what remains.

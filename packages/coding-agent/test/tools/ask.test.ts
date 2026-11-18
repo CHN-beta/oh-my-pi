@@ -113,7 +113,7 @@ describe("AskTool form dialog", () => {
 		);
 
 		expect(formDialog.mock.calls[0]?.[0]).toBe(DB_FORM);
-		expect(text(result)).toBe(`User answers:\n${JSON.stringify({ store: "redis", ttl: 7 }, null, 2)}`);
+		expect(text(result)).toBe(`Submitted user responses:\n${JSON.stringify({ store: "redis", ttl: 7 }, null, 2)}`);
 		expect(result.details).toEqual({
 			answers: [
 				{ name: "store", question: "Session store", answer: "Redis" },
@@ -134,7 +134,7 @@ describe("AskTool form dialog", () => {
 		);
 
 		expect(text(result)).toBe(
-			`User answers:\n${JSON.stringify({ store: "redis" }, null, 2)}\nOption notes:\n- Session store: Redis [store="redis"] — shared cache`,
+			`Submitted user responses:\n${JSON.stringify({ store: "redis" }, null, 2)}\nSelected option notes:\n- Session store: Redis [store="redis"] — shared cache`,
 		);
 		expect(result.details).toEqual({
 			answers: [
@@ -186,7 +186,7 @@ describe("AskTool form dialog", () => {
 		);
 
 		expect(text(result)).toBe(
-			`No answer before the timeout; submitted the form's current values:\n${JSON.stringify({ store: "sqlite", ttl: 30 }, null, 2)}\nOption notes:\n- Session store: SQLite [store="sqlite"] — no service needed`,
+			`Timed out before a response; submitted the form's existing values:\n${JSON.stringify({ store: "sqlite", ttl: 30 }, null, 2)}\nSelected option notes:\n- Session store: SQLite [store="sqlite"] — no service needed`,
 		);
 		expect(result.details?.timedOut).toBe(true);
 		expect(result.details?.notes).toEqual(notes);
@@ -396,7 +396,7 @@ describe("AskTool without a form surface", () => {
 		});
 		expect(input.mock.calls[0]?.slice(0, 2)).toEqual(["Lifetime (days)", "30"]);
 		expect(editor.mock.calls[0]?.slice(0, 2)).toEqual(["Notes", "draft"]);
-		expect(JSON.parse(text(result)?.replace("User answers:\n", "") ?? "")).toEqual({
+		expect(JSON.parse(text(result)?.replace("Submitted user responses:\n", "") ?? "")).toEqual({
 			version: "2",
 			store: "redis",
 			telemetry: ["metrics"],
@@ -508,7 +508,7 @@ describe("AskTool without a form surface", () => {
 			"Tools\n\nAutomation rules must be audited.",
 		]);
 		expect(selects.at(-1)?.checked).toEqual([0, 2]);
-		expect(JSON.parse(text(result)?.replace("User answers:\n", "") ?? "")).toEqual({
+		expect(JSON.parse(text(result)?.replace("Submitted user responses:\n", "") ?? "")).toEqual({
 			db: "MySQL 8",
 			tools: ["ci", "terraform"],
 		});
@@ -547,7 +547,7 @@ describe("AskTool without a form surface", () => {
 			createContext({ select }),
 		);
 
-		expect(text(result)).toBe("User answers:\n{}");
+		expect(text(result)).toBe("Submitted user responses:\n{}");
 	});
 
 	it("aborts the turn when the user cancels a later field", async () => {

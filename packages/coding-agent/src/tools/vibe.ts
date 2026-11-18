@@ -31,24 +31,28 @@ export const VIBE_TOOL_NAMES = ["vibe_spawn", "vibe_send", "vibe_wait", "vibe_ki
 
 const vibeSpawnSchema = type({
 	cli: type("'doc' | 'code' | 'debug' | 'design' | 'math' | 'exec'").describe(
-		"worker domain: doc = writing, documentation, research and language work; code = feature implementation, refactors and tests; debug = root-cause debugging, failure diagnosis and code audit; design = system architecture, contracts and frontend/UI design; math = derivations, formal and numerical reasoning; exec = operational execution such as checking git status/diff and committing, running commands and mechanical file/repo operations",
+		"worker specialization: doc = prose writing, documentation, research, and language tasks; code = feature implementation, refactoring, and tests; debug = root-cause investigation, failure analysis, and code audit; design = system architecture, interface contracts, and frontend/UI design; math = derivations, formal proofs, and numerical reasoning; exec = operational tasks like inspecting git status/diff and committing, running shell commands, and mechanical file/repo edits",
 	),
-	"name?": type("string <= 48").describe("optional session name; generated when omitted"),
-	prompt: type("string > 0").describe("first instruction; the worker starts with no other context"),
+	"name?": type("string <= 48").describe("optional session label; auto-generated if omitted"),
+	prompt: type("string > 0").describe("initial instruction; the worker begins with no prior context"),
 });
 
 const vibeSendSchema = type({
-	session: type("string > 0").describe("session id from vibe_spawn / vibe_list"),
-	message: type("string > 0").describe("message for the session; steers mid-turn, else runs as its next turn"),
+	session: type("string > 0").describe("session identifier returned by vibe_spawn / vibe_list"),
+	message: type("string > 0").describe(
+		"message sent to the session; steers if mid-turn, otherwise starts its next turn",
+	),
 });
 
 const vibeWaitSchema = type({
-	"sessions?": type("string[]").describe("session ids to watch; omit to watch every session with a turn in flight"),
-	"timeout?": type("number > 0").describe("max seconds to wait (default 30)"),
+	"sessions?": type("string[]").describe(
+		"session identifiers to monitor; omit to monitor all sessions with an active turn",
+	),
+	"timeout?": type("number > 0").describe("maximum seconds to block (default 30)"),
 });
 
 const vibeKillSchema = type({
-	session: type("string > 0").describe("session id to terminate"),
+	session: type("string > 0").describe("session identifier to shut down"),
 });
 
 const vibeListSchema = type({});
@@ -87,7 +91,7 @@ export class VibeSpawnTool implements AgentTool<typeof vibeSpawnSchema, VibeTool
 	readonly name = "vibe_spawn";
 	readonly approval = "exec" as const;
 	readonly label = "Vibe Spawn";
-	readonly summary = "Start a persistent doc/code/debug/design/math/exec worker session";
+	readonly summary = "Launch a persistent doc/code/debug/design/math/exec worker session";
 	readonly description: string;
 	readonly parameters = vibeSpawnSchema;
 	readonly strict = true;
@@ -108,7 +112,7 @@ export class VibeSendTool implements AgentTool<typeof vibeSendSchema, VibeToolDe
 	readonly name = "vibe_send";
 	readonly approval = "exec" as const;
 	readonly label = "Vibe Send";
-	readonly summary = "Message a worker session (steer or next turn)";
+	readonly summary = "Send a message to a worker session (steer or queue next turn)";
 	readonly description: string;
 	readonly parameters = vibeSendSchema;
 	readonly strict = true;
@@ -134,7 +138,7 @@ export class VibeWaitTool implements AgentTool<typeof vibeWaitSchema, VibeToolDe
 	readonly name = "vibe_wait";
 	readonly approval = "read" as const;
 	readonly label = "Vibe Wait";
-	readonly summary = "Block until a worker session finishes its turn";
+	readonly summary = "Wait until a worker session completes its turn";
 	readonly description: string;
 	readonly parameters = vibeWaitSchema;
 	readonly strict = true;
@@ -211,7 +215,7 @@ export class VibeKillTool implements AgentTool<typeof vibeKillSchema, VibeToolDe
 	readonly name = "vibe_kill";
 	readonly approval = "read" as const;
 	readonly label = "Vibe Kill";
-	readonly summary = "Terminate a worker session";
+	readonly summary = "Shut down a worker session";
 	readonly description: string;
 	readonly parameters = vibeKillSchema;
 	readonly strict = true;
@@ -237,7 +241,7 @@ export class VibeListTool implements AgentTool<typeof vibeListSchema, VibeToolDe
 	readonly name = "vibe_list";
 	readonly approval = "read" as const;
 	readonly label = "Vibe List";
-	readonly summary = "List worker sessions and their states";
+	readonly summary = "Show active worker sessions and their statuses";
 	readonly description: string;
 	readonly parameters = vibeListSchema;
 	readonly strict = true;

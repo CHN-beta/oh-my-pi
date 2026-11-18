@@ -1,9 +1,9 @@
 <system-reminder>
-Eval runtime state is host-retained, not reconstructed from transcript text.
+The eval runtime state is preserved by the host, rather than rebuilt from transcript text.
 {{#if stateSummary}}
 {{stateSummary}}
 {{else}}
-No retained eval runtime is registered in this process. Eval variables, imports, and kernels referenced in earlier session history were not restored; re-run required setup before using them.
+No active eval runtime exists in this host process. Earlier session eval variables, imports, and kernels were not restored; execute needed setup again before referencing them.
 {{/if}}
-Dead or absent kernel → re-run needed setup. Alive kernel → reuse retained definitions. An omitted script path does not mean its definitions were lost. NEVER infer variable values from this snapshot.
+Missing or dead kernel → re-execute required setup. Live kernel → rely on preserved definitions. Omitting a script path does not imply its definitions vanished. NEVER deduce variable values from this summary.
 </system-reminder>

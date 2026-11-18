@@ -82,8 +82,8 @@ export interface HindsightConfig {
 }
 
 const DEFAULT_PREAMBLE =
-	"Relevant memories from past conversations (prioritize recent when conflicting). " +
-	"Only use memories that are directly useful to continue this conversation; ignore the rest:";
+	"Pertinent memories from earlier conversations (favor newer entries when they conflict). " +
+	"Rely solely on memories directly helpful for continuing this conversation; disregard the rest:";
 
 /**
  * Load the resolved Hindsight config. `HINDSIGHT_*` environment variables override settings

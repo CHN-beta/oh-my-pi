@@ -195,7 +195,7 @@ describe("AgentSession interrupted thinking persistence", () => {
 		expect(hidden?.display).toBe(false);
 		expect(hidden?.attribution).toBe("agent");
 		expect(typeof hidden?.content === "string" ? hidden.content : JSON.stringify(hidden?.content)).toBe(
-			`You were saying this but I interrupted you:\n\`\`\`\n${REASONING_TEXT}\n\`\`\``,
+			`You were mid-thought when interrupted:\n\`\`\`\n${REASONING_TEXT}\n\`\`\``,
 		);
 		expect(hidden?.details).toMatchObject({
 			provider: harness.model.provider,

@@ -17,7 +17,7 @@ import type { SingleResult } from "@oh-my-pi/pi-tui/tools/task";
 import { TempDir } from "@oh-my-pi/pi-utils";
 import { createInMemoryAuthStorage } from "./helpers/agent-session-setup";
 
-const deliveryGuidance = "Results auto-deliver; NEVER poll.";
+const deliveryGuidance = "Results deliver automatically; NEVER poll.";
 const sessions: AgentSession[] = [];
 const roots: TempDir[] = [];
 const stores: ModelRegistry[] = [];
@@ -160,9 +160,9 @@ describe("SDK async task guidance", () => {
 		});
 		await session.prompt("Delegate two independent inspections");
 		const [first, second] = taskResults(requests[1].messages).map(text);
-		expect(first).toStartWith("Spawned agent `first` (job `first`).");
+		expect(first).toStartWith("Launched agent `first` (job `first`).");
 		expect(first).toContain("proc://<id>/kill");
-		expect(second).toBe("Spawned agent `second` (job `second`).");
+		expect(second).toBe("Launched agent `second` (job `second`).");
 		const description = requests[1].taskDescription;
 		expect(description).toContain("Inspect the named target");
 		expect(description).toContain(deliveryGuidance);
@@ -177,7 +177,7 @@ describe("SDK async task guidance", () => {
 			await session.prompt("Delegate two independent inspections");
 			const sent = taskResults(requests[1].messages);
 			expect(sent.map(text).filter(result => result.includes("without consuming delivery"))).toHaveLength(1);
-			expect(sent.map(text)[1]).toBe("Spawned agent `second` (job `second`).");
+			expect(sent.map(text)[1]).toBe("Launched agent `second` (job `second`).");
 			for (const request of requests) {
 				const instructions = inline === "on" ? request.systemPrompt?.join("\n") : request.taskDescription;
 				expect(instructions?.split(deliveryGuidance).length).toBe(2);
@@ -190,7 +190,7 @@ describe("SDK async task guidance", () => {
 			await session.prompt("Inspect one more file");
 			expect(taskResults(requests[3].messages).map(text)).toEqual([
 				...sent.map(text),
-				"Spawned agent `third` (job `third`).",
+				"Launched agent `third` (job `third`).",
 			]);
 		},
 	);

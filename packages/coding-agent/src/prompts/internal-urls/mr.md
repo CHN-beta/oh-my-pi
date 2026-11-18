@@ -1,1 +1,1 @@
-mr://<host>/<group>/<project>/<iid>/diff: GitLab merge request changed files; /diff/<i> one file, /diff/all full diff; mr://<iid>/diff for the current project.
+mr://<host>/<group>/<project>/<iid>/diff: changed files in a GitLab merge request; `/diff/<i>` views a single file, `/diff/all` shows the complete diff; use `mr://<iid>/diff` for the current project.

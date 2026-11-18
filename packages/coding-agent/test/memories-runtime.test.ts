@@ -309,7 +309,7 @@ describe("memories runtime", () => {
 		expect(ai.completeSimple).toHaveBeenCalled();
 		expect(ai.completeSimple).toHaveBeenCalledTimes(2);
 		const phase2Prompt = completeSpy.mock.calls[1]?.[1];
-		expect(phase2Prompt?.systemPrompt?.[0]).toContain("memory-stage-two consolidator");
+		expect(phase2Prompt?.systemPrompt?.[0]).toContain("stage-two memory consolidator");
 	});
 
 	test("clamps stage1 and phase2 reasoning effort against the model's supported range", async () => {
@@ -517,7 +517,7 @@ describe("buildMemoryToolDeveloperInstructions", () => {
 		await fs.writeFile(path.join(memoryRoot, "learned.md"), "- Check the project memory root.\n");
 
 		const payload = await buildMemoryToolDeveloperInstructions(agentDir, settings.getCwd(), settings);
-		expect(payload).toContain("Learned lessons");
+		expect(payload).toContain("Learned takeaways");
 		expect(payload).not.toContain("memory_summary.md");
 	});
 

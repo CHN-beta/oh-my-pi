@@ -15,7 +15,7 @@ import { SessionManager } from "@oh-my-pi/pi-coding-agent/session/session-manage
 import { TempDir } from "@oh-my-pi/pi-utils";
 
 const LANE = "cred:wrap-up-session-test";
-const WRAP_UP_MARKER = "wrap-up allowance";
+const WRAP_UP_MARKER = "small budget to wrap up";
 
 const zeroUsage = {
 	input: 0,

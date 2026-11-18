@@ -1,13 +1,13 @@
 <system-notice id="session-agents">
-User-tagged model agents changed. These `m<N>` pseudonyms are the `agent` names accepted by `task` and eval `agent()`/`workpool()`, each pinned to the model the user tagged; spawn one only when the user names it. This lists only what changed; any pseudonym not named here is unaffected.
+User-tagged model agents updated. These `m<N>` aliases are valid `agent` names for `task` and eval `agent()`/`workpool()`, each locked to the model tagged by the user; spawn an alias solely when the user mentions it. Only changes are listed below; any unmentioned alias stays the same.
 {{#if added.length}}
-Now available:
+Added:
 {{#each added}}
 - `{{name}}`: {{description}}
 {{/each}}
 {{/if}}
 {{#if removed.length}}
-No longer available; calls fail:
+Removed; calls will fail:
 {{#each removed}}
 - `{{this}}`
 {{/each}}

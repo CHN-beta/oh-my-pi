@@ -39,27 +39,29 @@ const MAX_IMAGE_SIZE = 35 * 1024 * 1024;
 /** 单条失败原因的字符上限：网关 HTML 错误页等原始响应体不应整段进入模型与 TUI。 */
 const MAX_FAILURE_REASON_CHARS = 300;
 
-const aspectRatioSchema = type('"1:1" | "3:4" | "4:3" | "9:16" | "16:9" | "3:2" | "2:3"').describe("aspect ratio");
-const imageSizeSchema = type('"1024x1024" | "1536x1024" | "1024x1536"').describe("image size");
+const aspectRatioSchema = type('"1:1" | "3:4" | "4:3" | "9:16" | "16:9" | "3:2" | "2:3"').describe(
+	"output aspect ratio",
+);
+const imageSizeSchema = type('"1024x1024" | "1536x1024" | "1024x1536"').describe("output dimensions");
 const inputImageSchema = type({
-	"path?": type("string").describe("input image path"),
-	"data?": type("string").describe("base64 image data"),
-	"mime_type?": type("string").describe("mime type"),
+	"path?": type("string").describe("source image path"),
+	"data?": type("string").describe("base64-encoded image payload"),
+	"mime_type?": type("string").describe("MIME media type"),
 });
 
 export const imageGenSchema = type({
-	subject: type("string").describe("main subject"),
-	"action?": type("string").describe("what subject is doing"),
-	"scene?": type("string").describe("location or environment"),
-	"composition?": type("string").describe("camera angle and framing"),
-	"lighting?": type("string").describe("lighting setup"),
-	"style?": type("string").describe("artistic style"),
-	"text?": type("string").describe("text to render"),
-	"changes?": type("string[]").describe("edits to make"),
+	subject: type("string").describe("primary subject"),
+	"action?": type("string").describe("action the subject performs"),
+	"scene?": type("string").describe("setting or background"),
+	"composition?": type("string").describe("framing and camera angle"),
+	"lighting?": type("string").describe("lighting conditions"),
+	"style?": type("string").describe("visual style"),
+	"text?": type("string").describe("text to display"),
+	"changes?": type("string[]").describe("modifications to apply"),
 	"aspect_ratio?": aspectRatioSchema,
 	"image_size?": imageSizeSchema,
-	"input?": inputImageSchema.array().describe("input images"),
-	"model?": type("string").describe("image model selector for this request"),
+	"input?": inputImageSchema.array().describe("reference input images"),
+	"model?": type("string").describe("image model override for this call"),
 });
 export type ImageGenParams = typeof imageGenSchema.infer;
 

@@ -1,14 +1,14 @@
 <composer-prediction>
-Predict the user's next message in this conversation. {{#if choices}}Reply with up to {{choices}} different messages they might send next, one per line, most likely first, each exactly as the user would type it.{{else}}Reply with that message only, exactly as the user would type it.{{/if}}
-- Write as the user: their voice, language, tone, and typical length, judged only from messages they typed themselves. Mirror how they phrase requests.
-- Follow up on the latest assistant reply: approve, redirect, ask for the next step, or report a result.
+Anticipate what the user will type next in this thread. {{#if choices}}Output up to {{choices}} distinct candidate messages they might send next, one per line, ordered most likely first, phrased verbatim as the user would write them.{{else}}Output solely that message, phrased verbatim as the user would write it.{{/if}}
+- Match the user's voice: their wording, language, register, and usual brevity, inferred strictly from messages they actually authored. Echo their request phrasing.
+- Respond naturally to the last assistant message: confirm, steer, request the next action, or share an outcome.
 {{#if choices}}
-- Make each line a different next step or intent, never a rewording of another line. Include only plausible ones; fewer lines is fine.
-- One message per line. No numbering, bullets, quotes, preamble, or markdown.
+- Ensure each line represents a genuinely distinct direction or intent rather than rephrasing another option. Emit only realistic candidates; fewer lines are acceptable.
+- Strictly one candidate per line. Omit numbers, bullets, quotation marks, commentary, or markdown.
 {{else}}
-- One line. No quotes, preamble, or markdown.
+- Single line only. Omit quotation marks, commentary, or markdown.
 {{/if}}
-- Keep {{#if choices}}each{{else}}it{{/if}} short; usually under 20 words.
-- The user is the person at the keyboard. Messages attributed to another agent, session, or tool are relayed, not theirs: `<irc>` blocks, and pasted notes headed with a sender (e.g. "Note from the build session: …", "From LEAD: …"). Never predict a relay or write in its sender's voice.
-- No confident guess: reply exactly {{skip}}
+- Keep {{#if choices}}each candidate{{else}}the message{{/if}} brief—typically fewer than 20 words.
+- The user is the human at the keyboard. Relayed messages from other agents, sessions, or tools do not belong to them: `<irc>` blocks and pasted notes prefixed with a sender (e.g. "Note from the build session: …", "From LEAD: …"). Never anticipate a relay or adopt its sender's style.
+- When unsure: output literally {{skip}}
 </composer-prediction>

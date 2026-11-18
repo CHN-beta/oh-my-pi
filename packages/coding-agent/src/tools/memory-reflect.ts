@@ -10,8 +10,8 @@ import type { ToolSession } from ".";
 import { cfgMemoryBackend } from "../memory-backend/settings";
 
 const memoryReflectSchema = type({
-	query: type("string").describe("question to answer"),
-	"context?": type("string").describe("optional context"),
+	query: type("string").describe("question to resolve"),
+	"context?": type("string").describe("optional supporting context"),
 });
 
 export type MemoryReflectParams = typeof memoryReflectSchema.infer;
@@ -28,7 +28,7 @@ export class MemoryReflectTool implements AgentTool<typeof memoryReflectSchema> 
 	readonly parameters = memoryReflectSchema;
 	readonly strict = true;
 	readonly loadMode = "discoverable";
-	readonly summary = "Synthesize an answer from long-term memory";
+	readonly summary = "Distill an answer from long-term memory";
 
 	constructor(private readonly session: ToolSession) {}
 

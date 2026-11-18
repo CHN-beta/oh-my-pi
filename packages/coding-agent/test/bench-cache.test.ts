@@ -134,8 +134,8 @@ describe("bench cache mode", () => {
 		expect(coldMessages).toHaveLength(2);
 		expect(warmMessages).toHaveLength(2);
 		expect(coldMessages?.[0]?.content).toBe(warmMessages?.[0]?.content);
-		expect(coldMessages?.[1]?.content).toBe("Cache benchmark suffix A.");
-		expect(warmMessages?.[1]?.content).toBe("Cache benchmark suffix B.");
+		expect(coldMessages?.[1]?.content).toBe("Benchmark suffix variant for prompt caching: A.");
+		expect(warmMessages?.[1]?.content).toBe("Benchmark suffix variant for prompt caching: B.");
 		const pair = summary.models[0]?.cachePairs?.[0];
 		expect(pair?.cold.observations).toEqual(["prompt_cache_write_observed"]);
 		expect(pair?.warm.observations).toEqual(["prompt_cache_read_observed", "response_cache_hit_observed"]);
@@ -283,7 +283,8 @@ describe("bench cache mode", () => {
 				streamSimple: (_model, context, options) => {
 					if (!options?.promptCacheKey) throw new Error("cache requests must have a prompt cache key");
 					const cacheKey = options.promptCacheKey;
-					const phase = context.messages[1]?.content === "Cache benchmark suffix B." ? "warm" : "cold";
+					const phase =
+						context.messages[1]?.content === "Benchmark suffix variant for prompt caching: B." ? "warm" : "cold";
 					calls.push({
 						phase,
 						cacheKey,
@@ -456,7 +457,7 @@ describe("bench cache mode", () => {
 		);
 		expect(stablePrefixes).toHaveLength(2);
 		expect(stablePrefixes[0]).toBe(stablePrefixes[1]);
-		expect(stablePrefixes[0]).toStartWith("ab\n\nPrompt-cache benchmark namespace:");
+		expect(stablePrefixes[0]).toStartWith("ab\n\nBenchmark namespace for prompt caching:");
 	});
 
 	it("truncates the default prefix-file reader at a UTF-8 boundary before decoding", async () => {
@@ -493,7 +494,7 @@ describe("bench cache mode", () => {
 
 		expect(stablePrefixes).toHaveLength(2);
 		expect(stablePrefixes[0]).toBe(stablePrefixes[1]);
-		expect(stablePrefixes[0]).toStartWith("ab\n\nPrompt-cache benchmark namespace:");
+		expect(stablePrefixes[0]).toStartWith("ab\n\nBenchmark namespace for prompt caching:");
 		expect(stablePrefixes[0]).not.toContain("\uFFFD");
 	});
 
@@ -533,7 +534,7 @@ describe("bench cache mode", () => {
 		expect(stablePrefixes).toHaveLength(2);
 		expect(stablePrefixes[0]).toBe(stablePrefixes[1]);
 		expect(stablePrefixes[0]?.startsWith(exactPrefix)).toBe(true);
-		expect(stablePrefixes[0]?.slice(exactPrefix.length)).toStartWith("\n\nPrompt-cache benchmark namespace:");
+		expect(stablePrefixes[0]?.slice(exactPrefix.length)).toStartWith("\n\nBenchmark namespace for prompt caching:");
 	});
 
 	it("does not turn zero cache counters into a miss", async () => {

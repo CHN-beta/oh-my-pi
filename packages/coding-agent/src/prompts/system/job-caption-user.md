@@ -1,11 +1,11 @@
 <job>
 {{#if intent}}
-Why it was started: {{intent}}
+Launch reason: {{intent}}
 {{/if}}
 {{#if timeoutSec}}
-Killed after: {{timeoutSec}}s
+Terminated after: {{timeoutSec}}s
 {{else}}
-Timeout: none
+Timeout: unlimited
 {{/if}}
 Command:
 ```

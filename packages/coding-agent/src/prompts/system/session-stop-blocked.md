@@ -1,1 +1,1 @@
-A session_stop handler blocked completion without a reason. Resolve the outstanding work before finishing.
+A session_stop hook prevented finishing without specifying a reason. Complete any remaining work before ending.

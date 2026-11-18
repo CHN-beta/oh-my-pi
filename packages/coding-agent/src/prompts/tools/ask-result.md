@@ -1,7 +1,7 @@
-{{#if timedOut}}No answer before the timeout; submitted the form's current values:{{else}}User answers:{{/if}}
+{{#if timedOut}}Timed out before a response; submitted the form's existing values:{{else}}Submitted user responses:{{/if}}
 {{json}}
 {{#if notes}}
-Option notes:
+Selected option notes:
 {{#each notes}}
 - {{question}}: {{option}} [{{name}}={{jsonStringify value}}] — {{text}}
 {{/each}}

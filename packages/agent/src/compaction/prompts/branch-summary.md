@@ -1,30 +1,30 @@
-You MUST create a structured summary of the conversation branch for context when returning.
+You MUST produce a structured summary of the conversation branch to provide context upon return.
 
-You MUST use EXACT format:
+You MUST follow this EXACT layout:
 
 ## Goal
 
-[What is the user trying to accomplish in this branch?]
+[What is the user attempting to achieve on this branch?]
 
 ## Constraints & Preferences
-- [Constraints, preferences, requirements mentioned]
-- [(none) if none mentioned]
+- [Mentioned constraints, preferences, or requirements]
+- [(none) if none were stated]
 
 ## Progress
 
 ### Done
-- [x] [Completed tasks/changes]
+- [x] [Finished tasks/edits]
 
 ### In Progress
-- [ ] [Work started but not finished]
+- [ ] [Ongoing unfinished work]
 
 ### Blocked
-- [Issues preventing progress]
+- [Issues blocking forward progress]
 
 ## Key Decisions
-- **[Decision]**: [Brief rationale]
+- **[Decision]**: [Short reasoning]
 
 ## Next Steps
-1. [What should happen next to continue]
+1. [What ought to happen next to resume]
 
-Sections MUST be kept concise. You MUST preserve exact file paths, function names, error messages.
+All sections MUST remain brief. You MUST retain exact file paths, function names, and error messages.

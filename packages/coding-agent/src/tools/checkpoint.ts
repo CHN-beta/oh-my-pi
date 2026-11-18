@@ -27,13 +27,13 @@ export interface CompletedRewindState {
 }
 
 const checkpointSchema = type({
-	goal: type("string").describe("investigation goal"),
+	goal: type("string").describe("objective of the investigation"),
 });
 
 type CheckpointParams = typeof checkpointSchema.infer;
 
 const rewindSchema = type({
-	report: type("string").describe("investigation findings"),
+	report: type("string").describe("summary of investigation findings"),
 });
 
 type RewindParams = typeof rewindSchema.infer;
@@ -54,7 +54,7 @@ export class CheckpointTool implements AgentTool<typeof checkpointSchema, Checkp
 	readonly name = "checkpoint";
 	readonly approval = "read" as const;
 	readonly label = "Checkpoint";
-	readonly summary = "Create a git-based checkpoint to save and restore session state";
+	readonly summary = "Save a git-backed checkpoint to snapshot and restore session state";
 	readonly description: string;
 	readonly parameters = checkpointSchema;
 	readonly strict = true;
@@ -90,7 +90,7 @@ export class RewindTool implements AgentTool<typeof rewindSchema, RewindToolDeta
 	readonly name = "rewind";
 	readonly approval = "read" as const;
 	readonly label = "Rewind";
-	readonly summary = "Rewind to a previously created checkpoint";
+	readonly summary = "Restore a previously saved checkpoint";
 	readonly description: string;
 	readonly parameters = rewindSchema;
 	readonly strict = true;

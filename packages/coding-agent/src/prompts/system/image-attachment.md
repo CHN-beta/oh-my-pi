@@ -1,5 +1,5 @@
-The user attached an image as `[Image #{{index}}]` in their visible message.
+The user included an image labeled `[Image #{{index}}]` in their message.
 
-Source path: `{{path}}`
+File path: `{{path}}`
 
-The attached image is stored in this file on disk. Use the source path directly with file tools (for example `read {{path}}`) when you need the file itself — to inspect, copy, or upload it.
+That attached image is saved at this local disk path. Reference this path directly in file tools (e.g. `read {{path}}`) whenever you need the raw file to examine, copy, or upload it.

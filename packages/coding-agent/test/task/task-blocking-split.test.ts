@@ -152,7 +152,7 @@ describe("task per-item blocking split", () => {
 		const text = firstText(result);
 		expect(text).toContain('id="ScoutOne"');
 		expect(text).toContain("ScoutOne output.");
-		expect(text).toContain("Spawned 1 background agent");
+		expect(text).toContain("Launched 1 background agent");
 		expect(text).toContain("- `WorkerOne` (job `WorkerOne`)");
 		expect(text).not.toContain("WorkerOne output.");
 

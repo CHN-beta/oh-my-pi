@@ -427,7 +427,7 @@ const CONTEXTUAL_NON_PRIMARY_HIDDEN_CUSTOM_TYPES: Record<string, true> = {
  * from `prompts/system/image-attachment.md`; these recover both fields from it.
  */
 const LEGACY_IMAGE_ATTACHMENT_INDEX = /`\[Image #(\d+)\]`/;
-const LEGACY_IMAGE_ATTACHMENT_PATH = /^Source path: `(.+)`$/m;
+const LEGACY_IMAGE_ATTACHMENT_PATH = /^(?:Source|File) path: `(.+)`$/m;
 
 /** One-liner for custom/hook messages: `[irc] A → B: body…`. */
 function customOneLiner(msg: CustomMessage | HookMessage, transform?: ToolIOTransform): string {

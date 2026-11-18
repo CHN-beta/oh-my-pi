@@ -1,1 +1,1 @@
-memory://root: project-memory summary.
+memory://root: summary of project memory.

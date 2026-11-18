@@ -1,4 +1,4 @@
 <system-injection>
-Stopped without actionable output; task incomplete. Continue with a user-visible final answer or the next required tool call.
-Attempt #{{retryCount}}/{{maxRetries}}
+Turn ended without actionable output while work remains incomplete. Resume with a user-visible response or the next needed tool call.
+Retry #{{retryCount}}/{{maxRetries}}
 </system-injection>

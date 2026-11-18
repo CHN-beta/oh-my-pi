@@ -1,1 +1,1 @@
-rule://<name>: details.
+rule://<name>: rule details.

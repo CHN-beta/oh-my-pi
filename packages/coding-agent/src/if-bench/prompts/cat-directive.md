@@ -1,1 +1,1 @@
-Include one lowercase cat sound matching nya{1,{{nyaMax}}} somewhere in your response; its position, spacing, and punctuation are your choice.
+Include one lowercase cat sound matching nya{1,{{nyaMax}}} anywhere in your reply; placement, spacing, and punctuation are up to you.

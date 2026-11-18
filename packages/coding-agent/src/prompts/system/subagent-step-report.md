@@ -1,3 +1,3 @@
-Finished a step; the next one is underway and the final result follows. Report:
+Completed one step; the subsequent step is running and the final output will follow. Report:
 
 {{report}}

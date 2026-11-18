@@ -1,32 +1,32 @@
-Single file string replacement; fuzzy whitespace matching.
+Exact-target string replacement in a single file, with fuzzy whitespace tolerance.
 
 <instruction>
-- MUST use smallest `old_string` uniquely identifying change.
-- Nonunique `old_string` → MUST add context or use `replace_all: true` for all occurrences.
-- Rename a string across file → use `replace_all: true`.
-- SHOULD edit existing files, not create new.
+- MUST pick the shortest `old_string` that uniquely locates the target edit.
+- If `old_string` matches multiple locations, you MUST supply extra surrounding context or set `replace_all: true` to update every match.
+- To rename an identifier or string throughout a file, set `replace_all: true`.
+- SHOULD modify existing files rather than creating new ones.
 </instruction>
 
 <output>
-Success/failure status.
-Success: file modified in place; replacement applied.
-Failure — e.g., `old_string` absent or multiple matches without `replace_all: true`: error describes issue.
+Reports success or failure.
+On success: the file is updated in place with the replacement applied.
+On failure (for instance, `old_string` missing or matching multiple times without `replace_all: true`): the error explains the cause.
 </output>
 
 <critical>
-- MUST read file at least once in conversation before editing. Tool errors on edit before read.
+- MUST read the file at least once in the session before editing it; editing without a prior read fails.
 </critical>
 
 <bash-alternatives>
-Replace content-addressed — identify change by text.
+Replace locates edits by exact text content.
 
-Pattern-addressed bulk changes: bash more efficient:
+For bulk pattern-based replacements, bash is often faster:
 
 |Operation|Command|
 |---|---|
 |Regex replace|`sed -E -i 's/pattern/replacement/g' file`|
 |Same replace in several files|`sed -E -i 's/pattern/replacement/g' a.ts b.ts`|
 
-Use Replace when content identifies location; `ast_edit` for structure-aware codemods.
-For in-place edits prefer Replace or `write` — diff preview and fuzzy matching.
+Choose Replace when literal text identifies the target; use `ast_edit` for AST-aware codemods.
+For in-place modifications, prefer Replace or `write` for diff preview and fuzzy whitespace matching.
 </bash-alternatives>

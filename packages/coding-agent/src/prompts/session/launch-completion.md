@@ -1,1 +1,1 @@
-Supervised process {{name}} {{state}} {{#if hasExitCode}}with exit code {{exitCode}}{{else}}without an exit code{{/if}}.
+Managed process {{name}} {{state}} {{#if hasExitCode}}returning exit code {{exitCode}}{{else}}with no exit code{{/if}}.

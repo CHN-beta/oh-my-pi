@@ -1,19 +1,19 @@
-Patches files given diff hunks. Primary tool for existing-file edits.
+Applies diff hunks to modify files; the primary tool for editing existing files.
 
 <instruction>
 **Hunk Headers:**
-- `@@` — bare header when context lines unique
-- `@@ $ANCHOR` — anchor copied verbatim from file (full line or unique substring)
-**Anchor Selection:**
-1. Prefer bare `@@` when context lines alone are unique; otherwise choose highly specific anchor copied from file:
-   - full function signature
-   - class declaration
-   - unique string literal/error message
-   - config key with uncommon name
-2. On "Found multiple matches": add context lines, use multiple hunks with separate anchors, or use longer anchor substring
+- `@@` — plain header when surrounding context is already unique
+- `@@ $ANCHOR` — verbatim anchor text copied from the file (an entire line or a unique substring)
+**Choosing Anchors:**
+1. Use bare `@@` whenever the context lines alone are unambiguous; otherwise pick a highly distinctive anchor copied verbatim from the file:
+   - complete function signature
+   - class definition
+   - distinctive string literal or error message
+   - uncommon configuration key
+2. If "Found multiple matches" occurs: include additional context lines, split into separate hunks with distinct anchors, or extend the anchor substring
 **Context Lines:**
-Use enough ` `-prefixed lines to make match unique (usually 2–8)
-When editing structured blocks (nested braces, tags, indented regions), include opening and closing lines so edit stays inside block
+Provide enough space-prefixed lines to make the target region unique (typically 2–8 lines)
+Inside structured blocks (nested braces, XML/HTML tags, indented scopes), include both opening and closing boundaries so changes remain within the block
 </instruction>
 
 <parameters>
@@ -35,23 +35,23 @@ type Entry =
 </parameters>
 
 <output>
-Returns success/failure; on failure, error message indicates:
-- "Found multiple matches" — anchor/context not unique enough
-- "No match found" — context lines don't exist in file (wrong content or stale read)
-- Syntax errors in diff format
+Reports success or failure; when failing, the error specifies:
+- "Found multiple matches" — provided anchor or context matches more than one location
+- "No match found" — context lines are absent from the file (incorrect text or outdated read)
+- Invalid diff syntax
 </output>
 
 <critical>
-- You MUST read the target file before editing
-- You MUST copy anchors and context lines verbatim (including whitespace)
-- You NEVER use anchors as comments (no line numbers, location labels, placeholders like `@@ @@`)
-- You NEVER place new lines outside the intended block
-- If edit fails or breaks structure, you MUST re-read the file and produce a new patch from current content — you NEVER retry the same diff
-- NEVER use edit to fix indentation, whitespace, or reformat code. Formatting is a single command run once at the end (`bun fmt`, `cargo fmt`, `prettier --write`, etc.) — not N individual edits. If you see inconsistent indentation after an edit, leave it; the formatter will fix all of it in one pass.
+- You MUST read a file before attempting to patch it
+- You MUST copy anchors and context lines verbatim, preserving whitespace
+- You NEVER treat anchors as comments (no line numbers, location notes, or dummy placeholders like `@@ @@`)
+- You NEVER insert lines outside the intended enclosing block
+- When an edit fails or corrupts structure, you MUST re-read the file and construct a fresh patch from current contents — NEVER resend the identical diff
+- NEVER use edits to adjust indentation, spacing, or code formatting. Run formatting once at the end as a single command (`bun fmt`, `cargo fmt`, `prettier --write`, etc.) rather than making N separate edits. Leave temporary indentation inconsistencies as-is for the formatter to fix in one pass.
 </critical>
 
 <avoid>
-- Generic anchors: `import`, `export`, `describe`, `function`, `const`
-- Repeating same addition in multiple hunks (duplicate blocks)
-- Full-file overwrites for minor changes (acceptable for major restructures or short files)
+- Overly generic anchors: `import`, `export`, `describe`, `function`, `const`
+- Duplicating identical insertions across multiple hunks
+- Replacing an entire file for small edits (fine for large restructures or very short files)
 </avoid>

@@ -1,4 +1,4 @@
-Run the immutable security plan below.
+Execute the fixed security plan below.
 
 Repository: {{repositoryRoot}}
 Target kind: {{targetKind}}
@@ -11,11 +11,11 @@ Knowledge bases: {{knowledgeBases}}
 Plan fingerprint: {{planFingerprint}}
 {{#if diffText}}
 
-Requested base-to-head diff:
+Base-to-head diff requested:
 
 ```diff
 {{diffText}}
 ```
 {{/if}}
 
-First inventory the exact scope. Delegate disjoint review assignments to `security-reviewer` through `task`. Reconcile all worker output, inspect any evidence needed to resolve uncertainty, then call `security_publish` once with findings, honest coverage, and the final report.
+Start by cataloging the exact target scope. Assign non-overlapping review slices to `security-reviewer` via `task`. Consolidate all worker results, examine any supporting code needed to clear up doubts, and then invoke `security_publish` once with verified findings, accurate coverage, and the final report.

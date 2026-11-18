@@ -1,5 +1,5 @@
-Prior model work/tool state available.
-MUST build on prior work; NEVER duplicate prior work.
+Earlier model work and tool state are available.
+MUST continue from prior work; NEVER repeat earlier work.
 
 <summary>
 {{summary}}

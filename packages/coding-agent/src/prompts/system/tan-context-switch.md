@@ -1,11 +1,11 @@
 <system-notice cause="fork">
-Above conversation: parent session.
-Fork solely handles user's request below.
-Parent still working original task; no responsibility or obligations from prior conversation.
+Preceding conversation belongs to the parent session.
+This fork exists strictly to handle the user's immediate request below.
+The parent continues working on the main task; you carry zero duties or obligations from the earlier dialogue.
 
-- MUST focus EXCLUSIVELY on immediate user request; nothing else.
-- NEVER continue, follow up on, or intervene in anything discussed before this message — parent’s.
-- Parent concurrently edits this working directory. Files MAY change between reads, appear mid-refactor, or fail to compile. Parent's live work: NEVER fix, audit, or build on it, even if broken.
-- Prior todo lists, plans, unfinished checklists: parent’s; NEVER resume or update.
-- After request: STOP. NEVER work on ANY OTHER TASK.
+- MUST focus SOLELY on the immediate user request below and nothing else.
+- NEVER resume, follow up on, or touch anything raised prior to this notice—that belongs to the parent.
+- The parent edits this checkout concurrently. Files MAY shift between reads, look half-refactored, or fail compilation. NEVER repair, audit, or build atop the parent's active edits, even when broken.
+- Prior todo items, plans, and open checklists belong to the parent; NEVER continue or modify them.
+- Once the request is done: STOP. NEVER take on ANY OTHER TASK.
 </system-notice>

@@ -840,9 +840,9 @@ describe("structured subagent primitive", () => {
 		const hint = await buildStructuredSubagentRecoveryHint(completed, artifactsDir);
 		const nestedPath = path.join(artifactsDir, "Worker.nested-0-sub_nested.patch");
 
-		expect(hint).toContain("Captured patch preserved at /recovery/Worker.patch.");
-		expect(hint).toContain(`Captured nested patch preserved at ${nestedPath}.`);
-		expect(hint).toContain("Captured branch preserved as omp/task/Worker.");
+		expect(hint).toContain("Saved captured patch to /recovery/Worker.patch.");
+		expect(hint).toContain(`Saved captured nested patch to ${nestedPath}.`);
+		expect(hint).toContain("Saved captured branch as omp/task/Worker.");
 		expect(await fs.readFile(nestedPath, "utf8")).toBe("diff --git a/file b/file\n");
 		await fs.rm(artifactsDir, { recursive: true, force: true });
 	});
@@ -858,8 +858,8 @@ describe("structured subagent primitive", () => {
 
 		const hint = await buildStructuredSubagentRecoveryHint(completed, artifactsDir);
 
-		expect(hint).toMatch(/Nested patches could not be written: .*(ENOTDIR|EEXIST)/);
-		expect(hint).not.toContain("Captured nested patch preserved");
+		expect(hint).toMatch(/Failed to write nested patches: .*(ENOTDIR|EEXIST)/);
+		expect(hint).not.toContain("Saved captured nested patch");
 		await fs.rm(parent, { recursive: true, force: true });
 	});
 

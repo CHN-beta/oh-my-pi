@@ -1,4 +1,4 @@
-Describe behavior, get implementing files and line ranges. MUST use first for unknown locations; known strings/regex/symbols → `grep`, names → `glob`.
-`query`: plain language, not regex; quoted phrases match whole. `grep_keywords`: likely verbatim terms, `[]` if unsure.
-`path`: one directory or file, host path or internal URL (skill://<name>, local://…); omitted = workspace root. Scope known subsystem; batch related questions. Searches live files, no index; no :start-end selector (judges whole files).
-Hits strongest first: `path:start-end score snippet` (workspace-relative, or URL under URL scope); read returned ranges. Scores: absolute comparable 0–1 probability; below ~0.4 = weak evidence, so widen query or use `grep` before concluding absence.
+Query by behavior to locate implementing files and line spans. MUST run first when file locations are unknown; use `grep` for known strings/regex/symbols and `glob` for filenames.
+`query`: natural language, not regex; quoted phrases require exact matches. `grep_keywords`: expected verbatim tokens, or `[]` if uncertain.
+`path`: single directory or file as a host path or internal URL (skill://<name>, local://…); defaults to workspace root. Restrict to known subsystems and combine related queries. Inspects live files with no index; `:start-end` selectors are disallowed (evaluates whole files).
+Results rank highest-scoring first: `path:start-end score snippet` (workspace-relative, or URL under URL scope); read those ranges. Scores are absolute, comparable 0–1 probabilities; values under ~0.4 represent weak evidence—broaden the query or verify with `grep` before concluding absence.

@@ -59,7 +59,7 @@ describe("YieldTool", () => {
 			{ id: "review#2", index: 2 },
 		];
 		expect(toRecord(tool.parameters).required).toEqual(["key"]);
-		expect(tool.description).toContain("ONE workpool item at a time");
+		expect(tool.description).toContain("ONE workpool item per call");
 		const first = await tool.execute("pool-1", { key: 1, data: "one" });
 		expect(first.content).toEqual([{ type: "text", text: "Item 1 submitted. Remaining item(s): 2." }]);
 		expect(first.details).toMatchObject({
@@ -829,7 +829,7 @@ describe("YieldTool", () => {
 			"type must be a string or non-empty array of strings",
 		);
 		await expect(tool.execute("call-both", { data: { ok: true }, error: "boom" } as never)).rejects.toThrow(
-			"yield cannot contain both data and error",
+			"`yield` must not include both `data` and `error`",
 		);
 		await expect(tool.execute("call-object-error", { error: { message: "boom" } } as never)).rejects.toThrow(
 			"error must be a string",
@@ -870,7 +870,7 @@ describe("YieldTool", () => {
 			.execute("call-conflict-typed", { type: "result", data: { ok: true }, error: "invalid output shape" } as never)
 			.catch(err => err);
 		expect(typed).toBeInstanceOf(Error);
-		expect(String(typed.message)).toContain("yield cannot contain both data and error");
+		expect(String(typed.message)).toContain("`yield` must not include both `data` and `error`");
 		expect(String(typed.message)).toContain('{"type":"result","data":<your output>}');
 		expect(String(typed.message)).toContain('{"error":"invalid output shape"}');
 
@@ -892,7 +892,7 @@ describe("YieldTool", () => {
 			.execute("pool-conflict", { key: 2, data: { ok: true }, error: "boom" })
 			.catch(err => err);
 		expect(failure).toBeInstanceOf(Error);
-		expect(String(failure.message)).toContain("workpool yield requires exactly one of data or error");
+		expect(String(failure.message)).toContain("workpool `yield` accepts only `data` or `error`, not both");
 		expect(String(failure.message)).toContain('{"key":2,"data":<your output>}');
 		expect(String(failure.message)).toContain('{"key":2,"error":"boom"}');
 		expect(String(failure.message)).not.toContain('"type"');

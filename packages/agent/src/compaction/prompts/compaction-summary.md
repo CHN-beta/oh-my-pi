@@ -1,38 +1,38 @@
-You MUST summarize the conversation above into a structured handoff summary for another LLM to resume the task.
+You MUST distill the conversation above into a structured handoff summary so another LLM can continue the task.
 
-IMPORTANT: If the conversation ends with an unanswered question or a request awaiting user response (e.g., "Please run command and paste output"), you MUST preserve that exact question/request.
+IMPORTANT: Should the conversation conclude with an unanswered question or a request waiting for user input (e.g., "Please run command and paste output"), you MUST retain that exact question/request.
 
-You MUST use this format (sections can be omitted if not applicable):
+You MUST adhere to this structure (omit sections that do not apply):
 
 ## Goal
-[User goals; list multiple if session covers different tasks.]
+[User objectives; enumerate multiple if the session spans distinct tasks.]
 
 ## Constraints & Preferences
-- [Constraints or requirements mentioned]
+- [Stated constraints or requirements]
 
 ## Progress
 
 ### Done
-- [x] [Completed tasks/changes]
+- [x] [Finished tasks/edits]
 
 ### In Progress
-- [ ] [Current work]
+- [ ] [Ongoing work]
 
 ### Blocked
-- [Issues preventing progress]
+- [Issues impeding progress]
 
 ## Key Decisions
-- **[Decision]**: [Brief rationale]
+- **[Decision]**: [Short reasoning]
 
 ## Next Steps
-1. [Ordered list of next actions]
+1. [Sequenced list of follow-up actions]
 
 ## Critical Context
-- [Important data, pending questions, references]
+- [Key data, open questions, references]
 
 ## Additional Notes
-[Anything else important not covered above]
+[Any other relevant details not captured above]
 
-You MUST output only the structured summary; you NEVER include extra text.
+You MUST emit only the structured summary; NEVER add extraneous text.
 
-Sections MUST be kept concise. You MUST preserve exact file paths, function names, error messages, and relevant tool outputs or command results. You MUST include repository state changes (branch, uncommitted changes) if mentioned.
+Sections MUST stay brief. You MUST keep exact file paths, function names, error messages, and pertinent tool outputs or command outputs. You MUST record repository state modifications (branch, uncommitted changes) if stated.

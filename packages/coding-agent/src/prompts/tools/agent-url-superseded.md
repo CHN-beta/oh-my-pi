@@ -1,1 +1,1 @@
-> `{{id}}` is running a newer turn. The output below is from its PREVIOUS run (published {{age}} ago), not the current one. Live progress: `history://{{id}}`; its next result auto-delivers to its owner.
+> `{{id}}` has moved on to a newer turn. The output shown below comes from its PREVIOUS run (published {{age}} ago), not the active turn. Check `history://{{id}}` for live progress; its upcoming result will auto-deliver to its owner.

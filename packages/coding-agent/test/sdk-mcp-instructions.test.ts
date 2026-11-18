@@ -41,7 +41,7 @@ const USER_APPEND_MARKER = "USER_APPEND_SENTINEL_7d13f2: prefer Bun APIs over No
 /** Heading that opens the user's append section, asserted literally rather than imported. */
 const USER_APPEND_SECTION_HEADING = "## User Instructions";
 /** The route section's instruction to read an `xdev://` path before first use. */
-const READ_FIRST_CLAUSE = "for docs + JSON schema before first use";
+const READ_FIRST_CLAUSE = "read docs + JSON schema before first invocation";
 
 /** The rendered `## MCP Tool Routes` section, up to the next heading. */
 function routeSection(prompt: string): string {
@@ -364,8 +364,12 @@ describe("createAgentSession MCP server instructions (deferred UI)", () => {
 			expect(prompt).toContain(SERVER_INSTRUCTIONS);
 			const renderedMappings = prompt.split("\n").filter(line => line.startsWith('- "row_'));
 			expect(renderedMappings).toHaveLength(64);
-			expect(renderedMappings[0]).toBe('- "row_aa" → `xdev://mcp__instr_row_aa` — Bounded guidance fixture tool aa.');
-			expect(renderedMappings[63]).toBe('- "row_cl" → `xdev://mcp__instr_row_cl` — Bounded guidance fixture tool cl.');
+			expect(renderedMappings[0]).toBe(
+				'- "row_aa" → `xdev://mcp__instr_row_aa` — Bounded guidance fixture tool aa.',
+			);
+			expect(renderedMappings[63]).toBe(
+				'- "row_cl" → `xdev://mcp__instr_row_cl` — Bounded guidance fixture tool cl.',
+			);
 			expect(prompt).not.toContain('- "row_cm" → `xdev://mcp__instr_row_cm`');
 			// Truncation notice present (row_cm absent above proves the cap applied).
 			expect(prompt).toContain("omitted");

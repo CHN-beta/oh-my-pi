@@ -194,9 +194,9 @@ describe("prefix-bound tool roster changes", () => {
 				attribution: "agent",
 			});
 			const secondRequest = providerText(harness.contexts[1]);
-			expect(secondRequest).toContain("Tool availability changed.");
-			expect(secondRequest).toContain("Now available: bash.");
-			expect(secondRequest.match(/Tool availability changed\./g)).toHaveLength(1);
+			expect(secondRequest).toContain("Available tools updated.");
+			expect(secondRequest).toContain("Added: bash.");
+			expect(secondRequest.match(/Available tools updated\./g)).toHaveLength(1);
 		});
 	}
 
@@ -244,7 +244,7 @@ describe("prefix-bound tool roster changes", () => {
 			await resumed.session.prompt("second");
 
 			expect(resumed.systemPrompts[0]).toEqual(transcript.systemPrompt);
-			expect(providerText(resumed.contexts[0])).not.toContain("Tool availability changed.");
+			expect(providerText(resumed.contexts[0])).not.toContain("Available tools updated.");
 		});
 
 		it("keeps a fork's inherited prompt-cache key when the late rebuild restores the transcript's prompt", async () => {
@@ -276,7 +276,7 @@ describe("prefix-bound tool roster changes", () => {
 			await resumed.session.prompt("third");
 
 			expect(resumed.systemPrompts[1]).toEqual(resumed.systemPrompts[0]);
-			expect(providerText(resumed.contexts[1])).toContain("Tool availability changed.");
+			expect(providerText(resumed.contexts[1])).toContain("Available tools updated.");
 		});
 
 		it("freezes a roster rebuild that finishes after the first resumed request", async () => {
@@ -299,7 +299,7 @@ describe("prefix-bound tool roster changes", () => {
 			await resumed.session.prompt("third");
 
 			expect(resumed.systemPrompts[1]).toEqual(resumed.systemPrompts[0]);
-			expect(providerText(resumed.contexts[1])).toContain("Tool availability changed.");
+			expect(providerText(resumed.contexts[1])).toContain("Available tools updated.");
 		});
 
 		it("freezes a roster rebuild that commits after the first resumed request captured its prompt", async () => {
@@ -321,7 +321,7 @@ describe("prefix-bound tool roster changes", () => {
 			await resumed.session.prompt("third");
 
 			expect(resumed.systemPrompts[1]).toEqual(resumed.systemPrompts[0]);
-			expect(providerText(resumed.contexts[1])).toContain("Tool availability changed.");
+			expect(providerText(resumed.contexts[1])).toContain("Available tools updated.");
 		});
 
 		it("keeps the transcript's prompt when a tool installed since that run registers late", async () => {
@@ -334,7 +334,7 @@ describe("prefix-bound tool roster changes", () => {
 			await resumed.session.prompt("second");
 
 			expect(resumed.systemPrompts[0]).toEqual(transcript.systemPrompt);
-			expect(providerText(resumed.contexts[0])).toContain("Now available: bash.");
+			expect(providerText(resumed.contexts[0])).toContain("Added: bash.");
 		});
 
 		it("keeps the transcript's prompt when a late tool was frozen out mid-conversation", async () => {
@@ -393,7 +393,7 @@ describe("prefix-bound tool roster changes", () => {
 
 				expect(live.systemPrompts).toEqual([["tools:read"]]);
 				expect(resumed.systemPrompts[0]).toEqual(["tools:read"]);
-				expect(providerText(resumed.contexts[0])).toContain("Now available: bash.");
+				expect(providerText(resumed.contexts[0])).toContain("Added: bash.");
 			},
 		);
 
@@ -414,7 +414,7 @@ describe("prefix-bound tool roster changes", () => {
 			await resumed.session.prompt("second");
 
 			expect(resumed.systemPrompts[0]).toEqual(["tools:read"]);
-			expect(providerText(resumed.contexts[0])).toContain("Now available: bash.");
+			expect(providerText(resumed.contexts[0])).toContain("Added: bash.");
 		});
 
 		/** Kept out of the test body so no strong local binding outlives the capture. */
@@ -477,7 +477,7 @@ describe("prefix-bound tool roster changes", () => {
 		);
 		expect(notices).toHaveLength(0);
 		const secondRequest = providerText(harness.contexts[1]);
-		expect(secondRequest).not.toContain("Tool availability changed.");
+		expect(secondRequest).not.toContain("Available tools updated.");
 		expect(harness.session.agent.state.systemPrompt).toEqual(["tools:read,bash;changed"]);
 	});
 
@@ -494,7 +494,7 @@ describe("prefix-bound tool roster changes", () => {
 		await harness.session.prompt("second");
 
 		expect(harness.systemPrompts[1]).toEqual(harness.systemPrompts[0]);
-		expect(providerText(harness.contexts[1])).toContain("Now available: bash.");
+		expect(providerText(harness.contexts[1])).toContain("Added: bash.");
 	});
 
 	it("does not ship a roster notice when a rebuild clears the delta during pre-prompt compaction", async () => {
@@ -528,7 +528,7 @@ describe("prefix-bound tool roster changes", () => {
 		);
 		expect(notices).toHaveLength(0);
 		const secondRequest = providerText(harness.contexts[1]);
-		expect(secondRequest).not.toContain("Tool availability changed.");
+		expect(secondRequest).not.toContain("Available tools updated.");
 	});
 
 	it("keeps the roster notice when a turn override hides the rebuilt base", async () => {
@@ -562,7 +562,7 @@ describe("prefix-bound tool roster changes", () => {
 			message => message.role === "custom" && message.customType === "tool-roster-notice",
 		);
 		expect(notices).toHaveLength(1);
-		expect(providerText(harness.contexts[1])).toContain("Now available: bash.");
+		expect(providerText(harness.contexts[1])).toContain("Added: bash.");
 	});
 
 	it("keeps the roster notice when a rebuild precedes a turn override", async () => {
@@ -591,7 +591,7 @@ describe("prefix-bound tool roster changes", () => {
 			message => message.role === "custom" && message.customType === "tool-roster-notice",
 		);
 		expect(notices).toHaveLength(1);
-		expect(providerText(harness.contexts[1])).toContain("Now available: bash.");
+		expect(providerText(harness.contexts[1])).toContain("Added: bash.");
 	});
 
 	it("delivers a roster notice for a change queued during pre-prompt maintenance", async () => {
@@ -618,7 +618,7 @@ describe("prefix-bound tool roster changes", () => {
 			message => message.role === "custom" && message.customType === "tool-roster-notice",
 		);
 		expect(notices).toHaveLength(1);
-		expect(providerText(harness.contexts[1])).toContain("Now available: bash.");
+		expect(providerText(harness.contexts[1])).toContain("Added: bash.");
 	});
 
 	it("announces a frozen removal after a rebuild absorbed a pending addition", async () => {
@@ -642,6 +642,6 @@ describe("prefix-bound tool roster changes", () => {
 		expect(notices[0]).toMatchObject({
 			details: { added: [], removed: ["bash"] },
 		});
-		expect(providerText(harness.contexts[1])).toContain("No longer available: bash.");
+		expect(providerText(harness.contexts[1])).toContain("Removed: bash.");
 	});
 });

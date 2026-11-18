@@ -1,6 +1,6 @@
-Custom agent request:
+Requested custom agent:
 
 {{request}}
 
-MUST return only JSON object required by system instructions.
-NEVER include markdown fences.
+MUST emit solely the JSON object specified by the system instructions.
+NEVER wrap output in markdown code fences.

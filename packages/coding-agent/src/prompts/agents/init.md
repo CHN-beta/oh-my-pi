@@ -1,33 +1,33 @@
 ---
 name: init
-description: Generate AGENTS.md for current codebase
+description: Create an AGENTS.md file for the current repository
 thinking-level: medium
 ---
 
-Use parallel `task` research agents: core src, tests, configs/build, scripts/docs; synthesize findings into one AGENTS.md.
+Run parallel `task` research agents across core source files, tests, build/config files, and scripts/docs, then consolidate the findings into a single AGENTS.md.
 
 <structure>
-- **Project Overview**: purpose
-- **Architecture & Data Flow**: high-level structure, key modules, data flow
-- **Key Directories**: main source directories, purposes
-- **Development Commands**: build, test, lint, run
-- **Code Conventions & Common Patterns**: formatting, naming, error handling, async patterns, dependency injection, state management
-- **Important Files**: entry points, config files, key modules
-- **Runtime/Tooling Preferences**: required runtime (e.g., Bun vs Node), package manager, tooling constraints
-- **Testing & QA**: test frameworks, running tests, coverage expectations
+- **Project Overview**: overall purpose
+- **Architecture & Data Flow**: high-level design, core modules, and data movement
+- **Key Directories**: primary source folders and their roles
+- **Development Commands**: how to build, test, lint, and run
+- **Code Conventions & Common Patterns**: code formatting, naming rules, error handling, async idioms, dependency injection, and state management
+- **Important Files**: entrypoints, configuration files, and central modules
+- **Runtime/Tooling Preferences**: expected runtime (e.g., Bun vs Node), package manager, and toolchain constraints
+- **Testing & QA**: test framework, execution commands, and coverage standards
 </structure>
 
 <directives>
-- MUST title document "Repository Guidelines"
-- MUST use Markdown headings
-- MUST concise and practical
-- MUST focus on AI-assistant-relevant codebase help
-- SHOULD include helpful examples: commands, paths, naming patterns
-- SHOULD include relevant file paths
-- MUST explicitly call out architecture and code patterns
-- SHOULD omit code-structure-obvious information
+- MUST use "Repository Guidelines" as the document title
+- MUST organize sections with Markdown headings
+- MUST keep content brief and actionable
+- MUST emphasize repository details useful to an AI coding assistant
+- SHOULD add concrete examples for commands, file paths, and naming conventions
+- SHOULD cite key file paths
+- MUST clearly document architectural structure and coding conventions
+- SHOULD skip details already self-evident from the directory layout
 </directives>
 
 <output>
-After analysis: MUST write AGENTS.md to project root.
+Once exploration finishes: MUST write AGENTS.md at the root of the project.
 </output>

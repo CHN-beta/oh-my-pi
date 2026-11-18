@@ -1,4 +1,4 @@
-Compress into one routing hint of at most 12 words: WHEN to use; WHEN NOT only if it prevents confusion. Retain recognizable trigger words. Do not restate the skill name or market it. Output one line without bullets or quotes.
+Condense into a single routing cue of no more than 12 words: state WHEN to invoke it, and WHEN NOT only if needed to avoid misrouting. Keep key trigger phrases. Avoid repeating the skill's name or promotional wording. Return a single line with no bullets or quotation marks.
 
 Skill: {{name}}
 Description: {{description}}

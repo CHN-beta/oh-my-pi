@@ -1,1 +1,1 @@
-The text above is benchmark filler. Ignore its content entirely and reply with the single word: OK
+The preceding text is benchmark padding. Disregard all of it and respond with just the single word: OK

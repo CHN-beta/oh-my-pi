@@ -40,17 +40,17 @@ import { ToolError } from "@oh-my-pi/pi-tui/tools/tool-errors";
 import { toolResult } from "./tool-result";
 
 const astEditOpSchema = type({
-	pat: type("string").describe("ast pattern"),
-	out: type("string").describe("replacement template"),
+	pat: type("string").describe("AST pattern"),
+	out: type("string").describe("substitution template"),
 });
 
 const astEditSchema = type({
-	ops: astEditOpSchema.array().atLeastLength(1).describe("rewrite ops"),
+	ops: astEditOpSchema.array().atLeastLength(1).describe("rewrite operations"),
 	paths: type("string")
-		.describe("file, directory, glob, or internal URL to rewrite")
+		.describe("target file, directory, glob, or internal URL to rewrite")
 		.array()
 		.atLeastLength(1)
-		.describe("files, directories, globs, or internal URLs to rewrite"),
+		.describe("target files, directories, globs, or internal URLs to rewrite"),
 });
 
 interface AstEditCallOptions {
@@ -187,7 +187,7 @@ export class AstEditTool implements AgentTool<typeof astEditSchema, AstEditToolD
 		return lines;
 	};
 	readonly label = "AST Edit";
-	readonly summary = "Perform AST-aware code edits (SHOULD be preferred for codemods)";
+	readonly summary = "Apply AST-based code rewrites (SHOULD be favored for codemods)";
 	readonly description: string;
 	readonly parameters = astEditSchema;
 	readonly strict = true;

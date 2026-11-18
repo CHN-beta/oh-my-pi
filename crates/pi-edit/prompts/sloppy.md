@@ -1,16 +1,16 @@
-Anchored edit patch: Find quotes existing text; Replace replaces it; Insert Before/Insert After add lines without replacing it.
+Anchored patch format: Find matches existing lines; Replace substitutes them; Insert Before and Insert After add lines while keeping the matched anchor.
 
 <ops>
-- `*** Edit File: path` opens a file; bare `*** Edit File:` continues it. Repeat for more files. Append ` all` to either opener to change every match. JSON-quote ambiguous paths.
-- `*** Find` MUST match once unless `all`. Copy exact text/indentation from the latest verbatim file read, not Markdown, diffs, or summaries. Use the smallest unique anchor; ambiguity requires parent context, NEVER retry the bare line.
-- Follow Find with `*** Replace` (complete final text; empty deletes), `*** Insert Before` (add lines before first matched line), or `*** Insert After` (add lines after last matched line). Inserts keep the match. Replacement MUST quote part of the changed line; insertion MUST quote adjacent anchor and contain new lines. Changing an anchor requires Replace. Omitting an action does not delete.
-- Headers MUST stand alone; bodies are raw lines until next header or EOF, no closing delimiter or `*** End …` line. NEVER use diff prefixes `+`/`-`/space or `@@` hunks. Edits address the original file, not positions shifted by earlier edits; an edit overlapping an earlier one applies to its result.
-- Find `…` captures omitted text: mid-line gaps stay on that line; line-end gaps span lines. Each Replace `…` re-emits the next capture. A whole `…` line without a capture errors: type those lines out. Insert `…` is literal. Avoid retyping unchanged lines: use Insert or captures.
-- Replace/Insert indentation verbatim; whitespace, operators, delimiters are NEVER repaired. A failing edit is rejected alone; the rest apply. Resend ONLY rejected edits, using any copy-ready correction verbatim; NEVER resend applied ones. “No change” means Replace already equals file text; look elsewhere. File contains a standalone edit header? Use `write`.
+- `*** Edit File: path` starts edits for a file; bare `*** Edit File:` continues targeting the same file. Add blocks to edit additional files. Append ` all` to either header to update every occurrence. Quote ambiguous paths as JSON strings.
+- `*** Find` MUST match uniquely unless `all` is set. Copy exact text and indentation from your latest verbatim file read—never from Markdown, diffs, or summaries. Pick the smallest unique anchor; if ambiguous, expand with parent context and NEVER retry the bare line.
+- Pair Find with `*** Replace` (full replacement text; empty body deletes), `*** Insert Before` (inserts lines ahead of the first matched line), or `*** Insert After` (inserts lines following the last matched line). Inserts preserve the matched anchor. Replace MUST include part of the modified line; inserts MUST anchor on an adjacent line and supply new lines. Modifying the anchor itself requires Replace. Leaving out an action does not delete anything.
+- Headers MUST appear on their own lines; bodies hold raw lines up to the next header or EOF, with no closing marker or `*** End …` line. NEVER write diff prefixes (`+`/`-`/space) or `@@` hunks. Edits target the original file state rather than positions shifted by prior edits; if an edit overlaps an earlier one, it operates on the earlier edit's output.
+- `…` in Find acts as a wildcard capturing skipped text: within a line it spans that single line; at a line end it spans multiple lines. Each `…` in Replace replays the next capture in sequence. A standalone `…` line without a matching capture fails: write those lines explicitly. `…` in Insert is treated as literal text. Prefer Insert or captures over retyping unchanged lines.
+- Replace/Insert preserve indentation verbatim; whitespace, operators, and delimiters are NEVER auto-fixed. A failing edit is rejected individually while valid ones apply. Resend ONLY the failed edits using any copy-ready suggestion verbatim; NEVER resend edits that already succeeded. "No change" means Replace already matches the file text—check another location. If the file contains a standalone edit header line, use `write` instead.
 </ops>
 
 <example>
-Move code: delete with empty Replace, insert ahead of an unchanged anchor:
+Relocate code: delete via an empty Replace, then insert before an unchanged anchor:
 ```text
 *** Edit File: src/util.ts
 *** Find
@@ -22,7 +22,7 @@ run(target);
 const helper = () => 1;
 ```
 
-Keep skipped lines and part of a line:
+Preserve elided lines and partial-line matches:
 ```text
 *** Edit File: src/users.ts
 *** Find

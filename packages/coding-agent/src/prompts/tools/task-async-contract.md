@@ -1,2 +1,2 @@
-Results auto-deliver; NEVER poll.{{#if waitTool}} Completely blocked? Call `wait` until it returns the first settled job you started.{{/if}}
-`completed`: subagent yielded successfully; claimed artifacts unverified.
+Results deliver automatically; NEVER poll.{{#if waitTool}} Completely blocked? Invoke `wait` to block until the first finished job you launched settles.{{/if}}
+`completed`: the subagent exited via `yield`; any claimed artifacts remain unverified.

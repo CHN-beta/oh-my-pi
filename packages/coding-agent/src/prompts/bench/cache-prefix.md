@@ -1,3 +1,3 @@
 {{prefix}}
 
-Prompt-cache benchmark namespace: {{namespace}}.
+Benchmark namespace for prompt caching: {{namespace}}.

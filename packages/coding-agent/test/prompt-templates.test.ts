@@ -406,7 +406,7 @@ describe("subagent peer roster prompt", () => {
 		expect(rendered).toContain("editing auth.ts");
 		expect(rendered).toContain("IdleReviewer");
 		expect(rendered).toContain("1 parked peer(s) omitted");
-		expect(rendered).toContain("Read bare `history://`");
+		expect(rendered).toContain("Read `history://`");
 		expect(rendered).toContain('path: "agent://<id>"');
 		expect(rendered).not.toContain("ParkedSecretId");
 		expect(rendered).not.toContain("secret parked label");

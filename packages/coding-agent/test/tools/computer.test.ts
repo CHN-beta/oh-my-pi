@@ -1650,7 +1650,7 @@ describe("computer worker round trips", () => {
 	it("reports Windows unavailable desktops without claiming macOS lock-screen contents", () => {
 		const state = { screenLocked: true, displayAsleep: false };
 		for (const notice of [screenLockedCaptureNotice("win32"), screenStateNotice(state, "win32")]) {
-			expect(notice).toContain("Windows reports a locked or disconnected session");
+			expect(notice).toMatch(/Windows (?:indicates|reports) a locked/);
 			expect(notice).not.toContain("macOS");
 			expect(notice).not.toContain("unlocks the Mac");
 		}
@@ -1658,9 +1658,9 @@ describe("computer worker round trips", () => {
 	});
 
 	it("keeps the macOS capture and display-sleep explanations", () => {
-		expect(screenLockedCaptureNotice("darwin")).toContain("macOS is showing its lock screen");
+		expect(screenLockedCaptureNotice("darwin")).toContain("macOS is displaying its lock screen");
 		expect(screenStateNotice({ screenLocked: false, displayAsleep: true }, "darwin")).toContain(
-			"Nothing on that display can be captured or clicked until it wakes.",
+			"Elements on that display cannot be captured or clicked until it wakes up.",
 		);
 	});
 
@@ -1704,7 +1704,7 @@ describe("computer worker round trips", () => {
 			if (locked) {
 				expect(result.content[0]).toMatchObject({
 					type: "text",
-					text: expect.stringMatching(/^Note: when this run ended the screen is locked\.\s/),
+					text: expect.stringMatching(/^Note: as of the end of this run the screen is locked\.\s/),
 				});
 			} else {
 				expect(notes).toEqual([]);
@@ -1728,7 +1728,7 @@ describe("computer worker round trips", () => {
 			if (result.ok) return;
 			const [first, ...rest] = result.error.message.split("\n");
 			expect(first).toBe("verification failed");
-			if (locked) expect(rest.join("\n")).toMatch(/^Note: when this run ended the screen is locked\.\s/);
+			if (locked) expect(rest.join("\n")).toMatch(/^Note: as of the end of this run the screen is locked\.\s/);
 			else expect(rest).toEqual([]);
 		}
 	});
@@ -1744,8 +1744,8 @@ describe("computer worker round trips", () => {
 		);
 		const [note] = result.content;
 		const text = note?.type === "text" ? note.text : "";
-		expect(text).toMatch(/^Note: when this run ended the session's display is asleep\.\s/);
-		expect(text).toContain("Nothing on that display can be captured or clicked until it wakes.");
+		expect(text).toMatch(/^Note: as of the end of this run the session's display is asleep\.\s/);
+		expect(text).toContain("Elements on that display cannot be captured or clicked until it wakes up.");
 		expect(text).toContain("`computer.display`");
 	});
 
@@ -1807,7 +1807,7 @@ describe("computer worker round trips", () => {
 		if (result.ok) return;
 		const [first, ...rest] = result.error.message.split("\n");
 		expect(first).toBe("Computer code execution timed out after 50ms");
-		expect(rest.join("\n")).toMatch(/^Note: when this run ended the screen is locked\.\s/);
+		expect(rest.join("\n")).toMatch(/^Note: as of the end of this run the screen is locked\.\s/);
 		expect(native.blockingReads).toBe(0);
 	});
 

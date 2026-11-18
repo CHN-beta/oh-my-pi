@@ -11,26 +11,26 @@ import { cfgMemoryBackend } from "../memory-backend/settings";
 
 const memoryRetainSchemaBase = type({
 	items: type({
-		content: type("string").describe("information to remember"),
-		"context?": type("string").describe("source context"),
+		content: type("string").describe("fact or detail to store"),
+		"context?": type("string").describe("originating context"),
 	})
 		.array()
 		.atLeastLength(1)
-		.describe("memories to retain"),
+		.describe("memories to store"),
 });
 
 /** Offered only where every project recalls a global item; see {@link isGlobalMemoryScopeAvailable}. */
 const memoryRetainSchemaWithScope = type({
 	items: type({
-		content: type("string").describe("information to remember"),
-		"context?": type("string").describe("source context"),
+		content: type("string").describe("fact or detail to store"),
+		"context?": type("string").describe("originating context"),
 		"scope?": type("'project' | 'global'").describe(
-			"storage scope; defaults to project, global is for durable cross-project knowledge",
+			"storage scope; defaults to project, whereas global holds durable cross-project knowledge",
 		),
 	})
 		.array()
 		.atLeastLength(1)
-		.describe("memories to retain"),
+		.describe("memories to store"),
 });
 
 type MemoryRetainSchema = typeof memoryRetainSchemaBase | typeof memoryRetainSchemaWithScope;
@@ -50,7 +50,7 @@ export class MemoryRetainTool implements AgentTool<MemoryRetainSchema, MemoryRet
 	}
 	readonly strict = true;
 	readonly loadMode = "discoverable";
-	readonly summary = "Store important facts in long-term memory";
+	readonly summary = "Persist key facts into long-term memory";
 
 	constructor(private readonly session: ToolSession) {}
 

@@ -1,6 +1,6 @@
-Tool call failed: your previous response tried to invoke a tool, but the tool-call markup was malformed, so it arrived as plain text, no tool was executed, and the broken markup was removed from your response. Usually the opening `<｜DSML｜tool_calls>` and/or `<｜DSML｜invoke name="…">` tags are missing, the tool name was written as a plain line, or the chat template's tool-call special tokens were typed out as text.
+Tool invocation failed: your last reply attempted to call a tool, but the tool-call markup was invalid, so it was treated as plain text, no tool ran, and the malformed markup was stripped from your reply. Typically the opening `<｜DSML｜tool_calls>` and/or `<｜DSML｜invoke name="…">` tags are absent, the tool name appeared on its own plain line, or the chat template's tool-call special tokens were emitted literally as text.
 
-A tool call must be one complete envelope:
+Every tool call must form one complete envelope:
 
 ```
 <｜DSML｜tool_calls>
@@ -11,9 +11,9 @@ A tool call must be one complete envelope:
 </｜DSML｜tool_calls>
 ```
 
-- `<｜DSML｜tool_calls>` wraps every call; put one `<｜DSML｜invoke>` per call inside it.
-- The tool name goes in the `name` attribute of `<｜DSML｜invoke>`, never on its own line.
-- Use `string="true"` for raw text values and `string="false"` for numbers, booleans, arrays, and objects (JSON).
-- Close every tag.
+- `<｜DSML｜tool_calls>` encloses all calls; place one `<｜DSML｜invoke>` per call inside it.
+- Put the tool name inside the `name` attribute of `<｜DSML｜invoke>`, never on a separate line.
+- Set `string="true"` for plain text values and `string="false"` for numbers, booleans, arrays, and objects (JSON).
+- Properly close every tag.
 
-Re-issue the intended call now in this shape, or reply in plain prose if no tool is needed.
+Resubmit the intended call now using this structure, or answer in plain text if no tool call is required.

@@ -28,7 +28,7 @@ describe("PdfConverter", () => {
 		const result = await new PdfConverter().convert(Buffer.from("image-only pdf"), { extension: ".pdf" });
 
 		expect(result.markdown).toBe(
-			"Text extraction is incomplete for PDF pages 2, 3. If this PDF is a file on disk, append `:page<N>.png` to its file path to read a page as an image (e.g. `doc.pdf:page2.png`).",
+			"Extracted text is incomplete on PDF pages 2, 3. When reading a local PDF on disk, append `:page<N>.png` to its path to inspect a page visually as an image (e.g. `doc.pdf:page2.png`).",
 		);
 		expect(result.markdown.length).toBeGreaterThan(0);
 	});

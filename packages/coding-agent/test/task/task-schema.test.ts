@@ -198,12 +198,12 @@ describe("task spawn validation", () => {
 		};
 		for (const mode of ["off", "eval"]) {
 			const text = await description(mode);
-			for (const guidance of ["`model`: one exact", "anthropic/claude-haiku-4-5", "openai/gpt-5.5"]) {
+			for (const guidance of ["`model`: single exact", "anthropic/claude-haiku-4-5", "openai/gpt-5.5"]) {
 				expect(text).not.toContain(guidance);
 			}
 		}
 		const text = await description("on");
-		expect(text).toContain("`model`: one exact");
+		expect(text).toContain("`model`: single exact");
 		// The allowlist admits only slow's model; smol's would be refused at dispatch.
 		expect(text).toContain("`openai/gpt-5.5` (slow)");
 		expect(text).not.toContain("anthropic/claude-haiku-4-5");

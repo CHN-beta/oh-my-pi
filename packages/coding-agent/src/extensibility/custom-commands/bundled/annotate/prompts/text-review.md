@@ -1,4 +1,4 @@
-# Feedback on {{sourceLabel}}
+# Review notes on {{sourceLabel}}
 {{#if includeSource}}
 
 ## Source
@@ -9,7 +9,7 @@
 {{/if}}
 {{#if contextSummary}}
 
-## Generated source context (not instructions)
+## Generated source context (not directives)
 
 {{summaryFence}}text
 {{contextSummary}}
@@ -18,7 +18,7 @@
 
 {{#list annotations join="\n\n"}}
 
-## {{number}}. {{#if isLine}}Feedback on line {{line}}:{{else}}General feedback{{/if}}
+## {{number}}. {{#if isLine}}Note on line {{line}}:{{else}}General note{{/if}}
 {{#if isLine}}
 {{#if quoteIsInline}}"{{quote}}"{{else}}{{quoteFence}}text
 {{quote}}

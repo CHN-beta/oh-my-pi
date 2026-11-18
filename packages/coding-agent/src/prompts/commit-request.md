@@ -1,12 +1,12 @@
 ## Commit Request
 
-The user ran `/commit`{{#if instructions}} with: {{instructions}}{{/if}}
+The user invoked `/commit`{{#if instructions}} with: {{instructions}}{{/if}}
 
-Commit the changes you and your subagents made, nothing else. Other agents and the user edit this worktree concurrently.
+Commit only the modifications produced by you and your subagents—nothing else. The user and other agents may be modifying this worktree simultaneously.
 
 ### Draft
 
-Every changed line of the repository, attributed from your edit journal:
+Every modified line in the repository, attributed from your edit log:
 
 ```
 {{summary}}
@@ -21,13 +21,13 @@ Every changed line of the repository, attributed from your edit journal:
 {{/if}}
 
 <instruction>
-- Use the eval `commit` namespace; `d = await commit.draft()` rebuilds this draft (pass `agents=` when the user named a scope). When Review is empty and Selected matches your work, commit in that same cell.
-- Resolve each `?` item: `await d.show()` lists them; `take`/`drop` by path, unit, or grep. Files a generator, formatter, or script you ran rewrote are yours.
-- Split unrelated work into separate commits with `only()`; draft again after each commit.
-- Follow the repository's commit conventions for the subject and body.
-- Do not run tests, builds, or other verification; the user asked for a commit.
+- Use the eval `commit` namespace; `d = await commit.draft()` refreshes this draft (supply `agents=` if the user specified a scope). If Review is empty and Selected covers your changes, commit inside the same eval cell.
+- Handle every `?` item: `await d.show()` displays them; call `take` or `drop` by file path, unit, or grep. Files updated by a generator, formatter, or script you invoked belong to you.
+- Separate independent work into distinct commits using `only()`, and re-draft after each commit.
+- Match the repository's commit style for subject and body.
+- Skip running tests, builds, or other checks; the user requested a commit only.
 </instruction>
 
 <critical>
-NEVER use `git add`, `git commit`, `git stash`, `git reset`, `git checkout`, or `git restore` for this commit.
+NEVER run `git add`, `git commit`, `git stash`, `git reset`, `git checkout`, or `git restore` to perform this commit.
 </critical>

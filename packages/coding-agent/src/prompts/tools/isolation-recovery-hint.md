@@ -1,12 +1,12 @@
 {{#if patchPath}}
-Captured patch preserved at {{patchPath}}.
+Saved captured patch to {{patchPath}}.
 {{/if}}
-{{#list nestedPatchPaths prefix="Captured nested patch preserved at " join=""}}
+{{#list nestedPatchPaths prefix="Saved captured nested patch to " join=""}}
 {{this}}.
 {{/list}}
 {{#if nestedFailure}}
-Nested patches could not be written: {{nestedFailure}}.
+Failed to write nested patches: {{nestedFailure}}.
 {{/if}}
 {{#if branchName}}
-Captured branch preserved as {{branchName}}.
+Saved captured branch as {{branchName}}.
 {{/if}}

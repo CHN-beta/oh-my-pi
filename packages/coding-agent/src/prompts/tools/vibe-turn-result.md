@@ -4,7 +4,7 @@
 - {{this}}
 {{/each}}
 {{#if traceOverflow}}
-- … {{traceOverflow}} earlier tool call(s) not shown
+- … {{traceOverflow}} previous tool call(s) omitted
 {{/if}}
 </activity>
 <response{{#if responseTruncated}} truncated="true" full-output="agent://{{id}}"{{/if}}>
@@ -14,6 +14,6 @@
 <error>{{error}}</error>
 {{/if}}
 {{#if alive}}
-Session `{{id}}` is idle and retains this conversation — continue it with vibe_send. Transcript: history://{{id}}
+Session `{{id}}` is idle with its conversation history intact — follow up using `vibe_send`. Transcript: `history://{{id}}`
 {{/if}}
 </vibe-turn>

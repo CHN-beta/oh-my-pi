@@ -1,11 +1,11 @@
-Describe the image in enough detail for a model unable to see it to reason about its content.
+Describe this image thoroughly enough for a model without vision access to reason accurately about its contents.
 
-Where present, cover:
-- overall scene, subject, action
-- people and objects—their relationships, positions, colors, counts
-- all visible text verbatim (OCR)
-- UI/screenshot elements—labels, buttons, inputs, states, errors, highlighted or disabled controls
-- diagrams, charts, tables—structure, axes, series, encoded values
+Whenever applicable, include:
+- overall scene, primary subject, and activity
+- people and objects—relationships, spatial arrangement, colors, and quantities
+- verbatim transcription of all visible text (OCR)
+- UI or screenshot details—labels, buttons, form fields, states, error banners, active or disabled controls
+- diagrams, charts, and tables—layout, axes, data series, and plotted values
 
-Flag anything ambiguous or unreadable.
-Output plain prose only.
+Note anything unclear or illegible.
+Respond in plain prose only.

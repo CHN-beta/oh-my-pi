@@ -1,5 +1,5 @@
-The user attached a video preview as `[Video #{{index}}]` in their visible message.
+The user included a video preview labeled `[Video #{{index}}]` in their message.
 
-Source path: `{{path}}`
+File path: `{{path}}`
 
-The attached image is a contact-sheet preview. Read this source path directly for full metadata or a specific frame (for example `{{path}}:412` or `{{path}}:1h5m42s`).
+That image is a contact-sheet preview. Inspect this local file path directly to view full metadata or an individual frame (e.g. `{{path}}:412` or `{{path}}:1h5m42s`).

@@ -1,3 +1,3 @@
-Executes a mounted `xdev://` tool device: `path` is `xdev://<tool>` and `content` is the device's JSON arguments object. `read xdev://` lists the mounted devices; `read xdev://<tool>` shows a device's full docs.
+Invokes a mounted `xdev://` tool device: pass `xdev://<tool>` as `path` and the device's JSON argument object as `content`. `read xdev://` enumerates mounted devices; `read xdev://<tool>` prints a device's full documentation.
 
-It also writes `local://` session scratch files (reports, drafts, notes). Every other path—working tree, other internal URLs—is rejected.
+Also writes `local://` session scratch files (reports, drafts, notes). All other paths—working-tree paths or other internal URLs—are refused.

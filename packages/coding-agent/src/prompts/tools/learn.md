@@ -1,8 +1,8 @@
-Capture reusable lessons in long-term memory; optionally mint/enhance a managed skill in the same call.
+Record reusable takeaways into long-term memory, and optionally create or update a managed skill in the same call.
 
-Use after solving insight likely to pay off again: a non-obvious fix, discovered project convention, or workflow that worked.
+Invoke after uncovering knowledge likely to help again: a subtle fix, an undocumented project convention, or an effective workflow.
 
-{{#if globalScope}}`scope: global` stores a lesson in the shared bank every project recalls; reserve it for cross-project lessons.
-{{/if}}`skill` optional; provide only for a repeatable procedure worth codifying as `SKILL.md`, not a fact. Managed skills: isolated `~/.omp/agent/managed-skills`; surfaced as normal skills next session; NEVER touch user-authored skills. Frontmatter: generated from `name` and `description`.
+{{#if globalScope}}`scope: global` saves the lesson in the cross-project bank recalled everywhere; use it only for lessons applicable across projects.
+{{/if}}`skill` is optional; supply it only for repeatable procedures suited to `SKILL.md`, not standalone facts. Managed skills live separately under `~/.omp/agent/managed-skills`, load like regular skills in future sessions, and NEVER modify user-authored skills. Frontmatter is auto-generated from `name` and `description`.
 
-Capture sparingly, specifically: one strong reusable lesson > several vague ones.
+Record selectively and concretely: one high-value reusable lesson beats many vague entries.

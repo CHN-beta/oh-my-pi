@@ -197,7 +197,7 @@ describe("incomplete local summaries", () => {
 	});
 
 	test("compact rejects a split-turn prefix summary that hit the output limit", async () => {
-		const prefixPrompt = "MUST summarize prefix for retained suffix:";
+		const prefixPrompt = "MUST summarize the prefix for the kept suffix:";
 		const error = await compact(makePreparation(), getAnthropicModel(), "key", undefined, undefined, {
 			completeImpl: async (_model, ctx) =>
 				JSON.stringify(ctx.messages).includes(prefixPrompt)

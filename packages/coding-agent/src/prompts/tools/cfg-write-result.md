@@ -1,20 +1,20 @@
 {{#if declined}}
-User declined changing `{{path}}`; it stays {{previous}}. NEVER retry unless the user asks.
+User rejected updating `{{path}}`; it remains {{previous}}. NEVER retry unless requested by the user.
 {{/if}}
 {{#if unchanged}}
-`{{path}}` is already {{value}}; nothing changed.
+`{{path}}` is already set to {{value}}; no change made.
 {{/if}}
 {{#if saved}}
-Saved `{{path}}` = {{value}} to the global config (was {{previous}}).
+Persisted `{{path}}` = {{value}} to global configuration (previously {{previous}}).
 {{#if effective}}
-Effective value is still {{effective}}: the {{provenance}} takes precedence over the global config, so the saved value does not take effect. Tell the user.
+The active value remains {{effective}} because {{provenance}} overrides global configuration, so the persisted setting is not in effect. Inform the user.
 {{/if}}
 {{/if}}
 {{#if applied}}
-Set `{{path}}` = {{value}} for this session only (was {{previous}}); NOT saved.
+Updated `{{path}}` = {{value}} for the current session only (previously {{previous}}); NOT persisted.
 {{#if effective}}
-Effective value is still {{effective}}: the {{provenance}} takes precedence over session overrides and the global config, so neither this change nor saving it takes effect. Tell the user; NEVER retry.
+The active value remains {{effective}} because {{provenance}} overrides session and global configuration, so neither this change nor persisting it will apply. Inform the user; NEVER retry.
 {{else}}
-Ask the user whether they are happy with it. Yes → `write {{saveUrl}}` with the same content to persist. No → restore by writing {{previous}} to `{{url}}`.
+Ask the user if this value works as expected. If yes → `write {{saveUrl}}` with the same payload to persist it. If no → revert by writing {{previous}} to `{{url}}`.
 {{/if}}
 {{/if}}

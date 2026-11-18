@@ -455,9 +455,9 @@ describe("TTSR injection notice", () => {
 		const delivery = followUp.mock.calls[0]?.[0];
 		if (delivery?.role !== "custom") throw new Error("Expected a custom TTSR delivery");
 		expect(delivery.content).toContain('<system-reminder reason="rule_violation"');
-		expect(delivery.content).toContain("the output was not interrupted by the rule");
+		expect(delivery.content).toContain("output continued uninterrupted");
 		expect(delivery.content).toContain(JSON.stringify(CONDITION));
-		expect(delivery.content).not.toContain("Output interrupted");
+		expect(delivery.content).not.toContain("Stream interrupted");
 	});
 
 	it("keeps the interrupt template on the abort/retry injection", async () => {
@@ -484,7 +484,7 @@ describe("TTSR injection notice", () => {
 		const injection = appendMessage.mock.calls[0]?.[0];
 		if (injection?.role !== "custom") throw new Error("Expected a custom TTSR injection");
 		expect(injection.content).toContain('<system-interrupt reason="rule_violation"');
-		expect(injection.content).toContain("Output interrupted: violated user-defined rule.");
-		expect(injection.content).not.toContain("was not interrupted");
+		expect(injection.content).toContain("Stream interrupted: breached a user-configured rule.");
+		expect(injection.content).not.toContain("continued uninterrupted");
 	});
 });

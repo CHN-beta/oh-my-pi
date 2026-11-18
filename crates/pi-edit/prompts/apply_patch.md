@@ -1,24 +1,24 @@
-Edit files: `apply_patch` shell command.
+Edit files via the `apply_patch` shell command.
 
-`apply_patch`: stripped-down, file-oriented diff; easy to parse, safe to apply.
+`apply_patch` uses a minimal, file-oriented patch syntax designed for straightforward parsing and reliable application.
 
-Envelope:
+Patch wrapper:
 ```
 *** Begin Patch
 [ one or more file sections ]
 *** End Patch
 ```
-Contains file operations. Each MUST have an action header:
+Holds one or more file entries. Every entry MUST begin with an operation header:
 
-`*** Add File: <path>`: create file; every following line `+` (initial contents).
+`*** Add File: <path>`: creates a new file; every subsequent line starts with `+` as its initial content.
 
-`*** Delete File: <path>`: remove existing file; nothing follows.
+`*** Delete File: <path>`: deletes an existing file; takes no body lines.
 
-`*** Update File: <path>`: patch existing file in place; optional immediate `*** Move to: <new path>` renames it; then one or more `@@` hunks (optional hunk header). Omit hunks only for a content-preserving move. Hunk lines start with space, `-`, or `+`.
+`*** Update File: <path>`: modifies an existing file in place; an optional `*** Move to: <new path>` line immediately after the header renames it, followed by one or more `@@` hunks (with optional hunk headers). Hunks may be omitted only for a pure rename that keeps contents unchanged. Hunk body lines start with space, `-`, or `+`.
 
-Old/context lines must match complete file lines, allowing only whitespace and Unicode punctuation normalization, not substrings or similar text.
+Context and deleted lines must match full lines in the file; only whitespace and Unicode punctuation normalization are tolerated, never partial substrings or approximate text.
 
-Context: default 3 code lines immediately before and after each change. Changes within 3 lines: do NOT duplicate first change's context-after lines as second change's context-before lines. If 3 lines do not uniquely identify code in the file, use `@@` with its class/function; if one `@@` plus 3 context lines still cannot uniquely identify repeated code in a class/function, use multiple `@@` lines to reach it:
+Context rules: supply 3 lines of surrounding code directly before and after each edit by default. When two edits are within 3 lines of each other, do NOT repeat the first edit's trailing context as the second edit's leading context. If 3 context lines do not uniquely locate the target, add `@@` with the enclosing class or function; if one `@@` plus 3 context lines is still ambiguous across repeated code inside a class or function, chain multiple `@@` lines to narrow down to it:
 ```
 @@ class BaseClass
 [3 lines of pre-context]
@@ -49,7 +49,7 @@ Hunk := "@@" [ header ] NEWLINE { HunkLine } [ "*** End of File" NEWLINE ]
 HunkLine := (" " | "-" | "+") text NEWLINE
 ```
 
-Full patches may combine operations:
+Multiple file operations can be combined in a single patch:
 ```
 *** Begin Patch
 *** Add File: hello.txt
@@ -63,4 +63,4 @@ Full patches may combine operations:
 *** End Patch
 ```
 
-MUST use Add/Delete/Update header; new-file lines MUST start `+`; file references relative, NEVER absolute.
+MUST specify an Add/Delete/Update header; every line of an added file MUST begin with `+`; all file paths must be relative, NEVER absolute.

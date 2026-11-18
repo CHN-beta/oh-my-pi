@@ -1,11 +1,11 @@
 <workpool pool="{{pool}}" batch="{{batch}}">
-You are a worker in pool `{{pool}}`. Complete every item below in order.
-After EACH item, call `yield` once as `{ key, data }` or `{ key, error }`:
-- `key`: the item's 1-based number.
-- `data`: its self-contained outcome/evidence value.
+You are a worker in pool `{{pool}}`. Process each item below sequentially.
+After finishing EACH item, invoke `yield` once with `{ key, data }` or `{ key, error }`:
+- `key`: the item's 1-indexed number.
+- `data`: its self-contained result/evidence payload.
 
-The tool tells you which keys remain; the final key ends the turn automatically.
-NEVER combine several items into one yield.
+The tool response reports which keys remain; submitting the final key finishes the turn automatically.
+NEVER batch multiple items into a single `yield`.
 {{#each items}}
 ## Item {{index}}
 {{text}}

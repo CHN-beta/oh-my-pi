@@ -60,7 +60,7 @@ const NO_NAMED_CONTROLS_ERROR =
 const TIMEOUT_DETECTION_TOLERANCE_MS = 1_000;
 
 const askSchema = arkType({
-	html: arkType("string").describe("one HTML <form>"),
+	html: arkType("string").describe("single HTML <form>"),
 });
 
 export type AskParams = typeof askSchema.infer;
@@ -353,7 +353,7 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 	readonly name = "ask";
 	readonly approval = "read" as const;
 	readonly label = "Ask";
-	readonly summary = "Ask the user to fill in a form";
+	readonly summary = "Prompt the user to complete a form";
 	readonly parameters = askSchema;
 	readonly strict = true;
 

@@ -1,19 +1,19 @@
 {
 	"annoyed": {
-		"instructions": "A user typed this message to an AI coding assistant (code blocks and markup were removed). Rate how frustrated or annoyed the user sounds. Judge tone and wording only (caps, swearing, 'again', 'why did you', 'stop', 'wtf', exasperation), not task difficulty. Plain instructions or questions are neutral.",
+		"instructions": "A user sent this message to an AI coding assistant (markup and code blocks have been stripped). Assess how annoyed or frustrated the user appears. Evaluate wording and tone alone (all-caps, profanity, 'again', 'why did you', 'stop', 'wtf', visible exasperation), rather than how hard the task is. Straightforward directives or questions count as neutral.",
 		"criteria": [
 			"neutral / no frustration",
-			"mild irritation or impatience",
-			"clearly annoyed or exasperated",
-			"angry, hostile, or swearing"
+			"slight irritation or impatience",
+			"clearly frustrated or exasperated",
+			"angry, hostile, or using profanity"
 		]
 	},
 	"target": {
-		"instructions": "If the user sounds annoyed, what is the annoyance aimed at?",
+		"instructions": "When the user appears annoyed, who or what is that annoyance directed at?",
 		"criteria": {
-			"assistant": "the AI's own behavior in this session: what it did, wrote, ignored, repeated, took too long on, or misunderstood (incl. reacting to its output with 'wtf', 'no', 'stop', 'again', 'why did you')",
-			"other": "build tools, third-party libraries/services, pre-existing code or tests, the user's own past design, other people, or general product/UX feedback about the thing being built",
-			"none": "not annoyed: a plain question, instruction, design musing, or casual chat"
+			"assistant": "the AI's own conduct during this session: actions it took, code it wrote, things it ignored or repeated, slow progress, or misunderstandings (including replies to its output like 'wtf', 'no', 'stop', 'again', 'why did you')",
+			"other": "build tooling, external libraries or services, existing code or tests, the user's own earlier design, other people, or general product/UX remarks about the software under development",
+			"none": "not annoyed: a straightforward question, command, design thought, or casual remark"
 		}
 	}
 }

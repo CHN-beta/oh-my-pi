@@ -101,8 +101,8 @@ function describeLanguageField(langs: readonly EvalLanguageToken[]): string {
 function summarizeEvalLanguages(langs: readonly EvalLanguageToken[]): string {
 	const names = langs.map(lang => EVAL_LANGUAGE_NAME[lang]);
 	return names.length > 0
-		? `Execute ${joinWithOr(names)} in persistent kernels; load scripts or install packages`
-		: "No eval runtimes are currently available";
+		? `Run ${joinWithOr(names)} inside persistent kernels; load scripts or install packages`
+		: "No eval runtimes are currently enabled";
 }
 
 /** Resolved-allowance → enabled language tokens, preserving display order. */
@@ -115,20 +115,20 @@ function enabledEvalLanguages(backends: EvalBackendsAllowance): EvalLanguageToke
 }
 
 const evalCellCommonFields = {
-	code: type("string").describe("Code or standalone % command."),
-	"title?": type("string").describe("Short transcript label."),
+	code: type("string").describe("Code or standalone % magic command."),
+	"title?": type("string").describe("Brief transcript label."),
 	"timeout?": evalTimeoutSchema(),
-	"reset?": type("boolean").describe("Wipe only this kernel."),
+	"reset?": type("boolean").describe("Clear only this kernel."),
 };
 
 function evalTimeoutSchema(maxTimeout?: number) {
 	const { min, max } = TOOL_TIMEOUTS.eval;
 	const configured =
 		maxTimeout !== undefined && maxTimeout > 0
-			? ` Configured tools.maxTimeout: ${maxTimeout}s (effective ceiling ${clampTimeout("eval", max, maxTimeout)}s).`
+			? ` Active tools.maxTimeout: ${maxTimeout}s (effective cap ${clampTimeout("eval", max, maxTimeout)}s).`
 			: "";
 	return type("number").describe(
-		`Cell deadline in seconds; nonzero values clamp to ${min}–${max}; 0 disables it.${configured}`,
+		`Cell timeout in seconds; nonzero values clamp to ${min}–${max}; 0 disables it.${configured}`,
 	);
 }
 

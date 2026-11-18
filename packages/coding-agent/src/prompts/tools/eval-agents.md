@@ -4,41 +4,41 @@ agent(prompt, *, agent?="{{spawnDefaultAgent}}", label?=None, schema?=None, sche
 {{else}}
 await agent(prompt, { agent?, label?, schema?, schemaMode?, isolated?, apply?, merge?{{#if evalTools}}, tools?{{/if}}{{#if perCallModel}}, model?{{/if}} }) → AgentHandle
 {{/if}}
-  Spawns a background subagent and returns immediately.
-  - `agent` selects a discovered agent; omit it to use `{{spawnDefaultAgent}}`.{{#if spawnAllowedAgentsText}} Allowed agents: {{spawnAllowedAgentsText}}.{{/if}}
-  - Handle: `.id`, `.handle` ("agent://<id>"), {{#if py}}`.status`{{else}}`.status()`{{/if}}, `.done()`, `.wait(timeout?)` → final text (parsed with `schema`),
+  Launches a background subagent and returns immediately.
+  - `agent` picks a discovered agent definition; omit to use `{{spawnDefaultAgent}}`.{{#if spawnAllowedAgentsText}} Allowed agents: {{spawnAllowedAgentsText}}.{{/if}}
+  - Handle API: `.id`, `.handle` ("agent://<id>"), {{#if py}}`.status`{{else}}`.status()`{{/if}}, `.done()`, `.wait(timeout?)` → final text (parsed via `schema`),
     `.send(message)`, `.cancel()`, `.output()`.
-  - Unwaited results auto-deliver like async jobs.
+  - Unawaited agent results deliver automatically like async jobs.
 {{#if perCallModel}}
-  - `model`: one exact `provider/model-id[@upstream][:level]` string for this call only.
-    - `@upstream` pins an aggregator route and is part of the model identity.
-    - Only operator-approved models; no roles, arrays, globs or partial IDs.
+  - `model`: single exact `provider/model-id[@upstream][:level]` identifier for this invocation only.
+    - `@upstream` pins an aggregator route and forms part of the model ID.
+    - Must be an operator-approved model; roles, arrays, globs, and partial IDs are disallowed.
     - Approved: {{#list perCallModelAdvertisement.roles join=", "}}{{#list patterns join=", "}}`{{this}}`{{/list}} ({{role}}){{/list}}{{#if perCallModelAdvertisement.roles.length}}; {{/if}}{{#if perCallModelAdvertisement.parentModelWithheld}}{{else}}your own current model; {{/if}}the selected bundled/user agent's own configured model.
-    - A listed glob approves matching exact IDs; write the exact ID, NEVER the glob.
+    - A listed glob authorizes matching exact model IDs; supply the exact ID, NEVER the glob itself.
 {{#if perCallModelAdvertisement.allowlist.length}}
     - Allowlist: {{#list perCallModelAdvertisement.allowlist join=", "}}`{{this}}`{{/list}} (must also be approved).
 {{/if}}
-    - An agent's `task.agentModelOverrides` entry or user-chosen effort conflicts with it.
-    - Unavailable → stop and report; NEVER substitute another.
-    - Every request requires an approved model; retry fallback, context promotion and prewalk are off.
+    - Conflicts with an agent's `task.agentModelOverrides` entry or user-selected effort.
+    - If unavailable → stop and report; NEVER fall back to a different model.
+    - Approved model required on every request; retry fallback, context promotion, and prewalk are disabled.
 {{/if}}
-  - `schema` overrides agent/session schemas.
-  - `{{#if py}}schema_mode{{else}}schemaMode{{/if}}`: "permissive" warns after retries, "strict" fails; omitted → session setting, else "permissive".
-  - `isolated` runs it in a worktree (requires `task.isolation.enabled`).
-  - `{{#if py}}apply=False{{else}}apply: false{{/if}}` keeps its changes as patch/branch artifacts instead of applying them.
-  - `{{#if py}}merge=False{{else}}merge: false{{/if}}` forces patch mode, otherwise `task.isolation.merge` decides.
+  - `schema` takes precedence over agent and session schemas.
+  - `{{#if py}}schema_mode{{else}}schemaMode{{/if}}`: "permissive" warns after retries, "strict" fails; if omitted → session setting, defaulting to "permissive".
+  - `isolated` executes inside a git worktree (requires `task.isolation.enabled`).
+  - `{{#if py}}apply=False{{else}}apply: false{{/if}}` retains changes as patch/branch artifacts rather than merging them.
+  - `{{#if py}}merge=False{{else}}merge: false{{/if}}` enforces patch mode; otherwise `task.isolation.merge` controls behavior.
 {{#if evalTools}}
-  - `tools`: names of tools you defined with {{#ifAll py js}}`@tool` / `tool(fn)`{{else}}{{#if py}}`@tool`{{else}}`tool(fn)`{{/if}}{{/ifAll}} that the child may call.
+  - `tools`: names of custom tools registered via {{#ifAll py js}}`@tool` / `tool(fn)`{{else}}{{#if py}}`@tool`{{else}}`tool(fn)`{{/if}}{{/ifAll}} exposed to the child.
 {{/if}}
 {{#ifAll py js}}
-  - Python: call without `await`; `await agent(…)` returns the final result, not a handle (`await h` = `h.wait()`).
-  - JS: ONE trailing object — `h = await agent(prompt, { agent, label, schema, schemaMode, isolated, apply, merge{{#if evalTools}}, tools{{/if}}{{#if perCallModel}}, model{{/if}} })`.
-    - Without `await agent(…)`, `.id`/`.handle` are undefined.
-    - Every handle method returns a Promise; `.status` is `await h.status()`.
+  - Python: invoke synchronously without `await`; `await agent(…)` yields the final result instead of a handle (`await h` = `h.wait()`).
+  - JS: pass ONE trailing options object — `h = await agent(prompt, { agent, label, schema, schemaMode, isolated, apply, merge{{#if evalTools}}, tools{{/if}}{{#if perCallModel}}, model{{/if}} })`.
+    - Omitting `await` on `agent(…)` leaves `.id`/`.handle` undefined.
+    - All handle methods return Promises; `.status` is `await h.status()`.
 {{else}}
 {{#if js}}
-  - Without `await agent(…)`, `.id`/`.handle` are undefined.
-  - Every handle method returns a Promise.
+  - Omitting `await` on `agent(…)` leaves `.id`/`.handle` undefined.
+  - All handle methods return Promises.
 {{/if}}
 {{/ifAll}}
 {{#if py}}
@@ -46,26 +46,26 @@ workpool(agent?=None, *, name?=None, context?=None{{#if evalTools}}, tools?=None
 {{else}}
 await workpool(agent?, { name?, context?{{#if evalTools}}, tools?{{/if}}{{#if perCallModel}}, model?{{/if}} }) → WorkPool
 {{/if}}
-  {{#if eagerDelegation}}Default for 2+ independent items.{{else}}Keep-alive worker pool for a batch of independent items.{{/if}}
-  - {{#if py}}`.push(*items)` (strings) → item ids; `.status()`; `.peek()`; `.close()`.{{else}}`await` each of `.push(...items)` (strings) → item ids, `.status()`, `.peek()`, `.close()`.{{/if}}
-  - Pool name = async job id; results auto-deliver.
-  - The first full drain closes the pool: push the whole batch while it is active; next wave → new pool.
-  - {{#if waitTool}}Completely blocked? Leave `eval` and call the `wait` tool (not kernel `wait()`); {{/if}}NEVER poll.
+  {{#if eagerDelegation}}Standard choice for 2+ independent items.{{else}}Persistent worker pool for processing a batch of independent items.{{/if}}
+  - {{#if py}}`.push(*items)` (strings) → item IDs; `.status()`; `.peek()`; `.close()`.{{else}}`await` every call to `.push(...items)` (strings) → item IDs, `.status()`, `.peek()`, `.close()`.{{/if}}
+  - Pool name acts as async job ID; results deliver automatically.
+  - Draining the pool completely closes it: enqueue the entire batch while active; start a fresh pool for the next wave.
+  - {{#if waitTool}}Completely blocked? Exit `eval` and invoke the `wait` tool (not kernel `wait()`); {{/if}}NEVER poll.
 {{#if perCallModel}}
-  - `model` selects each worker on its first turn; follow-ups reuse that session.
+  - `model` picks each worker's model on its initial turn; subsequent turns reuse that session.
 {{/if}}
 {{#ifAll py js}}
-  - JS: `pool = await workpool(agent, { name, context{{#if evalTools}}, tools{{/if}}{{#if perCallModel}}, model{{/if}} })`; `await` each pool method.
+  - JS: `pool = await workpool(agent, { name, context{{#if evalTools}}, tools{{/if}}{{#if perCallModel}}, model{{/if}} })`; `await` every pool method.
 {{/ifAll}}
 ```
 
-The cell `timeout` counts only the cell's own work, not waits on `agent()`/`wait()`/`tool.task(…)`, so a subagent can outlast it.
+The cell `timeout` measures only work inside the cell itself, excluding waits on `agent()`/`wait()`/`tool.task(…)`, allowing subagents to run past it.
 
 <dag>
-Acyclic waves of handles:
-- **Name nodes.** `h = {{#if py}}agent(…)`{{#if js}} (JS: `await agent(…)`){{/if}}{{else}}await agent(…)`{{/if}} returns at once; `h.handle` is `agent://<id>`.
-- **Wire edges.** Put an upstream `.wait()` result or `.handle` in the downstream prompt. Bulk: `write("local://<name>.md", …)`.
-- **Kernel `{{#if py}}wait(hs)`{{#if js}} (JS: `await wait(hs)`){{/if}}{{else}}await wait(hs)`{{/if}}** = wave barrier. Open-ended item streams → `workpool()`.
-- **Isolate failure.** `{{#if py}}wait(hs, raise_errors=False)`{{#if js}} (JS: `await wait(hs, { raiseErrors: false })`){{/if}}{{else}}await wait(hs, { raiseErrors: false })`{{/if}} keeps a failure in its slot; only that subtree degrades.
-- **Acyclic only.** Never feed an agent's handle or result back into one of its own upstream agents.
+Acyclic DAGs of agent handles:
+- **Assign nodes.** `h = {{#if py}}agent(…)`{{#if js}} (JS: `await agent(…)`){{/if}}{{else}}await agent(…)`{{/if}} returns immediately; `h.handle` equals `agent://<id>`.
+- **Connect edges.** Embed an upstream `.wait()` output or `.handle` into the downstream prompt. For large payloads use `write("local://<name>.md", …)`.
+- **Kernel `{{#if py}}wait(hs)`{{#if js}} (JS: `await wait(hs)`){{/if}}{{else}}await wait(hs)`{{/if}}** acts as a wave barrier. For open-ended item streams use `workpool()`.
+- **Contain failures.** `{{#if py}}wait(hs, raise_errors=False)`{{#if js}} (JS: `await wait(hs, { raiseErrors: false })`){{/if}}{{else}}await wait(hs, { raiseErrors: false })`{{/if}} isolates each failure to its slot so only that branch degrades.
+- **Keep acyclic.** Never pass an agent's handle or output back to any of its upstream agents.
 </dag>

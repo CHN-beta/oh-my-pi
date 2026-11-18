@@ -1,17 +1,17 @@
 <setup>
-Reusable setup: write a script, run `%load <path>` in a standalone `code` cell.
-- Quoted paths and `local://` work; source is not echoed.
-- Definitions persist; edited files require another `%load`.
+Shared setup: place code in a file and execute `%load <path>` inside a standalone `code` cell.
+- Supports quoted paths and `local://`; script source is not echoed back.
+- Loaded definitions stay in memory; re-run `%load` after modifying the file.
 {{#if py}}
-Missing Python dependency: `%pip install <distribution>` (e.g. `PIL` comes from `pillow`).
+Install missing Python packages via `%pip install <distribution>` (for example, `PIL` is provided by `pillow`).
 {{/if}}
 {{#if js}}
-Missing JS dependency: `%bun add <pkg>` installs into a managed per-project environment; `%environment project` selects project dependencies.
+Install missing JS packages via `%bun add <pkg>` into a managed per-project environment; `%environment project` switches to project dependencies.
 {{#unless autoProvision}}
-Automatic provisioning disabled: use an existing environment or `%environment project`.
+Auto-provisioning is off: use an existing environment or `%environment project`.
 {{/unless}}
 {{/if}}
-Percent commands are standalone cells. Install preserves kernel state; retry only the failed step.
+Percent magics require standalone cells. Package installation keeps existing kernel state; re-run only the step that failed.
 </setup>
 ```
 budget →
@@ -21,7 +21,7 @@ budget →
 {{#if js}}
   {{#if py}}JS: {{/if}}await budget.total(), await budget.spent(), await budget.remaining()
 {{/if}}
-  Ceiling +Nk advisory; +Nk! hard.
+  Soft limit +Nk advisory; +Nk! hard cap.
 {{#if evalTools}}
 {{#if py}}
 @tool / tool(fn, name=None, description=None)
@@ -29,7 +29,7 @@ budget →
 {{#if js}}
 {{#if py}}JS: {{/if}}tool(fn, { name?, description?, parameters? })
 {{/if}}
-  → kernel-hosted tool{{#if py}} (schema inferred from type hints){{/if}}.
-  Pass its name in task item `tools`{{#if spawns}}, `agent(tools=…)`, or `workpool(tools=…)`{{/if}}; `tool.defined()`, `tool.undefine(name)`.
+  → tool hosted in the kernel{{#if py}} (schema derived from type annotations){{/if}}.
+  Reference its name in task `tools`{{#if spawns}}, `agent(tools=…)`, or `workpool(tools=…)`{{/if}}; manage with `tool.defined()` and `tool.undefine(name)`.
 {{/if}}
 ```

@@ -73,7 +73,7 @@ describe("AgentSession text-only stream stall", () => {
 		const partial = resumed.findLast(message => message.role === "assistant") as AssistantMessage;
 		expect(partial.content).toContainEqual({ type: "text", text: "Here is the first half of the answ" });
 		const reminder = JSON.stringify(resumed.at(-1));
-		expect(reminder).toContain("Continue exactly where it stopped");
+		expect(reminder).toContain("Pick up precisely where it cut off");
 
 		const last = session.agent.state.messages.at(-1) as AssistantMessage;
 		expect(last.stopReason).toBe("stop");

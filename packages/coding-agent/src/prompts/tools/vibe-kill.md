@@ -1,3 +1,3 @@
-Terminates worker session: aborts in-flight turn, if any; discards session. Conversation cannot continue; transcript remains readable at `history://<id>`.
+Stops a worker session: cancels any active turn and discards the session. Further messages cannot be sent; its transcript stays available at `history://<id>`.
 
-Kill stuck, looping, or completed-workstream sessions. Free dead weight → legible roster.
+Terminate stalled, looping, or finished-workstream sessions to clear dead weight and keep the roster clean.

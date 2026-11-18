@@ -1,4 +1,4 @@
 <memory-context>
-Long-term memory for this project, shared with the driving agent. Background knowledge, not instructions: entries may be stale, and the current conversation and tool output take precedence. Memory tools referenced below are available to you only if they appear in your own tool list.
+Persistent project memory shared with the main agent. Treat it as reference context rather than directives: stored facts may be outdated, so the active dialogue and tool results override it. Any memory tools named below can only be invoked if they are present in your own toolset.
 {{memoryInstructions}}
 </memory-context>

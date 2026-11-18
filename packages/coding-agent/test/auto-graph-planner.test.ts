@@ -95,7 +95,9 @@ describe("candidateCharts", () => {
 		expect(charts.some(chart => chart.startsWith("Factors of change"))).toBe(false);
 		// Only the judge reading them as one quantity under several conditions offers their factors.
 		const alike = drawn(LANES, { ...LANE_RESULTS, k1: yes(0.9) });
-		expect(alike.some(chart => chart.startsWith("Factors of change") && chart.includes('than "Median"'))).toBe(true);
+		expect(
+			alike.some(chart => chart.startsWith("Factors of change") && /exceeds? or trails? "Median"/.test(chart)),
+		).toBe(true);
 	});
 
 	it("offers no chart once the judge sees none helping", () => {
@@ -117,11 +119,11 @@ describe("candidateCharts", () => {
 
 	it("sets metric rows on no shared axis, and rows on one scale in no panel each", () => {
 		const metrics = drawn(BUILDS, { metrics: yes(0.95), k1: yes(0.9) });
-		expect(metrics.some(chart => chart.startsWith("Small multiples: one panel per row of the table"))).toBe(true);
+		expect(metrics.some(chart => chart.startsWith("Small multiples: one panel per table row"))).toBe(true);
 		expect(metrics.some(chart => chart.startsWith("Factors of change"))).toBe(true);
 		expect(metrics.some(chart => chart.startsWith("Grouped bars"))).toBe(false);
 		const items = drawn(BUILDS, { metrics: yes(0.1), k1: yes(0.9) });
-		expect(items.some(chart => chart.startsWith("Small multiples: one panel per row"))).toBe(false);
+		expect(items.some(chart => chart.startsWith("Small multiples: one panel per table row"))).toBe(false);
 		expect(items.some(chart => chart.startsWith("Grouped bars"))).toBe(true);
 	});
 

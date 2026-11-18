@@ -150,7 +150,10 @@ describe("read and write route xdev:// device URLs", () => {
 		const xdev = createTestXdevState([readDevice]);
 		const write = new WriteTool(xdevSession(process.cwd(), { xdev }));
 
-		const result = await write.execute("write-xdev-read", { path: "xdev://peek", content: JSON.stringify({ q: "x" }) });
+		const result = await write.execute("write-xdev-read", {
+			path: "xdev://peek",
+			content: JSON.stringify({ q: "x" }),
+		});
 		expect(result.isError).toBeUndefined();
 		expect(result.details?.xdev).toMatchObject({ tool: "peek", mode: "execute", tier: "read" });
 	});
@@ -635,7 +638,7 @@ describe("read and write route xdev:// device URLs", () => {
 			expect(inlineDocs).toContain("## mcp_external_tool");
 			expect(inlineDocs).toContain("LEDE ");
 			expect(inlineDocs).not.toContain("TAIL");
-			expect(inlineDocs).toContain("… (full docs: read xdev://mcp_external_tool)");
+			expect(inlineDocs).toContain("… (complete docs: read xdev://mcp_external_tool)");
 
 			const builtinsDocs = xdevDocsAll(xdev, "builtins");
 			expect(builtinsDocs).toContain("## ");
@@ -882,7 +885,7 @@ describe("device-only write transport for explicit lists omitting write", () => 
 			// Filesystem writes are rejected before any handler or guard runs.
 			await expect(
 				write!.execute("write-device-only-fs", { path: path.join(tempDir, "nope.txt"), content: "x" }),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 
 			// Device dispatch still flows: an unknown device reaches the router and
 			// fails there, not at the transport guard.
@@ -930,7 +933,7 @@ describe("device-only write transport for explicit lists omitting write", () => 
 
 			await expect(
 				write!.execute("write-device-only-yield", { path: path.join(tempDir, "findings.md"), content: "x" }),
-			).rejects.toThrow("return the content in `yield` instead");
+			).rejects.toThrow("include the content directly in `yield`");
 		} finally {
 			await removeWithRetries(tempDir);
 		}
@@ -1053,7 +1056,7 @@ describe("device-only write transport for explicit lists omitting write", () => 
 			expect(write!.description).not.toBe(restrictedDescription);
 			await expect(
 				write!.execute("write-pending-full-fs", { path: path.join(tempDir, "nope.txt"), content: "x" }),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 			expect(await Bun.file(path.join(tempDir, "nope.txt")).exists()).toBe(false);
 
 			session.pendingFullWriteDescription = undefined;
@@ -1096,7 +1099,7 @@ describe("device-only write transport for explicit lists omitting write", () => 
 			// agent can hand its caller a real path; the file written above is there.
 			const localRoot = path.join(tempDir, "parent-artifacts", "local");
 			const refusal = write!.execute("write-device-only-fs", { path: path.join(tempDir, "nope.txt"), content: "x" });
-			await expect(refusal).rejects.toThrow("Other filesystem paths are refused");
+			await expect(refusal).rejects.toThrow("All other filesystem paths are rejected");
 			await expect(refusal).rejects.toThrow(shortenPath(path.join(localRoot, "<name>")));
 			expect(await Bun.file(path.join(localRoot, "report.md")).text()).toBe("report draft\n");
 
@@ -1107,7 +1110,7 @@ describe("device-only write transport for explicit lists omitting write", () => 
 					path: "conflict://1",
 					content: "@ours",
 				}),
-			).rejects.toThrow("Other filesystem paths are refused");
+			).rejects.toThrow("All other filesystem paths are rejected");
 		} finally {
 			await removeWithRetries(tempDir);
 		}

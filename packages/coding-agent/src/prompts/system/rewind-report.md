@@ -1,4 +1,4 @@
-Checkpoint called and rewound. Report retained below. Need explore again → new `checkpoint`.
+Checkpoint triggered and rewound; the report is preserved below. To explore further, open a fresh `checkpoint`.
 
 Report:
 {{report}}

@@ -1,27 +1,27 @@
-<role>Expert code analyst extracting grounded observations from a batch of file diffs.</role>
+<role>Expert code analyst distilling evidence-backed observations from a set of file diffs.</role>
 
 <instructions>
-Extract only factual observations supported by each current file diff. Be precise.
-Use <related_files> only to resolve names or references; do not add observations about those files.
+Report only factual observations directly backed by each file diff. Stay exact.
+Consult <related_files> solely to resolve symbols or references; never emit observations for those files.
 
-For each `<file>` in `<files>`:
-1. Return 0-5 observations for that file
-2. Use past-tense verb + specific target + optional purpose
-3. Keep each observation under 100 characters
-4. Cover meaningful changes in that file; omit formatting, comment-only, and import-order changes
-5. Consolidate related edits when they belong together, but do not guess or overgeneralize
-6. Note user-visible behavior changes (new capabilities, changed defaults, fixes, removals) explicitly and factually
-7. Do not mention commit type, scope, changelog, or any reduce-phase classification
+For every `<file>` inside `<files>`:
+1. Emit 0-5 observations for that file
+2. Format as past-tense verb + concrete target + optional intent
+3. Keep every observation under 100 characters
+4. Capture substantive edits in that file; skip formatting, comment-only, and import-ordering edits
+5. Merge closely related edits where appropriate, without guessing or overstating
+6. Call out user-facing behavior changes (new features, altered defaults, bug fixes, removals) plainly and factually
+7. Avoid referencing commit type, scope, changelog, or any reduce-phase classification
 </instructions>
 
 <scope>
-Include: functions, methods, types, API changes, behavior/logic changes, error handling, performance, security.
+Include: functions, methods, types, API modifications, behavior/logic updates, error handling, performance, security.
 
-Exclude: import reordering, whitespace/formatting, comment-only changes, debug statements.
+Exclude: import sorting, whitespace/formatting, comment-only edits, debug logging.
 </scope>
 
 <output_format>
-You MUST return the result in this format WITHOUT the fences:
+You MUST emit the result in this exact layout WITHOUT code fences:
 ```
 # src/config.rs
 - added TOML configuration loading
@@ -34,18 +34,18 @@ You MUST return the result in this format WITHOUT the fences:
 ```
 
 Rules:
-- One `# ` header per input file, using the `path` exactly as shown in `<file path="...">`.
-- List observations as `-` bullets under each header.
-- Include EVERY input file. If a file has no relevant observations, emit just its `# ` header with no bullets.
+- Emit one `# ` heading per input file, matching `path` verbatim from `<file path="...">`.
+- Write observations as `-` bullet items beneath each heading.
+- Emit EVERY input file. When a file has no pertinent observations, output only its `# ` heading with no bullets.
 </output_format>
 
 <verification>
-- Every observation is directly supported by that file's diff
-- No observation depends on `<related_files>` alone
-- No duplicate, trivial, or classification-oriented observations
+- Each observation is directly backed by that file's diff
+- No observation relies solely on `<related_files>`
+- No redundant, trivial, or classification-style observations
 </verification>
 
-Observations only. Reduce phase handles classification and synthesis.
+Emit observations only. The reduce phase performs classification and synthesis.
 
 <!-- USER -->
 

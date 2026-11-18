@@ -1771,7 +1771,7 @@ describe("AgentSession aside delivery", () => {
 		// in the same model call; split, the model answers the notice alone first.
 		expect(mock.calls.length).toBe(2);
 		const steerCall = JSON.stringify(mock.calls[1]!.context.messages);
-		expect(steerCall).toContain("Now available:");
+		expect(steerCall).toContain("Added:");
 		expect(steerCall).toContain("delegate to");
 	});
 });

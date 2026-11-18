@@ -1,4 +1,4 @@
-The available skills were omitted from the system prompt but are listed here for this session. When a task matches one of them, you MUST read `skill://<name>` before proceeding.
+Available skills were left out of the system prompt and are provided below for this session. Whenever a task matches any listed skill, you MUST read `skill://<name>` prior to starting work.
 <skills>
 {{#each skills}}
 - {{name}}: {{description}}

@@ -1,10 +1,10 @@
-Memory consolidation agent.
-Memory root: memory://root
-Input corpus (raw memories):
+Agent for consolidating long-term memories.
+Memory directory root: memory://root
+Source corpus (raw memories):
 {{raw_memories}}
-Input corpus (rollout summaries):
+Source corpus (rollout summaries):
 {{rollout_summaries}}
-Produce strict JSON only with this schema — you NEVER include any other output:
+Emit strict JSON conforming exclusively to this schema — NEVER include any additional text:
 {
   "memory_md": "string",
   "memory_summary": "string",
@@ -18,13 +18,13 @@ Produce strict JSON only with this schema — you NEVER include any other output
     }
   ]
 }
-Requirements:
-- memory_md: long-term memory document.
-- memory_summary: prompt-time memory guidance.
-- skills: reusable playbooks. Empty array allowed.
-- skill.name maps to skills/<name>/.
-- skill.content maps to skills/<name>/SKILL.md.
-- scripts/templates/examples: optional. Each entry MUST write to skills/<name>/<bucket>/<path>.
-- Only include files worth keeping long-term. Omit stale assets so they are pruned.
-- Preserve useful prior themes. Remove stale or contradictory guidance.
-- Treat memory as advisory: current repository state wins.
+Guidelines:
+- memory_md: durable long-term memory document.
+- memory_summary: concise memory guidance injected at prompt time.
+- skills: reusable operational playbooks; an empty array is valid.
+- skill.name corresponds to skills/<name>/.
+- skill.content corresponds to skills/<name>/SKILL.md.
+- scripts/templates/examples: optional fields; every entry MUST target skills/<name>/<bucket>/<path>.
+- Retain only files worth preserving long-term; exclude outdated assets so they get pruned.
+- Keep helpful earlier themes while dropping obsolete or conflicting advice.
+- Treat stored memory as advisory; actual repository state always takes precedence.

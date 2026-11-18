@@ -1,7 +1,7 @@
 <system-notice>
-Nothing new after {{waited}} of back-to-back waits.
-Waiting is not progress: each response MUST advance the task.
-Make as much progress as you can on everything that does not need what you are waiting on,
-and NEVER start `sleep` jobs to wait longer.
-Results and messages arrive on their own.
+No new updates after {{waited}} of consecutive waits.
+Merely waiting makes no progress: every response MUST move the task forward.
+Advance all work that does not depend on what you are awaiting,
+and NEVER launch `sleep` commands to stall longer.
+Results and incoming messages arrive automatically.
 </system-notice>

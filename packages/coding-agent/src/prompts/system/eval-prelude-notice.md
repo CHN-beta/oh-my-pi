@@ -1,13 +1,13 @@
 <system-notice id="prelude-extension">
-`eval` prelude globals changed. This lists only what changed; any prelude not named here is unaffected.
+Available `eval` prelude globals updated. Only changes are shown below; any prelude not mentioned remains unchanged.
 {{#if added.length}}
-Now available in JS/Python `eval`{{#if canRead}}; `read` the linked docs before first use{{/if}}:
+Added to JS/Python `eval`{{#if canRead}}; `read` the linked documentation prior to first use{{/if}}:
 {{#each added}}
 - `{{name}}`{{#if summary}}: {{summary}}{{/if}}{{#if ../canRead}} → `xdev://eval/{{name}}`{{/if}}
 {{/each}}
 {{/if}}
 {{#if removed.length}}
-No longer available; calls fail:
+Removed from scope; invocations will error:
 {{#each removed}}
 - `{{this}}`
 {{/each}}

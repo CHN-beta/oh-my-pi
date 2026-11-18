@@ -1,3 +1,3 @@
-Additional diagnostics were reported for files you own. Fix these too before yielding:
+More diagnostics arrived for files within your ownership. Resolve these before yielding as well:
 
 {{diagnostics}}

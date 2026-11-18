@@ -1,15 +1,15 @@
-Context checkpoint: before exploratory work; later `rewind`, retaining only concise report.
+Context checkpoint: start prior to exploratory investigation; later call `rewind` to keep only a concise summary report.
 
-Use for investigations with many intermediate tool calls (`read`/`grep`/`glob`/`lsp`/etc.) to minimize subsequent context cost.
+Intended for deep investigations involving many intermediate tool calls (`read`/`grep`/`glob`/`lsp`/etc.) to reduce downstream context usage.
 
-Rules:
-- MUST `rewind` before yielding after starting a checkpoint.
-- NEVER `checkpoint` while another checkpoint active.
-- Subagents: disabled by default. Enable: agent-definition `tools:` frontmatter lists `checkpoint` or `rewind`; sister tool auto-included; requires `checkpoint.enabled` setting.
+Constraints:
+- MUST call `rewind` before yielding once a checkpoint has been opened.
+- NEVER open a new `checkpoint` while one is already active.
+- Subagents: off by default. To enable, include `checkpoint` or `rewind` in the agent definition's `tools:` frontmatter (the paired tool is added automatically); also requires `checkpoint.enabled` in settings.
 
-Typical flow:
+Standard sequence:
 1. `checkpoint(goal: …)`
-2. Exploratory work
-3. `rewind(report: …)` with concise findings
+2. Exploratory research
+3. `rewind(report: …)` with summarized findings
 
-After `rewind`: intermediate checkpoint messages removed from active context; replaced by report.
+Calling `rewind` drops intermediate checkpoint messages from active context and substitutes the report.

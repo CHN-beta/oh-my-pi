@@ -97,7 +97,7 @@ describe("streaming edit recovery", () => {
 		const content = String(message.content);
 		expect(content).toContain("src/broken.ts");
 		expect(content).toContain("Failed to find expected lines");
-		expect(content).toContain("Read the target file again");
+		expect(content).toContain("Re-read the target file");
 
 		const persisted = harness.persisted[0];
 		if (!persisted) throw new Error("expected a persisted recovery entry");

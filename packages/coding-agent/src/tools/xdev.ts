@@ -123,7 +123,7 @@ function renderDocs(inst: Tool, heading = "#", descriptionCap?: number): string 
 	const schema = jsonSchemaToTypeScript(toolWireSchema(inst as AiTool));
 	let description = inst.description ?? "";
 	if (descriptionCap !== undefined && description.length > descriptionCap) {
-		description = `${description.slice(0, descriptionCap).trimEnd()}… (full docs: read ${XDEV_URL_PREFIX}${inst.name})`;
+		description = `${description.slice(0, descriptionCap).trimEnd()}… (complete docs: read ${XDEV_URL_PREFIX}${inst.name})`;
 	}
 	return [
 		`${heading} ${inst.name}${inst.label ? ` — ${inst.label}` : ""}`,
@@ -134,7 +134,7 @@ function renderDocs(inst: Tool, heading = "#", descriptionCap?: number): string 
 		"```ts",
 		`type Args = ${schema};`,
 		"```",
-		`Execute by writing JSON to ${XDEV_URL_PREFIX}${inst.name}.`,
+		`Invoke by writing JSON to ${XDEV_URL_PREFIX}${inst.name}.`,
 	].join("\n");
 }
 

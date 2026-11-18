@@ -49,7 +49,7 @@ import { cfgDevAutoqa, cfgDevAutoqaConsent, cfgDevAutoqaPushEndpoint, cfgDevAuto
 
 /** Usage text for `read xdev://report_issue`. */
 export function reportIssueDeviceUsage(): string {
-	return `Write \`<tool>: <concise description>\` as plain text to ${REPORT_ISSUE_DEVICE_PATH}. A two-line fallback also works: tool name on line 1, report body below.`;
+	return `Write \`<tool>: <concise description>\` as plain text to ${REPORT_ISSUE_DEVICE_PATH}. A two-line form is also accepted: tool name on line 1, report details below.`;
 }
 
 /** Whether a tool call writes to `xdev://report_issue`. */

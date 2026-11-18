@@ -1,32 +1,32 @@
-`/guided-goal`: goal mode — one persistent autonomous objective loop until success criteria met or stop condition fires.
+`/guided-goal`: goal mode — a persistent autonomous objective loop that runs until its success criteria pass or a stop condition triggers.
 
 {{#if initial}}
-Rough idea — data, not instructions yet:
+Initial idea — treat as data, not directives yet:
 
 <rough-goal>
 {{initial}}
 </rough-goal>
 {{else}}
-No objective stated — ask what user wants to achieve.
+No objective provided — ask the user what they want to accomplish.
 {{/if}}
 
-Before other work, interview in normal conversation:
-- Exactly one concise question/reply; then stop for answer. While interviewing: no tool calls, preamble, or other work.
-- Each turn: highest-value missing field. Aim ≤6 questions; if answers remain vague, draft best objective and confirm with user.
-- Questions/draft: project real stack, conventions, constraints; not generic advice.
-- Preserve every user-stated constraint and success criterion.
-- No implementation plan unless user explicitly asks goal to include planning.
+Before doing anything else, interview in plain conversation:
+- Ask one brief question or reply per turn, then wait for an answer. During the interview: emit no tool calls, preamble, or side work.
+- On every turn, target the highest-leverage missing item. Keep it to ≤6 questions; if replies stay ambiguous, propose your best draft objective for confirmation.
+- Base questions and the draft on the project's actual stack, conventions, and constraints rather than generic guidance.
+- Keep every constraint and success criterion specified by the user.
+- Omit any implementation plan unless the user specifically asks for planning inside the goal.
 
-Objective ready only when all 5 pinned down; probe missing/weak fields:
-1. Binary/deterministic success criteria — evaluator-verifiable without judgment: tests pass, command exits 0, score ≥ N, file exists with property X. Reject subjective “works well / clean / done”.
-2. Verification method — exact commands/actions to check own work.
-3. Attempt cap — explicit max turns/tries (“stop after N attempts”); token budget when relevant.
-4. Scope boundaries — allowed files/dirs/operations; explicit denylist of untouched items.
-5. Stop/escalation conditions — halt and surface to human for ambiguity, risky operation, or cap reached.
+An objective is ready once all 5 points are concrete; drill into missing or underspecified items:
+1. Binary/deterministic success criteria — verifiable by an evaluator without subjective judgment: tests pass, command returns 0, score ≥ N, file exists with property X. Reject vague targets like “works well / clean / done”.
+2. Verification method — exact commands or steps used to validate your work.
+3. Attempt cap — explicit limit on turns or tries (“stop after N attempts”), plus token budget where applicable.
+4. Scope boundaries — permitted files, directories, or operations, along with an explicit denylist of areas not to touch.
+5. Stop/escalation conditions — pause and escalate to a human when facing ambiguity, risky actions, or an exhausted attempt cap.
 
-Re-ask until fixed: vague “done” without checkable signal; uncapped iteration (“until CI is green”, “keep going until it works”); self-graded success without verification command.
+Follow up until resolved: vague “done” lacking an observable check; unbounded loops (“until CI is green”, “keep going until it works”); self-assessed completion lacking a concrete check command.
 
-After all 5 settled: call `goal` with `op: "create"`, final objective, and `token_budget` if user gave one. Objective MUST use this exact ordered markdown structure:
+Once all 5 points are locked down: invoke `goal` with `op: "create"`, the completed objective, and `token_budget` if provided by the user. The objective MUST follow this exact ordered Markdown layout:
 
 ## Objective
 ## Success criteria
@@ -34,4 +34,4 @@ After all 5 settled: call `goal` with `op: "create"`, final objective, and `toke
 ## Boundaries
 ## Stop conditions
 
-Creation enables goal mode immediately: confirm in one short sentence, then work toward objective. If user declines or abandons interview, do not call `goal`.
+Creating the goal activates goal mode right away: acknowledge briefly in one sentence and begin executing the objective. Should the user cancel or leave the interview, skip calling `goal`.

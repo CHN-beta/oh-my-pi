@@ -222,7 +222,7 @@ describe("task.batch schema gating", () => {
 		]);
 		const session = createSession({ settings: { "task.batch": true, "async.enabled": true } });
 		const tool = await TaskTool.create(session);
-		const navigation = "nested /reports/0/data";
+		const navigation = "nested `/reports/0/data`";
 
 		const optedIn = tool.description;
 		expect(optedIn).toContain(navigation);
@@ -236,7 +236,7 @@ describe("task.batch schema gating", () => {
 		cfgTaskDisabledAgents.override(session.settings, []);
 		cfgTaskStructured.override(session.settings, true);
 		const settingOn = tool.description;
-		expect(settingOn).toContain("`outputSchema` parsed payload, even invalid");
+		expect(settingOn).toContain("`outputSchema` parsed JSON payload (even when invalid)");
 		expect(settingOn).not.toContain("STRUCTURED");
 	});
 });
@@ -599,7 +599,7 @@ describe("task.batch spawning", () => {
 		} as TaskParams);
 
 		const text = getFirstText(result);
-		expect(text).toContain("Spawned 2 background agents");
+		expect(text).toContain("Launched 2 background agents");
 		expect(text).toContain("- `Alpha`");
 		expect(text).toContain("- `Beta`");
 		expect(result.details?.progress?.map(progress => progress.id)).toEqual(["Alpha", "Beta"]);
@@ -688,7 +688,7 @@ describe("task.batch spawning", () => {
 			],
 		} as TaskParams);
 
-		expect(getFirstText(result)).toContain("Spawned 2 background agents");
+		expect(getFirstText(result)).toContain("Launched 2 background agents");
 		await Promise.all([manager.getJob("Scout")!.promise, manager.getJob("Review")!.promise]);
 
 		const byId = new Map(seen.map(spawn => [spawn.id, spawn]));
@@ -726,7 +726,7 @@ describe("task.batch spawning", () => {
 			tasks: [{ name: "Solo", task: "Do the thing." }],
 		} as TaskParams);
 
-		expect(getFirstText(result)).toContain("Spawned agent `Solo`");
+		expect(getFirstText(result)).toContain("Launched agent `Solo`");
 		const job = manager.getJob(result.details!.async!.jobId)!;
 		await job.promise;
 		expect(job.status).toBe("completed");
@@ -783,7 +783,7 @@ describe("task.batch spawning", () => {
 			schemaMode: "strict",
 		} as TaskParams);
 
-		expect(getFirstText(result)).toContain("Spawned agent `Flat`");
+		expect(getFirstText(result)).toContain("Launched agent `Flat`");
 		const job = manager.getJob(result.details!.async!.jobId)!;
 		await job.promise;
 		expect(job.status).toBe("completed");

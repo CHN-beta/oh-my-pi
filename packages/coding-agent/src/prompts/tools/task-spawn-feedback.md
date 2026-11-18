@@ -1,15 +1,15 @@
 {{#if mixed}}
-Spawned {{count}} background agent{{#unless singular}}s{{/unless}}.{{scheduleFailureSummary}}
+Launched {{count}} background agent{{#unless singular}}s{{/unless}}.{{scheduleFailureSummary}}
 {{else}}
 {{#if singleCall}}
-Spawned agent `{{agentId}}` (job `{{jobId}}`).
+Launched agent `{{agentId}}` (job `{{jobId}}`).
 {{else}}
-Spawned {{count}} background agent{{#unless singular}}s{{/unless}} using {{agentLabel}}.{{scheduleFailureSummary}}
+Launched {{count}} background agent{{#unless singular}}s{{/unless}} with {{agentLabel}}.{{scheduleFailureSummary}}
 {{/if}}
 {{/if}}
 {{#if showListing}}{{#each started}}- `{{agentId}}` (job `{{jobId}}`)
 {{/each}}{{/if}}
 {{#if lifecycle}}
-read proc:// lists jobs/services; read proc://<id> inspects status/output without consuming delivery; write proc://<id>/kill with empty `content` cancels/stops.
-Job IDs are process-local; delivered results expire shortly (~30s), unconsumed results within ~5min. Agent output/transcripts remain readable at agent://<id> / history://<id>.{{#if ircEnabled}} write agent://<id> messages a live agent.{{/if}}
+`read proc://` enumerates active jobs/services; `read proc://<id>` checks status/output without consuming delivery; `write proc://<id>/kill` with empty `content` cancels or stops them.
+Job IDs exist only for this process; delivered results expire quickly (~30s) and unconsumed results within ~5min. Agent outputs and transcripts stay accessible via `agent://<id>` / `history://<id>`.{{#if ircEnabled}} `write agent://<id>` sends a message to a running agent.{{/if}}
 {{/if}}

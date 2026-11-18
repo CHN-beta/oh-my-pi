@@ -1,21 +1,21 @@
 ## Code Review Request
 
-Mode: custom instructions.
+Mode: custom review instructions.
 {{#if repository}}
 
-Repository: `{{repository}}` — not the session cwd; the reviewer MUST run version-control commands there and resolve `read` paths against it.
+Repository: `{{repository}}` — distinct from the session cwd; the reviewer MUST execute VCS commands inside it and resolve `read` paths relative to it.
 {{/if}}
 
 ## Distribution
 
-Use `task` with a `tasks` array. Set `agent: "reviewer"` inside the `tasks[]` item (`tasks[].agent`), never at the top level or omitted. Create exactly **1 reviewer task**; assignment MUST include custom instructions.
+Invoke `task` using a `tasks` array. Specify `agent: "reviewer"` inside the `tasks[]` entry (`tasks[].agent`), never at the top level and never omitted. Spawn exactly **1 reviewer task**, passing the custom instructions in the assignment.
 
 ## Reviewer Instructions
 
-Reviewer MUST:
-1. Follow custom instructions.
-2. Read referenced files/workspace context needed to evaluate them.
-3. Use incremental `yield` sections for findings and verdict fields; do NOT call a separate finding tool.
+The reviewer MUST:
+1. Adhere to the custom instructions.
+2. Inspect any cited files and surrounding workspace context required to assess them.
+3. Emit findings and verdict fields via incremental `yield` sections; do NOT invoke a separate finding tool.
 
 ## Custom Instructions
 

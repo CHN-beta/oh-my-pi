@@ -1,31 +1,31 @@
 <job>
 {{#if command}}
-Background bash job. Command:
+Background bash process. Command:
 ```
 {{command}}
 ```
 {{/if}}
 {{#if task}}
-Background subagent. Its assignment (excerpt):
+Background subagent. Excerpt of its task:
 ```
 {{task}}
 ```
 {{/if}}
 {{#if intent}}
-Why it was started: {{intent}}
+Launch reason: {{intent}}
 {{/if}}
 {{#if watch}}
-What the subagent says to watch: {{watch}}
+Metric or output the subagent says to track: {{watch}}
 {{/if}}
 {{#if stage}}
-Its current stage: {{stage}}
+Active stage: {{stage}}
 {{/if}}
 </job>
 
 <sources>
 {{#each sources}}
 ## `{{id}}` — {{label}}
-{{lines}} lines so far ({{size}}).{{#if omitted}} {{omitted}} not shown: the middle, and repeats of a line that differ only in numbers.{{/if}}
+{{lines}} lines recorded so far ({{size}}).{{#if omitted}} {{omitted}} omitted: the middle section, plus repeated lines differing solely in numbers.{{/if}}
 ```
 {{#each head}}
 {{this}}
@@ -43,20 +43,20 @@ Its current stage: {{stage}}
 </sources>
 {{#if previous}}
 
-A spec is already in place, but {{previous.reason}}. Write a replacement that matches the lines above:
+An existing spec is active, yet {{previous.reason}}. Provide an updated spec that matches the sample lines above:
 ```json
 {{previous.spec}}
 ```
 {{/if}}
 {{#if rejected}}
 
-Your previous answer was rejected:
+Your prior submission was rejected:
 ```json
 {{rejected.answer}}
 ```
-Problems:
+Issues:
 {{#each rejected.errors}}
 - {{this}}
 {{/each}}
-Fix every problem and call `respond` again.
+Resolve all issues and invoke `respond` again.
 {{/if}}

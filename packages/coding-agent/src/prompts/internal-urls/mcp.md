@@ -1,1 +1,1 @@
-mcp://<uri>: MCP resource.
+mcp://<uri>: fetch an MCP resource.

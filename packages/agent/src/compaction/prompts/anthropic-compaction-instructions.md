@@ -1,4 +1,4 @@
-The conversation above is the complete history to summarize. The API replaces every message in this request with your summary; no message you leave out survives.
+The conversation above constitutes the entire history to summarize. The API replaces all messages in this request with your summary; any omitted message is lost.
 
 {{#if extraContext}}
 {{extraContext}}
@@ -6,7 +6,7 @@ The conversation above is the complete history to summarize. The API replaces ev
 {{basePrompt}}
 {{#if customInstructions}}
 
-Additional focus: {{customInstructions}}
+Extra focus: {{customInstructions}}
 {{/if}}
 
-You MUST NOT call any tools while writing the summary; respond with the summary text only.
+You MUST NOT invoke any tools while composing the summary; output only the summary text.

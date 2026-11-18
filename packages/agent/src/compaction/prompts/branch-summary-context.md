@@ -1,4 +1,4 @@
-Branch-return summary:
+Summary upon returning from branch:
 
 <summary>
 {{summary}}

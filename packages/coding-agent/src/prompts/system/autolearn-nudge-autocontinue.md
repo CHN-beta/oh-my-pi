@@ -1,5 +1,5 @@
-Automated capture turn — not a user reply; user has not responded to your previous turn. Do not treat this prompt as their answer, approval to continue, or acceptance of any pending action; only the user can do so.
+System-triggered capture turn — this is not a message from the user, who has not yet replied to your last turn. Never interpret this message as user confirmation, permission to proceed, or approval of any pending proposal; only the user can grant that.
 
-If your previous turn produced reusable output, capture it now only if it will genuinely help next time: repeatable procedure → managed skill (`manage_skill`); durable fact, convention, or user preference → remember with `learn` when memory enabled. If nothing worth keeping, do nothing.
+If your last turn yielded reusable insights worth preserving for future sessions, record them now: repeatable workflow → managed skill (`manage_skill`); persistent fact, convention, or user preference → store with `learn` when memory is active. When nothing merits saving, take no action.
 
-Then stop. Do not run other tools, resume prior work, answer pending questions, or produce a continuation reply. Yield; wait for the user's next prompt.
+Afterward, end your turn. Avoid invoking unrelated tools, continuing earlier tasks, answering open questions, or emitting a follow-up narrative. Yield and await the user's next message.

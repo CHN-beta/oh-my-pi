@@ -1,18 +1,18 @@
-Persistent bash 5.3.
-cwd will reset after each turn, don't rely on cd; `pty` = interactive.
-Internal URIs work as paths for builtins/coreutils, redirects, globs.
-In-process builtins, ahead of PATH: {{join builtins ", "}}.
+Persistent bash 5.3 shell.
+Working directory resets between turns, so do not depend on `cd`; set `pty` for interactive sessions.
+Builtins, coreutils, redirects, and globs accept internal URIs directly as paths.
+Built-in commands (shadowing PATH): {{join builtins ", "}}.
 {{#if asyncEnabled}}
-`async` defers finite results but keeps the deadline (default {{defaultTimeoutSec}}s); `timeout: 0` for watchers and long jobs.
+`async` runs commands asynchronously without blocking while preserving the deadline (default {{defaultTimeoutSec}}s); set `timeout: 0` for watchers and indefinite jobs.
 {{/if}}
-Don't trunc output by habit, result will be summarized and saved as an artifact.
+Avoid truncating output unnecessarily—long results are summarized and stored as artifacts.
 {{#if hasLaunch}}
-Long-lived services:
-- unique name; ready requires name; no async/timeout; pty defaults true.
-- ready needs log regex or port (both if given); host defaults 127.0.0.1, ready.timeout 30s.
+Long-running services:
+- require a unique `name`; `ready` requires `name`; incompatible with `async`/`timeout`; `pty` defaults to true.
+- `ready` requires a log regex or port (both may be specified); `host` defaults to 127.0.0.1 and `ready.timeout` defaults to 30s.
 {{/if}}
 {{#if autoBackgroundEnabled}}
-Non-`pty` calls still running after {{autoBackgroundSeconds}}s (or 1s before `timeout`, if sooner) usually move to background job `bg_N` and keep running to `timeout`.
-No backgrounding when the client terminal runs the command or the job cap is reached.
-The result arrives automatically as a follow-up message. NEVER poll.
+Non-`pty` commands still executing after {{autoBackgroundSeconds}}s (or 1s prior to `timeout`, whichever comes first) normally transition to background job `bg_N` and continue until `timeout`.
+Backgrounding is skipped when executed in the client terminal or when the concurrent job limit is full.
+Completion notices arrive automatically as follow-up messages. NEVER poll.
 {{/if}}

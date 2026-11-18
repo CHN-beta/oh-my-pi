@@ -147,7 +147,7 @@ describe("task spawn routing", () => {
 
 		// Tool returned while the job body is still gated on the deferred.
 		const text = getFirstText(result);
-		expect(text).toContain("Spawned agent `Spawnling`");
+		expect(text).toContain("Launched agent `Spawnling`");
 		const jobId = result.details?.async?.jobId;
 		expect(jobId).toBeTruthy();
 		expect(text).toContain(`job \`${jobId}\``);
@@ -328,7 +328,7 @@ describe("task spawn routing", () => {
 			await job!.promise;
 
 			const delivered = `${job!.resultText ?? ""}${job!.errorText ?? ""}`;
-			expect(delivered).toContain("Sandboxed ran isolated and cannot be resumed or messaged");
+			expect(delivered).toContain("Sandboxed executed in isolation and cannot be resumed or messaged");
 			expect(delivered).toContain("history://Sandboxed");
 			expect(delivered).not.toContain("is now idle");
 			expect(delivered).not.toContain("message it via");

@@ -1,20 +1,20 @@
-Structural code search via ast-grep. Use when syntax shape matters more than text (calls, declarations, language constructs).
+AST-based structural code search via ast-grep. Choose this when syntax structure matters more than raw text (function calls, declarations, language constructs).
 
 <instruction>
-- Narrow each call to one language. `pat` is ONE AST pattern; separate calls for unrelated patterns.
-- Set `lang` when extension inference is ambiguous (for example, `cpp` for `.h`); `.cu` and `.cuh` infer as C++.
-- `$NAME` captures one node; `$_` matches without binding; `$$$NAME` zero-or-more; `$$$` zero-or-more unbound.
-  - Use `$$$NAME`, NOT `$$NAME` (invalid). Names UPPERCASE, whole node — `prefix$VAR` fails.
-- Same metavariable twice → MUST match identical code (`$A == $A` matches `x == x`, not `x == y`).
-- Patterns MUST parse as single AST node. Non-standalone → wrap: `class $_ { … }`.
-- C++ expression-statement calls need trailing `;`: `ns::doThing($ARG);`, `$CALLEE($ARG);`.
-- TS: tolerate annotations — `async function $NAME($$$ARGS): $_ { $$$BODY }`.
-- Declaration forms are distinct — `function foo`, method `foo()`, `const foo = () => {}`; search the right form before concluding absence.
-- Loosest existence check: `pat: "executeBash"` with narrow `path`.
+- Restrict each invocation to a single language. `pat` holds ONE AST pattern; issue separate calls for unrelated patterns.
+- Specify `lang` whenever file extensions are ambiguous (e.g., `cpp` for `.h`); `.cu` and `.cuh` are inferred as C++.
+- `$NAME` binds a single node; `$_` matches one node without capturing; `$$$NAME` captures zero or more nodes; `$$$` matches zero or more anonymously.
+  - Write `$$$NAME`, NOT `$$NAME` (invalid syntax). Names must be UPPERCASE and match complete nodes — partial forms like `prefix$VAR` fail.
+- Repeating a metavariable → MUST match identical AST subtrees (`$A == $A` matches `x == x`, never `x == y`).
+- Patterns MUST parse as a single AST node. Wrap non-standalone fragments: `class $_ { … }`.
+- C++ expression statements require a trailing `;`: `ns::doThing($ARG);`, `$CALLEE($ARG);`.
+- TypeScript: account for type annotations — `async function $NAME($$$ARGS): $_ { $$$BODY }`.
+- Distinct declaration syntaxes do not cross-match — `function foo`, method `foo()`, and `const foo = () => {}` differ; check each relevant form before concluding none exist.
+- Broadest presence probe: `pat: "executeBash"` scoped to a narrow `path`.
 </instruction>
 
 <critical>
-- AVOID repo-root scans — narrow `path` first.
-- Parse issues = query failure, not absence: fix pattern or tighten `path` before concluding "no matches".
-{{#if eagerDelegation}}- Broad cross-subsystem exploration → {{#if scoutAvailable}}Task tool + scout{{else}}Task tool{{/if}} subagent first.{{/if}}
+- AVOID scanning the repository root — scope `path` first.
+- Parse failures indicate a broken query, not missing code: correct the pattern or narrow `path` before reporting "no matches".
+{{#if eagerDelegation}}- For wide cross-subsystem searches → dispatch a {{#if scoutAvailable}}Task tool + scout{{else}}Task tool{{/if}} subagent first.{{/if}}
 </critical>

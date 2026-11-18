@@ -207,7 +207,7 @@ describe("AgentSession streaming edit preview recovery", () => {
 			if (recoveryPrompt) {
 				const text = messageText(recoveryPrompt);
 				expect(text).toContain("sample.txt");
-				expect(text).toContain("Read the target file again");
+				expect(text).toContain("Re-read the target file");
 			}
 
 			// The user saw a notice explaining the retry.

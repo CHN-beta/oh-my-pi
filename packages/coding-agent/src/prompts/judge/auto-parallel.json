@@ -1,13 +1,13 @@
 {
 	"role": {
-		"instructions": "The state is a user's request to a coding agent, split into numbered items. Classify item [{{item}}] by its role in the request.",
+		"instructions": "The input state contains a user's prompt to a coding agent, broken into numbered segments. Determine the role of item [{{item}}] within the request.",
 		"criteria": {
-			"context": "Asks for no work of its own: background, a goal statement, framing (\"i want to add X\", \"can you:\", \"we use bun\", how things work now), or a lead-in whose instruction applies to each of the items listed after it (\"update these docs:\", \"add X for these providers:\").",
-			"task": "Asks for work: a change, fix, design, investigation, or answer — including a detail or constraint of such work, or one entry of a list a lead-in applies to.",
-			"wrapup": "A follow-up over the whole request that runs after every other item: run the test suite or checks, commit, changelog or docs for everything."
+			"context": "Requests no standalone work: background info, goal framing (\"i want to add X\", \"can you:\", \"we use bun\", current behavior), or a lead-in whose directive governs every entry listed beneath it (\"update these docs:\", \"add X for these providers:\").",
+			"task": "Requests actual work: an edit, bugfix, design, analysis, or answer — including a sub-detail or constraint for that work, or a single entry covered by a lead-in.",
+			"wrapup": "A concluding pass across the entire request that runs after all other items: running the test suite or verification checks, committing, or updating docs/changelog overall."
 		}
 	},
 	"coupled": {
-		"instructions": "The state is a user's request to a coding agent, split into numbered items. Two items are coupled when one worker must do them together or in sequence: they change the same file, function, command, or component (items the request places in one file or component are coupled even when the changes differ); one needs the other's result, design, decision, or new API; one renames or reshapes something the other touches; or one only refines, constrains, or explains the other. Items are independent when separate workers could do them at the same time in one checkout without either waiting for or overwriting the other. Are items [{{a}}] and [{{b}}] coupled?"
+		"instructions": "The input state contains a user's prompt to a coding agent, broken into numbered segments. Two items are coupled when one worker needs to handle them together or sequentially: they modify the same file, function, command, or module (items targeting the same file or module remain coupled even when their edits differ); one depends on the other's output, design, choice, or newly introduced API; one renames or refactors code touched by the other; or one merely clarifies, narrows, or specifies the other. Items are independent if separate workers could execute them concurrently in the same checkout without blocking on or clobbering one another. Are items [{{a}}] and [{{b}}] coupled?"
 	}
 }

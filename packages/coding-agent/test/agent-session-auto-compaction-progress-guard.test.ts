@@ -1079,7 +1079,7 @@ describe("AgentSession auto-compaction progress guard", () => {
 			);
 			expect(session.agent.state.messages.at(-1)).toMatchObject({
 				role: "developer",
-				content: [{ type: "text", text: expect.stringContaining("1024-token output limit") }],
+				content: [{ type: "text", text: expect.stringContaining("1024-token output cap") }],
 			});
 		});
 
@@ -1111,7 +1111,7 @@ describe("AgentSession auto-compaction progress guard", () => {
 					expect(continueSpy).toHaveBeenCalledTimes(1);
 					expect(session.agent.state.messages.at(-1)).toMatchObject({
 						role: "developer",
-						content: [{ type: "text", text: expect.stringContaining("1024-token output limit") }],
+						content: [{ type: "text", text: expect.stringContaining("1024-token output cap") }],
 					});
 				},
 			);

@@ -1,1 +1,1 @@
-Prompt-cache benchmark stable prefix.
+Static prefix segment for prompt-cache benchmarking.

@@ -120,15 +120,15 @@ const tabCallStepSchema = type({
 });
 
 const browserSchema = type({
-	action: type("'open' | 'close' | 'run' | 'call' | 'tabs' | 'targets'").describe("operation"),
-	"name?": type("string").describe("tab id (default 'main')"),
-	"url?": type("string").describe("url to open"),
+	action: type("'open' | 'close' | 'run' | 'call' | 'tabs' | 'targets'").describe("browser action"),
+	"name?": type("string").describe("tab identifier (default 'main')"),
+	"url?": type("string").describe("destination URL to open"),
 	"app?": type("string").describe(
-		"browser to drive: 'relay' (the user's Chrome), 'tern' (Tern picture-in-picture), 'webkit', 'chromium' (managed), 'own' (omp's own browser: WebKit if installed, else Chromium), 'auto' (default choice without the relay), a CDP endpoint URL to attach to, or an executable path to spawn",
+		"browser target to control: 'relay' (user's Chrome), 'tern' (Tern picture-in-picture), 'webkit', 'chromium' (managed), 'own' (omp's built-in browser: WebKit when available, otherwise Chromium), 'auto' (default selection when relay is unavailable), a CDP endpoint URL to attach to, or an executable path to launch",
 	),
-	"argv?": type("string[]").describe("extra cli args when app is an executable path"),
+	"argv?": type("string[]").describe("additional CLI flags when app is an executable path"),
 	"target?": type("string").describe(
-		"URL/title substring picking the page to drive; inside Tern, adopts the user's browser block (or its id)",
+		"URL or title substring selecting the page to control; in Tern, adopts the user's browser block (or its id)",
 	),
 	"viewport?": {
 		width: "number",
@@ -136,24 +136,26 @@ const browserSchema = type({
 		"scale?": "number",
 	},
 	"wait_until?": type("'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2'").describe(
-		"navigation wait condition",
+		"navigation readiness condition",
 	),
-	"dialogs?": type("'accept' | 'dismiss'").describe("auto-handle dialogs"),
-	"allowed_domains?": type("string[]").describe("allowed request hostnames"),
-	"init_scripts?": type("string[]").describe("document-start JavaScript sources or cwd-relative file paths"),
-	"downloads?": type("string").describe("cwd-relative download directory"),
-	"user_agent?": type("string").describe("tab user agent override"),
-	"insecure?": type("boolean").describe("ignore invalid HTTPS certificates"),
-	"headed?": type("boolean").describe("override the configured display mode: a window for the tab (true) or none"),
-	"code?": type("string").describe("js body to run in tab"),
-	"fn?": type("string").describe("serialized JavaScript function to run in tab"),
-	"args?": type("unknown[]").describe("arguments passed to a serialized function"),
+	"dialogs?": type("'accept' | 'dismiss'").describe("automatic dialog handling"),
+	"allowed_domains?": type("string[]").describe("permitted request hostnames"),
+	"init_scripts?": type("string[]").describe("JavaScript snippets or cwd-relative file paths run at document start"),
+	"downloads?": type("string").describe("cwd-relative directory for downloads"),
+	"user_agent?": type("string").describe("tab user-agent override"),
+	"insecure?": type("boolean").describe("bypass invalid HTTPS certificate checks"),
+	"headed?": type("boolean").describe(
+		"override configured display mode: show a tab window (true) or keep headless (false)",
+	),
+	"code?": type("string").describe("JavaScript body executed inside the tab"),
+	"fn?": type("string").describe("serialized JavaScript function executed inside the tab"),
+	"args?": type("unknown[]").describe("positional arguments forwarded to a serialized function"),
 	"chain?": tabCallStepSchema.array(),
-	"timeout?": type("number").describe("timeout in seconds"),
-	"all?": type("boolean").describe("release every managed tab this agent opened"),
-	"kill?": type("boolean").describe("also kill spawned-app browsers"),
+	"timeout?": type("number").describe("deadline in seconds"),
+	"all?": type("boolean").describe("close every managed tab opened by this agent"),
+	"kill?": type("boolean").describe("also terminate spawned-app browser processes"),
 	"persist?": type("boolean").describe(
-		"keep tab live across turn settle and idle close; on a relay tab omp opened, keep it open after the session ends",
+		"preserve tab across turn completion and idle cleanup; for a relay tab opened by omp, keep it open after the session exits",
 	),
 });
 

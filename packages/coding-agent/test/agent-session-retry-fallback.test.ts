@@ -8588,7 +8588,7 @@ describe("AgentSession retry fallback", () => {
 				? reminder.content
 				: reminder.content.map(part => (part.type === "text" ? part.text : "")).join("");
 		expect(reminderText).toContain("malformed");
-		expect(reminderText).toContain("Attempt #1/1");
+		expect(reminderText).toContain("Retry #1/1");
 	});
 
 	it("auto-retries provider finish_reason errors after partial text", async () => {

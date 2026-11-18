@@ -155,7 +155,7 @@ function reminderMessages(messages: AgentMessage[]): AgentMessage[] {
 				? message.content
 				: message.content.find((content): content is { type: "text"; text: string } => content.type === "text")
 						?.text) ?? "";
-		return text.includes("You said you would continue");
+		return text.includes("You indicated you were about to run a tool");
 	});
 }
 

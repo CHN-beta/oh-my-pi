@@ -1,1 +1,1 @@
-skill://<name>: instructions; append /<path> for a file.
+skill://<name>: skill instructions; append `/<path>` to read a bundled file.

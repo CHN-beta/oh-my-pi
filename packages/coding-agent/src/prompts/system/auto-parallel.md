@@ -1,5 +1,5 @@
 <system-reminder>
-A classifier split this request into {{len subtasks}} subtasks that can run concurrently: items within a subtask are coupled; different subtasks touch separate code.
+A classifier partitioned this request into {{len subtasks}} subtasks suited for parallel execution: entries inside one subtask are interdependent, whereas distinct subtasks modify disjoint code.
 {{#each subtasks}}
 
 Subtask {{add @index 1}}:
@@ -9,18 +9,18 @@ Subtask {{add @index 1}}:
 {{/each}}
 {{#if context}}
 
-Context every subtask needs:
+Shared context required by all subtasks:
 {{#each context}}
 - {{this}}
 {{/each}}
 {{/if}}
 {{#if wrapup}}
 
-After every subtask finishes, do yourself:
+Once every subtask completes, handle yourself:
 {{#each wrapup}}
 - {{this}}
 {{/each}}
 {{/if}}
 
-Settle cross-subtask contracts first, then delegate the subtasks in ONE parallel `{{taskTool}}` call, with the context in each assignment. The split is a guess: merge subtasks you find coupled; NEVER split one further.
+Agree on cross-subtask interfaces upfront, then dispatch the subtasks together in ONE parallel `{{taskTool}}` call, embedding the shared context in each brief. Treat this grouping as advisory: combine subtasks that turn out to be coupled, and NEVER subdivide a subtask any further.
 </system-reminder>

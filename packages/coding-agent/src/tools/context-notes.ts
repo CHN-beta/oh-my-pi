@@ -89,7 +89,7 @@ export class ContextNotesTool implements AgentTool<typeof contextNotesSchema, Co
 	// so omitted `text` keeps meaning "read" while an explicit empty string clears.
 	readonly strict = false;
 	readonly loadMode = "essential" as const;
-	readonly summary = "Read or replace persistent experimental context notes";
+	readonly summary = "Inspect or overwrite persistent experimental context notes";
 
 	constructor(private readonly session: ToolSession) {}
 
@@ -159,7 +159,7 @@ export class NewContextTool implements AgentTool<typeof newContextSchema, NewCon
 	readonly parameters = newContextSchema;
 	readonly strict = true;
 	readonly loadMode = "essential" as const;
-	readonly summary = "Request a fresh context window";
+	readonly summary = "Trigger a clean context window";
 
 	constructor(private readonly session: ToolSession) {}
 

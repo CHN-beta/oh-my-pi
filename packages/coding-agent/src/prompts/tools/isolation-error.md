@@ -1,26 +1,26 @@
 {{#when kind "==" "merge-failed"}}
-Merge failed: {{message}}{{#if captureError}}; patch capture failed: {{captureError}}{{/if}}.
+Merge unsuccessful: {{message}}{{#if captureError}}; patch capture also failed: {{captureError}}{{/if}}.
 {{#if rescueBranch}}
-The agent's commits are preserved on branch {{rescueBranch}} — merge or cherry-pick it manually.
+The agent's commits remain saved on branch {{rescueBranch}} — merge or cherry-pick manually.
 {{/if}}
 {{#if retainedDir}}
-Isolation workspace retained at {{retainedDir}} — recover the changes from it; `omp worktree clear` reclaims it once this session has exited.
+Kept isolation workspace at {{retainedDir}} — retrieve changes from there; `omp worktree clear` cleans it up after this session exits.
 {{#if sidecarMissing}}
-Its mount metadata is missing, so unmount {{retainedDir}} manually before clearing.
+Mount metadata is absent, so manually unmount {{retainedDir}} before cleaning up.
 {{/if}}
 {{/if}}
 {{/when}}
 {{#when kind "==" "patch-capture-failed"}}
-Patch capture failed: {{message}}.
-Isolation workspace retained at {{retainedDir}} — recover the changes from it; `omp worktree clear` reclaims it once this session has exited.
+Unable to capture patch: {{message}}.
+Kept isolation workspace at {{retainedDir}} — retrieve changes from there; `omp worktree clear` cleans it up after this session exits.
 {{#if sidecarMissing}}
-Its mount metadata is missing, so unmount {{retainedDir}} manually before clearing.
+Mount metadata is absent, so manually unmount {{retainedDir}} before cleaning up.
 {{/if}}
 {{/when}}
 {{#when kind "==" "nested-capture-failed"}}
-Nested patch capture failed: {{message}}.
-Isolation workspace retained at {{retainedDir}} — recover the changes from it; `omp worktree clear` reclaims it once this session has exited.
+Unable to capture nested patch: {{message}}.
+Kept isolation workspace at {{retainedDir}} — retrieve changes from there; `omp worktree clear` cleans it up after this session exits.
 {{#if sidecarMissing}}
-Its mount metadata is missing, so unmount {{retainedDir}} manually before clearing.
+Mount metadata is absent, so manually unmount {{retainedDir}} before cleaning up.
 {{/if}}
 {{/when}}

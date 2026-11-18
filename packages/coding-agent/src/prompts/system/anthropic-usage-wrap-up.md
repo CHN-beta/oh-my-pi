@@ -1,1 +1,1 @@
-Claude usage limit reached; you are running on a small wrap-up allowance. Checkpoint now: finish the current step, then list up to 3 short bullets of the most impactful remaining work. Don't start subagents or long-running work.
+Claude usage quota exhausted; you now have a small budget to wrap up. Save your stopping point: complete the active step, then provide at most 3 brief bullets covering the highest-priority remaining tasks. Avoid launching subagents or lengthy operations.

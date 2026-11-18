@@ -171,7 +171,7 @@ describe("learned-lesson read-back", () => {
 		const settings = Settings.isolated({ "memory.backend": "local" });
 		await saveLearnedLesson(agentDir, settings.getCwd(), { content: "File-backed lesson" });
 		const out = await buildMemoryToolDeveloperInstructions(agentDir, settings.getCwd(), settings);
-		expect(out).toContain("Learned lessons");
+		expect(out).toContain("Learned takeaways");
 		expect(out).toContain("- File-backed lesson");
 	});
 

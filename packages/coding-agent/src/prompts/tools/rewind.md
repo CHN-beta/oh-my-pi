@@ -1,1 +1,1 @@
-End the active checkpoint; rewind context to it, replacing intermediate exploration with your report.
+Close the current checkpoint and roll context back to it, substituting your report for the intermediate exploration.

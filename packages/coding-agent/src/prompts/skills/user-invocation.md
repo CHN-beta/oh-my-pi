@@ -1,11 +1,11 @@
-[IMPORTANT: User invoked the "{{name}}" skill; follow its instructions. Full skill below.]
+[IMPORTANT: The user triggered the "{{name}}" skill; follow all instructions below. Full skill contents follow.]
 
 {{body}}
 
 ---
 
 [Skill directory: {{baseDir}}]
-Resolve relative paths in this skill (e.g. `scripts/foo.js`, `templates/config.yaml`) against this absolute directory; read referenced assets and templates; run scripts with the terminal tool when skill instructions call for it.
+Resolve any relative paths referenced by this skill (such as `scripts/foo.js` or `templates/config.yaml`) relative to this absolute path; inspect referenced assets and templates, and invoke scripts via the terminal tool when directed by the skill.
 {{#if userArgs}}
 User: {{userArgs}}
 {{/if}}

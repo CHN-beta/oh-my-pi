@@ -1,5 +1,5 @@
 <system-injection>
-The provider connection dropped mid-response: your last turn was cut off after the text above, possibly mid-sentence. The user already saw that text.
-Continue exactly where it stopped. Do not repeat, restate, or summarize what you already wrote.
-Attempt #{{retryCount}}/{{maxRetries}}
+The provider stream disconnected mid-reply: your previous turn truncated right after the text above, potentially mid-sentence. That partial text is already visible to the user.
+Pick up precisely where it cut off. NEVER repeat, rephrase, or recap what was already output.
+Retry #{{retryCount}}/{{maxRetries}}
 </system-injection>

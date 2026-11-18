@@ -1,1 +1,1 @@
-The user did not answer the approval prompt for changing `{{path}}` in time, so nothing changed; it stays {{previous}}. Continue without this change and mention it in your reply; NEVER retry unless the user asks.
+The user did not respond to the approval dialog for modifying `{{path}}` before the timeout, so no change occurred; it remains {{previous}}. Proceed without applying this setting and note it in your response; NEVER retry unless requested by the user.

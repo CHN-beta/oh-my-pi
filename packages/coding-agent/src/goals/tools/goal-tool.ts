@@ -19,9 +19,9 @@ import { completionBudgetReport, remainingTokens } from "../runtime";
 import type { Goal, GoalToolDetails } from "@oh-my-pi/pi-tui/tools/goal";
 
 const goalSchema = type({
-	op: type("'create' | 'get' | 'complete' | 'resume' | 'drop'").describe("goal operation"),
-	"objective?": type("string").describe("goal objective"),
-	"token_budget?": type("number.integer").describe("token budget"),
+	op: type("'create' | 'get' | 'complete' | 'resume' | 'drop'").describe("goal action"),
+	"objective?": type("string").describe("goal target objective"),
+	"token_budget?": type("number.integer").describe("allocated token budget"),
 });
 
 export type GoalToolInput = typeof goalSchema.infer;

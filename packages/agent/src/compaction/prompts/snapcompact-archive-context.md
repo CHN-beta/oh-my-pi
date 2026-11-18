@@ -1,3 +1,3 @@
-Previous snapcompact archive source text:
+Prior snapcompact archive source text:
 
 {{archiveText}}

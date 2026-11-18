@@ -1,19 +1,19 @@
 <system-notice id="skills">
-Skills changed this session. Matching skill → MUST read `skill://<name>` first. This lists only what changed; any skill not named here is unaffected.
+Available skills updated during this session. When a skill matches → MUST read `skill://<name>` before starting. Only changes appear below; any skill omitted here remains unchanged.
 {{#if added.length}}
-Now available:
+Added:
 {{#each added}}
 - {{name}}: {{description}}
 {{/each}}
 {{/if}}
 {{#if updated.length}}
-Updated (this description replaces the earlier one):
+Revised (this description supersedes the prior one):
 {{#each updated}}
 - {{name}}: {{description}}
 {{/each}}
 {{/if}}
 {{#if removed.length}}
-No longer available:
+Removed:
 {{#each removed}}
 - `{{this}}`
 {{/each}}

@@ -1,24 +1,24 @@
 {
 	"bucket": {
-		"instructions": "Classify the coding request by how open-ended its problem is. Volume of work never raises it.\n\nExamples:\n<request>rename a local constant and its two uses</request>\ntrivial\n\n<request>make the failing pagination test pass</request>\nmoderate\n\n<request>convert the fixtures in five repos to the new JSON format</request>\ntrivial\n\n<request>diagnose an intermittent deadlock across two services</request>\nhard",
+		"instructions": "Categorize this coding task according to how open-ended the underlying problem is. Work volume alone never increases the tier.\n\nExamples:\n<request>rename a local constant and its two uses</request>\ntrivial\n\n<request>make the failing pagination test pass</request>\nmoderate\n\n<request>convert the fixtures in five repos to the new JSON format</request>\ntrivial\n\n<request>diagnose an intermittent deadlock across two services</request>\nhard",
 		"criteria": {
-			"trivial": "One obvious solution, mechanically applied: target, mapping, or fix given.",
-			"moderate": "A few candidate causes or several viable designs: which line breaks a test, API shape, policy choice.",
-			"hard": "Open cause of flaky, concurrent, or stale behavior; solutions that are easy to get subtly wrong (races, invariants, cross-version compatibility)."
+			"trivial": "Single straightforward solution applied mechanically: target, mapping, or fix is already specified.",
+			"moderate": "A handful of plausible causes or candidate designs: pinpointing which line breaks a test, choosing an API shape, or deciding a policy.",
+			"hard": "Unidentified root cause behind intermittent, concurrent, or stale state; fixes that are easy to implement subtly wrong (races, invariants, cross-version compatibility)."
 		}
 	},
 	"level": {
-		"instructions": "The state is a user's request to a coding agent. Judge how open-ended its problem is: whether the fix or design is given, or which causes or designs remain open. Choose the reasoning effort that needs, judging inherent difficulty rather than phrasing politeness or verbosity. Volume of work never raises it. If torn between levels, choose the lower one{{#if withMax}}, except that a request meeting the max conditions takes max{{/if}}.",
+		"instructions": "The input state contains a user's prompt to a coding agent. Assess how open-ended the problem is: whether the implementation or fix is already specified, or whether candidate causes or designs remain unresolved. Select the reasoning level required, weighing intrinsic complexity rather than tone, politeness, or length. Work volume alone never raises it. When choosing between two levels, pick the lower one{{#if withMax}}, unless the request satisfies the max criteria, in which case choose max{{/if}}.",
 		"criteria": {
-			"low": "One obvious solution, mechanically applied: target, mapping, or fix given.",
-			"medium": "A few candidates in a localized area, or one small trap: which line breaks a test, one boundary case.",
-			"high": "Several viable designs or candidate causes: API shape, policy choice, a known cause whose fix needs a design choice.",
-			"xhigh": "Open cause of flaky, concurrent, or stale behavior; solutions that are easy to get subtly wrong (races, invariants, cross-version compatibility).",
-			"max": "An open cause of flaky, concurrent, or stale behavior, or a solution that is easy to get subtly wrong (races, invariants, cross-version compatibility), plus at least one of: no reproduction to work from, irreversible or data-loss operation, or a live cutover that must stay correct while running. Difficulty alone is insufficient."
+			"low": "Single straightforward solution applied mechanically: target, mapping, or fix is already specified.",
+			"medium": "A handful of candidates in a bounded scope, or a minor edge case: finding which line fails a test or handling one boundary condition.",
+			"high": "Multiple viable designs or candidate root causes: shaping an API, picking a policy, or fixing a known bug that requires a design decision.",
+			"xhigh": "Unidentified root cause behind intermittent, concurrent, or stale state; fixes that are easy to implement subtly wrong (races, invariants, cross-version compatibility).",
+			"max": "Unidentified root cause behind intermittent, concurrent, or stale state, or a fix that is easy to implement subtly wrong (races, invariants, cross-version compatibility), combined with at least one of: no available reproduction, an irreversible or data-destructive action, or a live cutover that must remain correct during execution. Complexity by itself is not enough."
 		}
 	},
 	"solutionSpace": {
-		"instructions": "The state describes how open-ended a coding subagent's problem is; the work itself is not shown. Choose the reasoning effort it needs. Volume of work and coordination with other agents never raise it. If torn between levels, choose the lower one{{#if withMax}}, except that a problem meeting the max conditions takes max{{/if}}.",
+		"instructions": "The input state summarizes how open-ended a coding subagent's task is; the actual code is omitted. Select the required reasoning effort. Work volume and inter-agent coordination never increase it. When choosing between two levels, pick the lower one{{#if withMax}}, unless the task satisfies the max criteria, in which case choose max{{/if}}.",
 		"criteria": {}
 	}
 }

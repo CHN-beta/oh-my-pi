@@ -10,7 +10,7 @@ import type { ToolSession } from ".";
 import { cfgMemoryBackend } from "../memory-backend/settings";
 
 const memoryRecallSchema = type({
-	query: type("string").describe("natural language search query"),
+	query: type("string").describe("natural-language lookup query"),
 });
 
 export type MemoryRecallParams = typeof memoryRecallSchema.infer;
@@ -27,7 +27,7 @@ export class MemoryRecallTool implements AgentTool<typeof memoryRecallSchema> {
 	readonly parameters = memoryRecallSchema;
 	readonly strict = true;
 	readonly loadMode = "discoverable";
-	readonly summary = "Search memory for relevant prior context";
+	readonly summary = "Query memory for pertinent prior context";
 
 	constructor(private readonly session: ToolSession) {}
 

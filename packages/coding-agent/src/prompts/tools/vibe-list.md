@@ -1,3 +1,3 @@
-Worker-session roster: id, slot (`doc`/`code`/`debug`/`design`/`math`/`exec`), state (`starting`/`running`/`idle`/`dead`), model, turn count, queued messages, one-line gist of latest activity. Sessions you killed collapse to one trailing line of ids.
+Active worker-session roster: ID, slot (`doc`/`code`/`debug`/`design`/`math`/`exec`), state (`starting`/`running`/`idle`/`dead`), model, turn count, pending queued messages, and a brief summary of recent activity. Sessions you terminated collapse into a single trailing line of IDs.
 
-Use to reorient: existing sessions, busy workers, idle workers ready for next instruction.
+Use this to check status: active sessions, busy workers, and idle workers ready for follow-up instructions.

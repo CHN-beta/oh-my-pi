@@ -265,7 +265,7 @@ describe("Mnemopi recall across a resume", () => {
 		const resumed = await resume(dir, sessionFile, dir);
 		const turn = await firstTurn(resumed);
 		expect(turn.block).toBe(block);
-		expect(turn.notice?.content).toContain("No longer in memory");
+		expect(turn.notice?.content).toContain("Removed from memory");
 		expect(turn.notice?.content).toContain("The deploy host is alpha-7.");
 
 		// Once delivered, a later resume does not report it again.
@@ -279,7 +279,7 @@ describe("Mnemopi recall across a resume", () => {
 
 		const turn = await firstTurn(await resume(dir, sessionFile, dir));
 		expect(turn.block).toBe(block);
-		expect(turn.notice?.content).toContain("No longer in memory");
+		expect(turn.notice?.content).toContain("Removed from memory");
 	});
 
 	it("reports an updated memory with its current content once", async () => {
@@ -289,8 +289,8 @@ describe("Mnemopi recall across a resume", () => {
 		const resumed = await resume(dir, sessionFile, dir);
 		const turn = await firstTurn(resumed);
 		expect(turn.block).toBe(block);
-		expect(turn.notice?.content).toContain("Recalled as: The deploy host is alpha-7.");
-		expect(turn.notice?.content).toContain("Now: The deploy host is beta-9.");
+		expect(turn.notice?.content).toContain("Previously recalled: The deploy host is alpha-7.");
+		expect(turn.notice?.content).toContain("Current: The deploy host is beta-9.");
 
 		const reportedFile = await writeTranscript(resumed.session.sessionManager, turn.notice);
 		expect(await firstTurn(await resume(dir, reportedFile, dir))).toEqual({ block, notice: undefined });
@@ -304,7 +304,7 @@ describe("Mnemopi recall across a resume", () => {
 
 		const turn = await firstTurn(await resume(dir, sessionFile, dir));
 		expect(turn.block).toBe(block);
-		expect(turn.notice?.content).toContain("No longer in memory");
+		expect(turn.notice?.content).toContain("Removed from memory");
 		expect(turn.notice?.content).toContain("The deploy host is alpha-7.");
 	});
 
@@ -318,7 +318,7 @@ describe("Mnemopi recall across a resume", () => {
 		expect((await firstTurn(interrupted)).notice).toBeDefined();
 		await writeTranscript(interrupted.session.sessionManager);
 
-		expect((await firstTurn(await resume(dir, sessionFile, dir))).notice?.content).toContain("No longer in memory");
+		expect((await firstTurn(await resume(dir, sessionFile, dir))).notice?.content).toContain("Removed from memory");
 	});
 
 	it("tracks memories the budgeted block showed, even in part, and not ones it cut", async () => {
@@ -390,8 +390,8 @@ describe("Mnemopi recall across a resume", () => {
 		const sessionFile = await writeTranscript(live.session.sessionManager);
 
 		const notice = (await firstTurn(await resume(dir, sessionFile, dir))).notice?.content;
-		expect(notice).toContain("Recalled as: zeta-5");
-		expect(notice).toContain("Now: omega-6");
+		expect(notice).toContain("Previously recalled: zeta-5");
+		expect(notice).toContain("Current: omega-6");
 	});
 
 	it("compares and quotes memories as the recall block shows them, clipped", async () => {
@@ -405,7 +405,7 @@ describe("Mnemopi recall across a resume", () => {
 		const updated = `The deploy host is beta-9. ${"Rollback detail. ".repeat(100)}`;
 		expect(live.editScopedMemory("update", id, { content: updated }).status).toBe("updated");
 		const notice = (await firstTurn(await resume(dir, sessionFile, dir))).notice?.content;
-		expect(notice).toContain(`Now: ${clipRecallContent(updated).content}`);
+		expect(notice).toContain(`Current: ${clipRecallContent(updated).content}`);
 		expect(notice).not.toContain(updated);
 	});
 

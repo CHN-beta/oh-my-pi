@@ -1,14 +1,14 @@
 ## Existing Plan
 
-Approved plan inlined below; durable copy at `{{planFilePath}}` (identical content).
+The approved plan is included inline below, with a persistent copy at `{{planFilePath}}` (identical content).
 
 <plan path="{{planFilePath}}">
 {{planContent}}
 </plan>
 
 <instruction>
-Relevant to current work and incomplete → MUST continue executing.
-Stale or unrelated → MUST ignore.
-NEVER re-read `{{planFilePath}}` while the inline plan is intact.
-Inline content compressed, expired, or unrecoverable → NEVER stop; read `{{planFilePath}}`.
+Applies to the current task and remains unfinished → MUST keep executing it.
+Outdated or unrelated → MUST disregard it.
+NEVER re-read `{{planFilePath}}` while the inline copy stays intact.
+If the inline copy is truncated, expired, or lost → NEVER halt; read `{{planFilePath}}`.
 </instruction>

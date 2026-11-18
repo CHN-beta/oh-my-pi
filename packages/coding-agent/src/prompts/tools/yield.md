@@ -1,24 +1,24 @@
 {{#if workPoolItems}}
-Submit ONE workpool item at a time as `{ key, data }` or `{ key, error }`:
-- `key`: its 1-based number.
-- `data`: the self-contained outcome/evidence value.
-- `error`: a failure reason.
+Report ONE workpool item per call using `{ key, data }` or `{ key, error }`:
+- `key`: the item's 1-based index.
+- `data`: the self-contained result/evidence payload.
+- `error`: a description of the failure.
 
-The result tells you which keys remain. The final key ends the turn automatically.
-NEVER submit multiple items together.
+The tool response indicates which keys remain. Submitting the last key ends the turn automatically.
+NEVER send multiple items in one call.
 {{else}}
-Submit subagent output: `{ data: <your output> }` for success, `{ error: "message" }` for failure.
-Never both; never a bare payload outside `data`.
+Return subagent output as `{ data: <your output> }` on success, or `{ error: "message" }` on failure.
+Never supply both, and never pass a bare payload outside `data`.
 
-Omit `type` for the usual single terminal structured result.
-Pass `type: ["section"]` to submit an incremental, non-terminal section that accumulates.
+Leave `type` omitted for a standard single terminal structured result.
+Supply `type: ["section"]` to record an incremental, non-terminal section that accumulates.
 {{/if}}
 {{#unless workPoolItems}}
 {{#if hasOutputSchema}}
-This task declares an output schema: the terminal `data` MUST be the full object matching it.
-A data-less `type: "result"` finalizes previously submitted incremental sections.
-It is invalid when no sections were submitted — prose in your last turn can never satisfy the schema.
+This task specifies an output schema: the final `data` MUST be a complete object conforming to it.
+Calling `type: "result"` without `data` finalizes previously submitted incremental sections.
+That is invalid if no sections were submitted—plain prose in your final turn never satisfies the schema.
 {{else}}
-Pass `type: "result"` to finalize; when `data` is omitted, your last assistant turn becomes the raw final result.
+Supply `type: "result"` to finalize; omitting `data` uses your final assistant turn as the raw final result.
 {{/if}}
 {{/unless}}

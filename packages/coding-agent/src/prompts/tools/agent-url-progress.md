@@ -1,6 +1,6 @@
 # {{id}} ({{status}})
 
-No final output yet: `agent://{{id}}` shows progress until the run publishes its output. Concise transcript: `history://{{id}}`.
+Final output is not yet available: `agent://{{id}}` reports live progress until this run publishes its output. Condensed transcript: `history://{{id}}`.
 {{#each sections}}
 
 ## Yield{{#if labels}} [{{labels}}]{{/if}}
@@ -11,11 +11,11 @@ No final output yet: `agent://{{id}}` shows progress until the run publishes its
 {{/each}}
 {{#if lastText}}
 
-## Latest assistant text
+## Most recent assistant text
 
 {{lastText}}
 {{/if}}
 {{#if empty}}
 
-Nothing produced yet.
+No output yet.
 {{/if}}

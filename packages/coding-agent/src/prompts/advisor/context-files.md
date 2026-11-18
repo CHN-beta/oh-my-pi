@@ -1,5 +1,5 @@
 <project-context>
-Context files: user's standing project instructions (AGENTS.md etc.); binding on driving agent. Enforce; flag drift immediately; NEVER advise against mandates.
+Project instruction files (such as AGENTS.md) capture the user's persistent rules and bind the primary agent. Uphold them, point out any divergence promptly, and NEVER recommend violating these rules.
 {{#each contextFiles}}
 <file path="{{path}}">
 {{content}}

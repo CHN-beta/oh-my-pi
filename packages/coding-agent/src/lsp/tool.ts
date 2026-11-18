@@ -195,7 +195,7 @@ export class LspTool implements AgentTool<typeof lspSchema, LspToolDetails, Them
 	};
 	readonly label = "LSP";
 	readonly loadMode = "discoverable";
-	readonly summary = "Query LSP (language server) for diagnostics, hover info, and references";
+	readonly summary = "Query LSP (language server) for diagnostics, hover details, and references";
 	readonly parameters = lspSchema;
 	readonly strict = true;
 

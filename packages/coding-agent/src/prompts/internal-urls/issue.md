@@ -1,1 +1,1 @@
-issue://<N> / pr://<N> (<owner>/<repo>/<N> for other repos): GitHub issue/PR; bare: recent; pr://<N>/diff: changed files.
+issue://<N> or pr://<N> (use `<owner>/<repo>/<N>` for external repositories): GitHub issue or PR; bare URL lists recent entries; `pr://<N>/diff` shows modified files.

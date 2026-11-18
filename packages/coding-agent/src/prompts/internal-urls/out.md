@@ -1,1 +1,1 @@
-out://: write Markdown (or redirect bash output, `> out://`; ≤64 KiB) to show the user a reply without ending your turn; use it to answer questions asked mid-task or post progress reports when asked, then keep working.
+out://: write Markdown here (or redirect bash output with `> out://`; max 64 KiB) to send a message to the user without terminating your turn; use this to answer mid-task questions or share requested progress updates before continuing work.

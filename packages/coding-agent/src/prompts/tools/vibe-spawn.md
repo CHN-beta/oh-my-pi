@@ -1,4 +1,4 @@
-Starts persistent conversational coding-agent worker session (edit, bash, grep, everything).
+Launches a persistent conversational coding-agent worker session (with edit, bash, grep, and full tool access).
 
 CLI slot by domain — the slots are specializations, not capability tiers:
 - `doc`: writing, documentation, source research, reports, correspondence.
@@ -10,9 +10,9 @@ CLI slot by domain — the slots are specializations, not capability tiers:
 
 Each slot runs the agent definition named `doc`/`code`/`debug`/`design`/`math`/`exec` (project `.omp/agents/` or user `~/.omp/agent/agents/`), so its model, prompt and tools come from that definition.
 
-`prompt`: first session instruction. Worker starts with NO context beyond it; include files, constraints, acceptance criteria.
-`name`: optional session label; otherwise generated.
+`prompt`: initial instruction for the session. The worker starts with NO prior context beyond this prompt, so specify files, constraints, and acceptance criteria.
+`name`: optional session label; auto-generated if omitted.
 
-Returns session id immediately. On worker completion, turn result—activity trace + worker response—delivered automatically. Do not wait unless blocked; direct other sessions.
+Returns the session ID right away. When the worker finishes, its turn output—activity trace plus worker response—arrives automatically. Do not block waiting unless idle; manage other sessions in parallel.
 
-Session persists after turn; remembers whole conversation. Same-workstream follow-up: `vibe_send`; NEVER spawn second session.
+The session stays alive after each turn and retains its full conversation history. For follow-ups on the same workstream, use `vibe_send`; NEVER launch a duplicate session.

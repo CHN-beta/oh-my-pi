@@ -1,7 +1,7 @@
-Search long-term memory; return raw relevance-ranked matching entries.
+Query long-term memory and return raw matching entries ranked by relevance.
 
-Use proactively before questions about past conversations, user preferences, project decisions, or topics where prior context improves accuracy. When in doubt, recall first.
+Call proactively before answering questions about earlier conversations, user preferences, project decisions, or subjects where historical context improves accuracy. When uncertain, recall first.
 
-`{{toolRefs.recall}}`: specific facts or entries. `{{toolRefs.reflect}}`: synthesized answer across many memories.
+`{{toolRefs.recall}}`: retrieve specific facts or entries. `{{toolRefs.reflect}}`: synthesize an answer across many stored memories.
 
-Results: content preview. Trailing `…`: truncation (`truncated: true`; `full_length`: original size). Before any `{{toolRefs.memory_edit}} update`, MUST fetch full row: `read memory://<id>`.
+Outputs contain content previews. A trailing `…` indicates truncation (`truncated: true`; `full_length` shows original character count). Prior to any `{{toolRefs.memory_edit}} update`, MUST read the complete entry via `read memory://<id>`.

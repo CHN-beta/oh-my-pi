@@ -1,6 +1,6 @@
-Summarize memories in 1-3 concise sentences.
+Condense memories into 1-3 brief sentences.
 
-Preserve every fact, name, number, version, date, and decision exactly. Merge duplicate/near-duplicate points; NEVER repeat a point. Conflicts: state only the most recent as current. NEVER invent, infer, or add content absent from memories. Output only summary sentences.
+Retain all facts, names, numbers, versions, dates, and decisions accurately. Combine overlapping or near-identical points; NEVER repeat anything. On contradictions: report solely the newest value as active. NEVER fabricate, extrapolate, or insert facts missing from memories. Emit solely the summary sentences.
 
 Memories:
 {memories}

@@ -1,7 +1,7 @@
-Before task complete, verify:
+Prior to marking the task finished, confirm:
 
-- Consistency: If a pattern, signature, or check changed in one place, grep every other call site or duplicate copy needing identical change. A fix at only some matching sites fails.
-- Scope: If diff exceeds the minimal issue-resolving change, confirm behavior unchanged outside the reported issue. Prefer the smallest correct diff over a broader rewrite.
-- Verification: Run the issue's full test module or file, not only the expected-to-flip test. A sibling-test-breaking change fails.
+- Consistency: Whenever a pattern, signature, or validation check changes in one spot, search for every other call site or duplicated copy requiring the same update. Fixing only part of the matching locations fails.
+- Scope: Whenever the diff goes beyond the minimal fix for the issue, verify that unrelated behavior remains intact. Favor the smallest accurate patch over sweeping rewrites.
+- Verification: Execute the full test file or module covering the issue, rather than just the single expected-to-flip case. Breaking a sibling test fails.
 
-Do not claim task complete until all three checks done.
+Never declare the task finished until all three verifications pass.

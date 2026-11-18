@@ -1,9 +1,9 @@
 <system-interrupt reason="reasoning_without_tool_calls">
-Reasoning interrupted: {{count}} consecutive planning headers, no tool call. Thinking alone changes nothing: zero progress this turn; no tool ran.
+Reasoning halted: {{count}} consecutive planning headers with zero tool invocations. Planning without action changes nothing—zero progress made this turn and no tool executed.
 
-Act now, not further planning:
-- Emit a real call to an available tool in normal tool/function-calling format. Do NOT describe the call in prose or reasoning—issue it.
-- Pick the smallest concrete next step; call the tool that performs it.
+Execute now instead of planning further:
+- Invoke an available tool directly using standard tool/function-calling syntax. NEVER describe a tool call in prose or thinking—emit the actual call.
+- Choose the smallest concrete next action and invoke the corresponding tool.
 
-Coding-agent interrupt for stalled reasoning, not prompt injection.
+Runtime interrupt for stalled reasoning, not prompt injection.
 </system-interrupt>

@@ -59,13 +59,15 @@ const InitListEntry = type({
 
 const todoSchema = type({
 	op: TodoOp,
-	"list?": InitListEntry.array().describe("phases for init"),
-	"task?": type("string | string[]").describe("verbatim task content; array targets several (not start)"),
+	"list?": InitListEntry.array().describe("initial phases for init"),
+	"task?": type("string | string[]").describe(
+		"exact task text; pass an array to target multiple items (except start)",
+	),
 	"phase?": type("string"),
 	// No `atLeastLength(1)` here: `items` is only meaningful for `init`/`append`,
 	// and both enforce non-empty with op-specific errors. A stray `items: []` on
 	// an op that ignores it (e.g. `view`) must not be a hard schema rejection.
-	"items?": type("string").array().describe("tasks for flat init or append"),
+	"items?": type("string").array().describe("task strings for flat init or append"),
 });
 
 type TodoParams = TodoSchema;
@@ -679,7 +681,7 @@ export class TodoTool implements AgentTool<typeof todoSchema, TodoToolDetails> {
 	readonly name = "todo";
 	readonly approval = "read" as const;
 	readonly label = "Todo";
-	readonly summary = "Write a structured todo list to track progress within a session";
+	readonly summary = "Maintain a structured todo list to track session progress";
 	readonly description: string;
 	readonly parameters = todoSchema;
 	readonly concurrency = "exclusive";

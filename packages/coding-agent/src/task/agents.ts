@@ -49,7 +49,7 @@ const EMBEDDED_AGENT_DEFS: EmbeddedAgentDef[] = [
 		fileName: "task.md",
 		frontmatter: {
 			name: "task",
-			description: "General-purpose subagent with full capabilities for delegated multi-step tasks",
+			description: "Versatile subagent equipped with full capabilities for delegated multi-step work",
 			spawns: "*",
 			model: "@task",
 			thinkingLevel: AUTO_THINKING,
@@ -64,7 +64,7 @@ const EMBEDDED_AGENT_DEFS: EmbeddedAgentDef[] = [
 		fileName: "sonic.md",
 		frontmatter: {
 			name: "sonic",
-			description: "Low-reasoning agent for strictly mechanical updates or data collection only",
+			description: "Lightweight-reasoning agent restricted solely to mechanical edits or data gathering",
 			model: "@smol",
 			thinkingLevel: Effort.Medium,
 		},

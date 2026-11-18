@@ -1,1 +1,1 @@
-This session had moved to {{to}} when it was resumed here, so it continues as a fork of the stale local copy `{{source}}`. Work done on {{to}} after the move is not part of this conversation.
+This session had already moved to {{to}} before being resumed here, so it now branches off the outdated local snapshot `{{source}}`. Any actions taken on {{to}} since the transfer are absent from this session.

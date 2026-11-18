@@ -1,44 +1,44 @@
-Update existing handoff summary in <previous-summary> tags from new messages above for another LLM to resume.
+Revise the existing handoff summary inside <previous-summary> tags using new messages above so another LLM can continue.
 
 MUST:
-- preserve all previous-summary information; add new progress, decisions, context.
-- Progress: move completed "In Progress" items to "Done".
-- update "Next Steps" for completed work.
-- preserve exact file paths, function names, error messages.
-- MAY remove irrelevant content.
-- If new messages end with an unanswered user question/request: add it to Critical Context; replace any previous pending question if answered.
-- output only the structured summary; NEVER extra text.
-- keep sections concise.
-- preserve relevant tool outputs/command results.
-- include mentioned repository state changes (branch, uncommitted changes).
+- retain all prior previous-summary details; incorporate new progress, decisions, and context.
+- Progress: shift finished "In Progress" items into "Done".
+- refresh "Next Steps" to reflect completed items.
+- keep exact file paths, function names, and error messages.
+- MAY drop obsolete content.
+- If newer messages end with an unanswered user question or request: record it under Critical Context; overwrite any earlier pending question once answered.
+- emit only the structured summary; NEVER include extra text.
+- keep every section brief.
+- retain pertinent tool outputs and command results.
+- record mentioned repository state changes (branch, uncommitted changes).
 
-Format (omit inapplicable sections):
+Layout (skip inapplicable sections):
 
 ## Goal
-[Preserve existing goals; add new ones if task expanded]
+[Keep current goals; append new ones if scope grew]
 
 ## Constraints & Preferences
-- [Preserve existing; add new ones discovered]
+- [Keep current items; append newly identified ones]
 
 ## Progress
 
 ### Done
-- [x] [Include previously done and newly completed items]
+- [x] [List previously finished and newly completed items]
 
 ### In Progress
-- [ ] [Current work—update based on progress]
+- [ ] [Ongoing work—refresh based on progress]
 
 ### Blocked
-- [Current blockers—remove if resolved]
+- [Active blockers—drop once cleared]
 
 ## Key Decisions
-- **[Decision]**: [Brief rationale] (preserve all previous, add new)
+- **[Decision]**: [Short reasoning] (keep all prior items, append new)
 
 ## Next Steps
-1. [Update based on current state]
+1. [Refresh according to latest state]
 
 ## Critical Context
-- [Preserve important context; add new if needed]
+- [Keep vital context; append new details if needed]
 
 ## Additional Notes
-[Other important info not fitting above]
+[Other pertinent details not covered above]

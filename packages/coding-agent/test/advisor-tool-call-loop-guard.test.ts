@@ -314,7 +314,7 @@ describe("advisor tool-call loop guard", () => {
 		// thresholds' worth (6) with no request after the abort.
 		expect(contexts).toHaveLength(6);
 		const delivered = JSON.stringify(contexts[3]!.messages);
-		expect(delivered).toContain("You called `read` 3 consecutive times");
+		expect(delivered).toContain("You invoked `read` 3 times in a row");
 		expect(delivered).toContain("ENOENT: no such file or directory");
 		const redirects = advisor.state.messages.filter(
 			message => message.role === "user" && JSON.stringify(message.content).includes("tool_call_loop_detected"),
@@ -584,7 +584,7 @@ describe("advisor tool-call loop guard", () => {
 		expect(merged).toContain("second broken handoff");
 		expect(merged).toContain("Reviewer A");
 		expect(merged).toContain("Reviewer B");
-		expect(merged).toContain("aggregated review from other models");
+		expect(merged).toContain("consolidated critique produced by peer models");
 	});
 
 	it("steers one continuation turn for a terminal-boundary concern at the default advisor.continueSeverity", async () => {

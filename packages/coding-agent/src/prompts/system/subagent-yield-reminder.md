@@ -1,31 +1,31 @@
 {{#if budgetStop}}
 {{#if structured}}
 <system-reminder>
-Request budget crossed; in-flight turn stopped → forced wrap-up. MUST call `yield` NOW with best final report from completed work.
+Request budget exceeded; active turn halted → mandatory wrap-up. MUST invoke `yield` IMMEDIATELY with the best final report from finished work.
 
-- Consolidate all gathered value; mark remaining gaps incomplete, do not investigate further.
-- Do NOT call another tool or resume assignment.
-- Terminal `yield` only: report in `data`, `type` omitted. Data-less `type: string` ONLY when that report is already written out as prose this turn.
+- Summarize all findings and deliverables achieved so far; flag unfinished parts as incomplete rather than exploring further.
+- NEVER invoke any other tool or continue working on the task.
+- Terminal `yield` only: place the report in `data` with `type` omitted. Use data-less `type: string` SOLELY if that full report already appears in your prose this turn.
 </system-reminder>
 {{else}}
 <system-reminder>
-Request budget crossed; in-flight turn stopped → forced wrap-up. Tools disabled. Reply NOW with best final report from completed work; this message is your result.
+Request budget exceeded; active turn halted → mandatory wrap-up. Tools are disabled. Respond IMMEDIATELY with the best final report from finished work; this message becomes your output.
 
-- Consolidate all gathered value; mark remaining gaps incomplete, do not investigate further.
+- Summarize all findings and deliverables achieved so far; flag unfinished parts as incomplete rather than exploring further.
 </system-reminder>
 {{/if}}
 {{else}}
 <system-reminder>
-Last turn had no tool call → session idle. Reminder {{retryCount}} of {{maxRetries}}.
+Your previous turn emitted no tool call → session went idle. Reminder {{retryCount}} of {{maxRetries}}.
 
-Every turn MUST end with a tool call. First applicable:
-1. **Resume work** — assignment incomplete and not recording an incremental section: call next intended tool (edit, write, bash, search, etc.). NEVER treat this reminder as forced stop.
-2. **Yield incremental section** — only if useful: call `yield` with non-empty `type: string[]`; matching sections accumulate; task continues.
-3. **Yield success** — only if genuinely complete: terminal `yield` carrying the report in `data`, `type` omitted. Data-less `type: string` finalizes from your last assistant turn and keeps no structure — use it ONLY when that turn already spells the report out in prose.
-4. **Yield error** — only for a real, concrete, nameable blocker (missing file, unavailable API, contradictory spec): describe attempts and exact blocker. NEVER fabricate a "forced immediate-yield" or "system reminder required termination" reason; reminder not a blocker.
+Every turn MUST finish with a tool call. Pick the first option that applies:
+1. **Resume work** — task remains unfinished and you are not emitting an incremental section: invoke the next working tool (edit, write, bash, search, etc.). NEVER interpret this reminder as a mandatory halt.
+2. **Yield incremental section** — only where helpful: invoke `yield` with a non-empty `type: string[]`; matching sections accumulate while the task stays active.
+3. **Yield success** — solely once truly done: call terminal `yield` carrying the report in `data` with `type` omitted. Data-less `type: string` closes using your previous assistant message and discards structure—use it SOLELY when that message already presents the complete report in prose.
+4. **Yield error** — solely for a genuine, concrete, specific blocker (missing file, broken API, conflicting spec): detail what you tried and the exact obstacle. NEVER invent a "forced immediate-yield" or "system reminder required termination" excuse; this reminder is not a blocker.
 
-Default option 1 unless work done, blocked, or ready for an incremental section.
+Default to option 1 unless the task is finished, genuinely blocked, or ready to emit an incremental section.
 
-NEVER end this turn with text only.
+NEVER finish this turn with plain text alone.
 </system-reminder>
 {{/if}}

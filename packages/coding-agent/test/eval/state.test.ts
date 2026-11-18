@@ -163,6 +163,6 @@ describe("eval state registry", () => {
 		const resumed = toolSession("state-contract-fresh-host", cwd);
 		const resumeContext = formatEvalStateContext(resumed, { historyHasEval: true });
 		expect(resumeContext).toContain("were not restored");
-		expect(resumeContext).toContain("re-run required setup");
+		expect(resumeContext).toContain("re-execute required setup");
 	});
 });

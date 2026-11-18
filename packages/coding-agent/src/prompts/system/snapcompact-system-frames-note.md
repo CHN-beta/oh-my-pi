@@ -1,1 +1,1 @@
-=== OPERATING INSTRUCTIONS — image(s) below: your system prompt ===
+=== OPERATING INSTRUCTIONS — the image(s) below contain your system prompt ===

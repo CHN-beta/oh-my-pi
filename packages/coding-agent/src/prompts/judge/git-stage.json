@@ -1,16 +1,16 @@
 {
 	"belongs": {
-		"instructions": "The user is staging a git commit out of a working tree with many unrelated changes and described which changes they want. `all_changed_files` lists every changed path for contrast; the state then shows one unit of change: its `path`, its `kind` (`hunk`: the added + and removed − lines of one hunk of a modified file; `deleted file`: the head of the removed − lines of a file being deleted; `new file`: the head of an untracked file; `binary`: path only), and `change`. How much does this unit belong to what the user described?",
+		"instructions": "The user wants to stage a git commit from a working tree containing multiple unrelated edits and has specified which edits to include. `all_changed_files` shows every modified path for context; the state displays one change unit: its `path`, its `kind` (`hunk`: added + and deleted − lines of one hunk in a modified file; `deleted file`: leading deleted − lines of a removed file; `new file`: leading lines of an untracked file; `binary`: path only), and `change`. To what extent does this unit match what the user asked to stage?",
 		"criteria": [
-			"Unrelated: different work that happens to be in the same tree.",
-			"Tangential: same file, area, or vocabulary, but the user's words do not actually describe this particular change.",
-			"Part of it: the user's words describe this particular change (its content, its kind of edit, or this file by name)."
+			"Unrelated: separate work that merely happens to coexist in the working tree.",
+			"Tangential: shares a file, subsystem, or terminology, yet the user's description does not refer to this specific edit.",
+			"Part of it: the user's description covers this specific edit (via its code changes, edit type, or explicit file name)."
 		]
 	},
 	"pick": {
-		"instructions": "The user is staging a git commit and described which changes they want. `candidates` are the changed units in the tree that scored highest for that description, each with its path, kind, and changed lines. Which candidate is most clearly the change the user described — or is none of them actually it?",
+		"instructions": "The user wants to stage a git commit and described the intended changes. `candidates` lists the top-scoring change units in the tree for that description, showing each unit's path, kind, and modified lines. Which candidate clearly corresponds to the change described—or do none of them match?",
 		"criteria": {
-			"none": "None of the candidates is the change the user described; they only share an area or vocabulary with it."
+			"none": "None of the listed candidates matches what the user described; at most they overlap in area or terminology."
 		}
 	}
 }

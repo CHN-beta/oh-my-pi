@@ -86,7 +86,9 @@ function mountNoticesIn(messages: readonly Message[]): string[] {
 			typeof content === "string"
 				? content
 				: content.flatMap(part => (part.type === "text" ? [part.text] : [])).join("");
-		return text.includes("xdev:// device inventory changed.") ? [text] : [];
+		return text.includes("xdev:// device roster updated.") || text.includes("xdev:// device inventory changed.")
+			? [text]
+			: [];
 	});
 }
 
@@ -535,7 +537,8 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 			...createMcpCustomTool("mcp__archive_lookup", "archive", "lookup", "Search nucleus"),
 			label: stableLabel,
 		};
-		const remountedAndUninstructedPrompt = 'mounted:"lookup"=xdev://mcp__archive_lookup,"ping"=xdev://mcp__silent_ping';
+		const remountedAndUninstructedPrompt =
+			'mounted:"lookup"=xdev://mcp__archive_lookup,"ping"=xdev://mcp__silent_ping';
 		await session.refreshMCPTools([remountedSearch, uninstructed]);
 		expect(rebuildCount).toBe(7);
 		expect(session.systemPrompt).toEqual([remountedAndUninstructedPrompt]);
@@ -1104,9 +1107,9 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		await session.prompt("third");
 		const allNotices = mountNoticesIn(contexts[2]);
 		expect(allNotices).toHaveLength(1);
-		expect(allNotices[0]).toContain("Unmounted; writes fail:");
+		expect(allNotices[0]).toContain("Unmounted; further writes will error:");
 		expect(allNotices[0]).toContain("xdev://mcp__nucleus_fetch");
-		expect(allNotices[0]).not.toContain("Available tools.");
+		expect(allNotices[0]).not.toContain("Available devices.");
 	});
 
 	it("keeps capped summaries for devices the route projection omits", async () => {
@@ -1264,7 +1267,7 @@ describe("AgentSession refreshMCPTools rebuild skipping", () => {
 		expect(notices).toHaveLength(1);
 		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
 		expect(notices[0]).not.toContain("mcp__nucleus_fetch");
-		expect(notices[0]).not.toContain("Unmounted; writes fail:");
+		expect(notices[0]).not.toContain("Unmounted; further writes will error:");
 	});
 
 	it.each([
@@ -1459,7 +1462,7 @@ These tools became available:
 		await session.prompt("second");
 		const notices = mountNoticesIn(contexts[1] ?? []);
 		expect(notices).toHaveLength(1);
-		expect(notices[0]).toContain("Unmounted; writes fail:");
+		expect(notices[0]).toContain("Unmounted; further writes will error:");
 		expect(notices[0]).toContain("xdev://mcp__nucleus_search");
 	});
 

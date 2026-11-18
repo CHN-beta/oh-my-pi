@@ -1296,7 +1296,7 @@ describe("compact", () => {
 		);
 		const archive = snapcompact.getPreservedArchive(result.preserveData);
 		expect(archive?.text).toContain("Legacy beginning summary");
-		expect(result.summary).toContain("condensed digest of still-older context");
+		expect(result.summary).toContain("compressed digest of even earlier context");
 		// The frames hold history no re-render can recover: counted as dropped, which the summary reports.
 		expect(archive?.truncatedChars).toBe(12);
 	});
@@ -1574,7 +1574,7 @@ describe("archive helpers", () => {
 			expect(sent).not.toContain("¶think:");
 			expect(sent).not.toContain("secret");
 			expect(sent).not.toContain("assistant reasoning");
-			expect(sent).toContain("`¶user:`, `¶ai:`, `¶call:`: user, assistant reply, tool call.");
+			expect(sent).toContain("`¶user:`, `¶ai:`, and `¶call:` open user, assistant reply, and tool-call scopes.");
 			expect(sent).toContain("a.ts (Read)");
 			expect(view.archive.textHead).toStartWith("¶user: ask\n¶ai: answer one");
 			expect(view.archive.textTail).toBe(textTail);
@@ -1681,8 +1681,8 @@ describe("archive helpers", () => {
 			for (const sentinel of ["HEAD sentinel", "MIDDLE sentinel", "TAIL sentinel", "PRIVATE plan"]) {
 				expect(sent).toContain(sentinel);
 			}
-			expect(result.summary).toContain("images, not text");
-			expect(sent).not.toContain("images, not text");
+			expect(result.summary).toContain("rendered as images rather than text");
+			expect(sent).not.toContain("rendered as images rather than text");
 			// This reader may read reasoning, so the legend keeps it.
 			expect(sent).toContain("`¶think:`");
 			// The summary's own file list, read-and-written files included.
@@ -1706,7 +1706,9 @@ describe("archive helpers", () => {
 			expect(sent).toContain("TAIL sentinel");
 			expect(sent).not.toContain("MIDDLE sentinel");
 			expect(sent).toContain("middle history omitted above");
-			expect(sent).toContain(`About ${view.archive.truncatedChars} characters of older middle history dropped`);
+			expect(sent).toContain(
+				`Roughly ${view.archive.truncatedChars} characters from the older middle span were omitted`,
+			);
 		});
 
 		it("drops reasoning for a reader without it when the summary declares no reasoning scope", async () => {

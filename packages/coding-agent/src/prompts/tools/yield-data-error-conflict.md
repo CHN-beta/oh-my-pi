@@ -1,11 +1,11 @@
-{{#if isWorkPool}}workpool yield requires exactly one of data or error (got error {{{errorJson}}}).
+{{#if isWorkPool}}workpool `yield` accepts only `data` or `error`, not both (received error {{{errorJson}}}).
 
-Resubmit exactly one outcome, keeping the same `key`:
-- For success, resend `{"key":{{workPoolKey}},"data":<your output>}`.
-- For failure, resend only `{{{failureJson}}}`.
-{{else}}yield cannot contain both data and error (got error {{{errorJson}}}).
+Resend a single outcome with the same `key`:
+- On success, resend `{"key":{{workPoolKey}},"data":<your output>}`.
+- On failure, resend only `{{{failureJson}}}`.
+{{else}}`yield` must not include both `data` and `error` (received error {{{errorJson}}}).
 
-Resubmit exactly one outcome:
-- For success, resend the same payload without `error`, keeping the same `type` if you sent one: {{#if typeJson}}`{"type":{{{typeJson}}},"data":<your output>}`{{else}}`{"data":<your output>}`{{/if}}.
-- For failure, resend only `{{{failureJson}}}`.
+Resend a single outcome:
+- On success, resend the same payload omitting `error`, preserving `type` if supplied: {{#if typeJson}}`{"type":{{{typeJson}}},"data":<your output>}`{{else}}`{"data":<your output>}`{{/if}}.
+- On failure, resend only `{{{failureJson}}}`.
 {{/if}}

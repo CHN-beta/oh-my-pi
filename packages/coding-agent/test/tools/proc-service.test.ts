@@ -390,7 +390,7 @@ describe("proc:// background jobs", () => {
 		const write = new WriteTool(session);
 		try {
 			await expect(write.execute("stdin", { path: `proc://${id}`, content: "go" })).rejects.toThrow(
-				deviceOnlyWrite ? "limited to the xdev:// device transport" : "Plan mode",
+				deviceOnlyWrite ? "restricted to the `xdev://` device protocol" : "Plan mode",
 			);
 			expect(manager.getJob(id)?.status).toBe("running");
 			const result = await write.execute("kill", { path: `proc://${id}/kill`, content: "" });

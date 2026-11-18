@@ -226,7 +226,7 @@ describe("CfgProtocolHandler", () => {
 		const shadowed = await write("cfg://modelRoles/save", '{"default":"anthropic/global"}', settings);
 		expect(asked[0]?.shadowedBy).toContain("project config");
 		expect(shadowed.details?.cfg?.effective).toContain("anthropic/project");
-		expect(textOf(shadowed)).toContain("project config takes precedence");
+		expect(textOf(shadowed)).toContain("project config overrides global configuration");
 
 		// A key the project layer does not set applies despite the layer owning the record.
 		const applied = await write("cfg://modelRoles/save", '{"smol":"anthropic/global"}', settings);
@@ -263,7 +263,7 @@ describe("CfgProtocolHandler", () => {
 			const saved = await write("cfg://bash/patterns/save", '[{"match":"git *","approval":"allow"}]', settings);
 			expect(asked[0]?.shadowedBy).toBeUndefined();
 			expect(saved.details?.cfg?.effective).toBeUndefined();
-			expect(textOf(saved)).not.toContain("Effective value is still");
+			expect(textOf(saved)).not.toContain("active value remains");
 			expect(cfgBashPatterns.get(settings)).toEqual([
 				{ match: "make *", approval: "allow" },
 				{ match: "git *", approval: "allow" },
@@ -274,7 +274,7 @@ describe("CfgProtocolHandler", () => {
 			approveAll(reset);
 			const shadowed = await write("cfg://bash/patterns/save", '[{"match":"ls *","approval":"allow"}]', reset);
 			expect(asked[1]?.shadowedBy).toContain("project config");
-			expect(textOf(shadowed)).toContain("project config takes precedence");
+			expect(textOf(shadowed)).toContain("project config overrides global configuration");
 			expect(cfgBashPatterns.get(reset)).toEqual([]);
 		} finally {
 			await dir.remove();
