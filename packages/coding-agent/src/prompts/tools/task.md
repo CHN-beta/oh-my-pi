@@ -56,27 +56,9 @@ Execute a single agent synchronously.
 {{#if effortEnabled}}
 - `effort`: `"lo"`|`"med"`|`"hi"` matching how open-ended the problem is.
 {{/if}}
-{{#if perCallModelEnabled}}
-- `model`: single exact `provider/model-id[@upstream][:level]` string scoped to this spawn only{{#if batchEnabled}}; set per `tasks[]` entry{{/if}}.
-  - `@upstream` locks an aggregator route and forms part of the model identity.
-  - Restricted to operator-approved models; roles, arrays, globs, and partial IDs are disallowed.
-  - Approved:
-{{#each perCallModelAdvertisement.roles}}
-    - {{#list patterns join=", "}}`{{this}}`{{/list}} ({{role}})
-{{/each}}
-{{#unless perCallModelAdvertisement.parentModelWithheld}}
-    - your own current model
-{{/unless}}
-    - the chosen bundled/user agent's own configured model
-  - A listed glob authorizes matching exact model IDs; supply the exact ID, NEVER the glob itself.
-{{#if perCallModelAdvertisement.allowlist.length}}
-  - Allowlist: {{#list perCallModelAdvertisement.allowlist join=", "}}`{{this}}`{{/list}} (must also be approved).
-{{/if}}
-  - Conflicts with an agent's `task.agentModelOverrides` entry or user-chosen effort.
-  - Leave unset unless required.
-  - If the requested model is unavailable → stop and report; NEVER fall back to another model.
-  - Approved model required on every request; retry fallback, context promotion, and prewalk are disabled.
-{{/if}}
+- `model`: optional model for this spawn{{#if batchEnabled}}; set per `tasks[]` entry{{/if}}. Accepts any selector: `provider/model-id`, a bare model id, a role alias, or `model-id:level`, with an optional `@upstream` pin for aggregators (`provider/model-id@upstream:level`). It overrides the agent definition and any `task.agentModelOverrides` entry.
+- `thinkingLevel`: optional `"off"`|`"minimal"`|`"low"`|`"medium"`|`"high"`|`"xhigh"`|`"max"` for this spawn{{#if batchEnabled}}; set per `tasks[]` entry{{/if}}. It overrides the agent's level, a `:level` suffix on `model`, and `task.maxEffort`.
+  - If the requested model cannot be resolved → stop and report it; NEVER substitute another silently.
 {{#if structured}}
 - `schemaMode`: permissive (default) warns after retries; strict fails immediately.
 {{/if}}

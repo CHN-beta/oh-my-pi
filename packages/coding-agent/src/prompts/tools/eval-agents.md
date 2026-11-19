@@ -10,17 +10,9 @@ await agent(prompt, { agent?, label?, schema?, schemaMode?, isolated?, apply?, m
     `.send(message)`, `.cancel()`, `.output()`.
   - Unawaited agent results deliver automatically like async jobs.
 {{#if perCallModel}}
-  - `model`: single exact `provider/model-id[@upstream][:level]` identifier for this invocation only.
-    - `@upstream` pins an aggregator route and forms part of the model ID.
-    - Must be an operator-approved model; roles, arrays, globs, and partial IDs are disallowed.
-    - Approved: {{#list perCallModelAdvertisement.roles join=", "}}{{#list patterns join=", "}}`{{this}}`{{/list}} ({{role}}){{/list}}{{#if perCallModelAdvertisement.roles.length}}; {{/if}}{{#if perCallModelAdvertisement.parentModelWithheld}}{{else}}your own current model; {{/if}}the selected bundled/user agent's own configured model.
-    - A listed glob authorizes matching exact model IDs; supply the exact ID, NEVER the glob itself.
-{{#if perCallModelAdvertisement.allowlist.length}}
-    - Allowlist: {{#list perCallModelAdvertisement.allowlist join=", "}}`{{this}}`{{/list}} (must also be approved).
-{{/if}}
-    - Conflicts with an agent's `task.agentModelOverrides` entry or user-selected effort.
-    - If unavailable → stop and report; NEVER fall back to a different model.
-    - Approved model required on every request; retry fallback, context promotion, and prewalk are disabled.
+  - `model`: optional model for this invocation. Accepts `provider/model-id`, a bare model id, a role alias, or `model-id:level`, with an optional `@upstream` pin for aggregators. It overrides the agent definition and `task.agentModelOverrides`.
+  - `thinkingLevel`: optional `"off"`|`"minimal"`|`"low"`|`"medium"`|`"high"`|`"xhigh"`|`"max"`; overrides the agent's level and any `:level` suffix on `model`.
+    - If the requested model cannot be resolved → stop and report it; NEVER substitute another silently.
 {{/if}}
   - `schema` takes precedence over agent and session schemas.
   - `{{#if py}}schema_mode{{else}}schemaMode{{/if}}`: "permissive" warns after retries, "strict" fails; if omitted → session setting, defaulting to "permissive".

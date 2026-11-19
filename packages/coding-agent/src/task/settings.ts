@@ -377,27 +377,23 @@ export const cfgTaskPerCallModel = register({
 	ui: {
 		tab: "tasks",
 		group: "Subagents",
-		label: "Per-Call Model",
+		label: "Per-Call Model (Deprecated)",
 		description:
-			"Whether a subagent call may pick its model with one exact provider/model-id[@upstream][:level] selector. An @upstream pin is part of the model identity and is supported only by aggregators. Only models the configuration already routes to are accepted. Project settings can turn it off but not on, and never approve a model.",
+			"Deprecated and ignored: the task tool and eval agent()/workpool() always accept a caller-supplied `model` selector (`provider/model-id`, a bare id, a role alias, or `model:level`).",
 		options: [
-			{ value: "off", label: "Off", description: "Reject `model` on task items and eval agent()/workpool()" },
-			{ value: "eval", label: "Eval only", description: "Accept `model` in eval agent() and workpool() only" },
-			{ value: "on", label: "On", description: "Accept `model` on task items and in eval agent()/workpool()" },
+			{ value: "off", label: "Off", description: "Ignored; `model` is always accepted" },
+			{ value: "eval", label: "Eval only", description: "Ignored; `model` is always accepted" },
+			{ value: "on", label: "On", description: "Ignored; `model` is always accepted" },
 		],
 	},
 });
 
 /**
- * Whether `task.perCallModel` accepts a per-call `model` for this invocation kind. The operator's
- * layers ({@link Settings.grantAuthority}) must enable it; project and subagent-injected settings,
- * which the live merged value includes, can only turn it off.
+ * Always true: a caller-supplied `model` is accepted for both `task` and eval spawns regardless of
+ * `task.perCallModel`, which is retained only as a documented setting.
  */
-export function perCallModelEnabled(settings: Settings, invocationKind: "task" | "eval"): boolean {
-	return [settings.grantAuthority(), settings].every(layers => {
-		const mode = cfgTaskPerCallModel.get(layers);
-		return mode === "on" || (mode === "eval" && invocationKind === "eval");
-	});
+export function perCallModelEnabled(_settings: Settings, _invocationKind: "task" | "eval"): boolean {
+	return true;
 }
 
 /**
@@ -427,12 +423,12 @@ export const cfgTaskPerCallModelAllow = register({
 	ui: {
 		tab: "tasks",
 		group: "Subagents",
-		label: "Per-Call Model Allowlist",
+		label: "Per-Call Model Allowlist (Deprecated)",
 		editor: "json",
 		// The editor writes the global layer; hide a project-supplied list so the repository cannot promote it.
 		condition: "perCallModelAllowNotProject",
 		description:
-			"Exact selectors: `provider/model-id`, including `@upstream` only for a pinned OpenRouter/Vercel route (e.g. `openrouter/x@y`). When set, a per-call model must also be listed here. Empty: every model the configuration grants. A project list can only narrow this one.",
+			"Deprecated and ignored: a caller-supplied model is no longer filtered by an allowlist. The list still validates as `provider/model-id` entries.",
 	},
 });
 
@@ -654,7 +650,7 @@ export const cfgTaskMaxEffort = register({
 		group: "Subagents",
 		label: "Maximum Per-Spawn Effort",
 		description:
-			"Maximum reasoning effort allowed for the task tool's per-spawn effort hint or a per-call model. An explicit `:level` is clamped to the highest supported effort at or below this ceiling, and an omitted `:level` inherits the agent's thinking level capped at this value; cold revival re-applies the cap. Unset, `:inherit` and `:off` keep their existing meaning. A per-call model must support an effort at or below this ceiling; the default preserves the model's full range.",
+			"Maximum reasoning effort applied to the task tool's coarse `effort` hint (lo/med/hi). It never applies to a caller-supplied `model` or `thinkingLevel`, which run at exactly the level they name. An omitted selector inherits the agent's thinking level uncapped; cold revival does the same.",
 		options: THINKING_EFFORTS.map(getThinkingLevelMetadata),
 	},
 });

@@ -13,7 +13,6 @@ import { modelKind } from "@oh-my-pi/pi-catalog/types";
 import {
 	resolveAgentModelSelection,
 	resolveConfiguredModelPatterns,
-	resolveExplicitModelRole,
 	getModelMatchPreferences,
 	resolveModelOverride,
 } from "../config/model-resolver";
@@ -37,7 +36,7 @@ import isolationRecoveryHintTemplate from "../prompts/tools/isolation-recovery-h
 import salvagedChildHintTemplate from "../prompts/tools/salvaged-child-hint.md" with { type: "text" };
 import { AgentRegistry, MAIN_AGENT_ID } from "../registry/agent-registry";
 import { journalCompletion } from "../session/model-usage-journal";
-import { AUTO_THINKING, type TaskEffort } from "@oh-my-pi/pi-tui/thinking";
+import type { TaskEffort } from "@oh-my-pi/pi-tui/thinking";
 import type { ToolSession } from "../tools";
 import { isIrcEnabled } from "../irc/messaging";
 import { buildOutputValidator } from "../tools/output-schema-validator";
@@ -64,6 +63,7 @@ import { resolveSpawnPolicy } from "./spawn-policy";
 import { type AgentDefinition, canSpawnAtDepth } from "./types";
 import type {
 	AgentProgress,
+	CallerThinkingLevel,
 	SingleResult,
 	StructuredSubagentOutput,
 	StructuredSubagentSchemaMode,
@@ -83,16 +83,9 @@ import {
 	cfgTaskIsolationEnabled,
 	cfgTaskIsolationMerge,
 	cfgTaskMaxRecursionDepth,
-	cfgTaskPerCallModel,
 	ovnfsCommand,
-	perCallModelEnabled,
 } from "./settings";
-import {
-	assertPerCallModelApproved,
-	parentModelGrantPattern,
-	PerCallModelError,
-	type PerCallModelGrants,
-} from "./model-approval";
+import { parentModelGrantPattern, type PerCallModelGrants } from "./model-approval";
 
 /** Final structured completion metadata returned for a schema-bearing run. */
 export type StructuredSubagentSchemaResult = StructuredSubagentOutput;
@@ -146,6 +139,11 @@ export interface StructuredSubagentRequest {
 	 * operator-approved models.
 	 */
 	perCallModel?: string;
+	/**
+	 * Caller-supplied concrete thinking level for this spawn. Always honored: it overrides the agent
+	 * definition, a `:level` suffix on the model selector, and the `task.maxEffort` ceiling.
+	 */
+	thinkingLevel?: CallerThinkingLevel;
 
 	/** Presence, rather than truthiness, makes this the highest-priority schema. */
 	outputSchema?: unknown;
@@ -228,8 +226,10 @@ export interface EffectiveSubagentPolicy {
 	applyChanges: boolean;
 	enableLsp: boolean;
 	enableIrc: boolean;
-	/** Caller `effort` hint to apply; dropped when the agent's level comes from the user's `^model:level` tag. */
+	/** Caller `effort` hint to apply; overrides the agent's thinking selector. */
 	effort?: TaskEffort;
+	/** Caller-supplied concrete thinking level; wins over `effort`, a `:level` suffix on the model, and the agent's selector. */
+	thinkingLevel?: CallerThinkingLevel;
 }
 
 /** Settled child execution plus data needed by the frontends' own rendering. */
@@ -356,16 +356,6 @@ function assertDepthAndSpawnAllowed(request: StructuredSubagentRequest, agentNam
 	}
 }
 
-/** The per-call gate's refusal for `invocationKind` calls, or `undefined` when `task.perCallModel` allows them. */
-function perCallModelDisabledReason(settings: Settings, invocationKind: "task" | "eval"): string | undefined {
-	if (perCallModelEnabled(settings, invocationKind)) return undefined;
-	const mode = cfgTaskPerCallModel.get(settings);
-	const operatorMode = cfgTaskPerCallModel.get(settings.grantAuthority());
-	// Project settings can turn the gate off but never on, so name both values when they differ.
-	const setting = mode === operatorMode ? mode : `${operatorMode}, project: ${mode}`;
-	return `Per-call model is disabled for ${invocationKind} calls (task.perCallModel: ${setting}). Omit model to use the agent's configured model.`;
-}
-
 /**
  * A blank `model` is absence, not a selector: callers that emit JSON pad optional
  * fields with `""` or `[]`, and whitespace alone names no model.
@@ -376,36 +366,30 @@ export function normalizeModelSelector<T>(model: T): T | undefined {
 }
 
 /**
- * Why a per-call `model` cannot be used before dispatch: the `task.perCallModel` gate first, so a
- * caller is never told to fix a selector it may not send, then anything but one exact
- * `provider/model-id[:level]` selector. `undefined` when there is no problem.
+ * Why a per-call `model` cannot be used before dispatch. A caller may name any selector
+ * (`provider/model`, a bare model id, a role alias, a glob, or a `:level` suffix); only a
+ * non-string or an empty selector is refused. `undefined` when there is no problem.
  */
 export function invalidModelSelectorReason(
 	model: unknown,
 	label: string,
-	gate: { settings: Settings; invocationKind: "task" | "eval" },
+	_gate: { settings: Settings; invocationKind: "task" | "eval" },
 ): string | undefined {
 	if (normalizeModelSelector(model) === undefined) return undefined;
-	const disabled = perCallModelDisabledReason(gate.settings, gate.invocationKind);
-	if (disabled) return disabled;
-	if (
-		typeof model !== "string" ||
-		!/^[^\s/@,*?[\]{}]+\/[^\s,*?{}]+$/.test(model.trim()) ||
-		// Settings make a legacy `pi/<custom role>` alias read as the role it names.
-		resolveExplicitModelRole(model.trim(), gate.settings) !== undefined
-	) {
-		return `${label} has an invalid \`model\` value ${JSON.stringify(model)}. Use one exact provider/model-id selector, optionally followed by a supported :level. Role aliases, patterns, and candidate arrays are not accepted.`;
+	if (typeof model !== "string") {
+		return `${label} has an invalid \`model\` value ${JSON.stringify(model)}. Use a single model selector string.`;
 	}
 	return undefined;
 }
 
-/** Gate, validate and approve a per-call `model`; returns the grants the running child stays held to. */
+/**
+ * Validate a per-call `model` and describe the run for the executor. The caller's selector wins over
+ * `task.agentModelOverrides` and the user's `^model:level` tag; no allowlist or approval gate applies.
+ */
 function preflightPerCallModel(
 	request: StructuredSubagentRequest,
 	selector: unknown,
 	agent: AgentDefinition,
-	hasModelOverride: boolean,
-	userTaggedEffort: boolean,
 	parentModelPattern: string | undefined,
 ): PerCallModelGrants {
 	const { settings, modelRegistry } = request.session;
@@ -413,18 +397,6 @@ function preflightPerCallModel(
 		throw new StructuredSubagentError("preflight", message);
 	};
 	if (request.model !== undefined) fail("A call cannot supply both a host model and a per-call model.");
-	const disabled = perCallModelDisabledReason(settings, request.invocationKind);
-	if (disabled) fail(disabled);
-	if (hasModelOverride) {
-		fail(
-			`Per-call model conflicts with task.agentModelOverrides for agent "${agent.name}". Omit model to use the configured override.`,
-		);
-	}
-	if (userTaggedEffort) {
-		fail(
-			`Per-call model conflicts with the user's \`^model:level\` tag for agent "${agent.name}". Omit model to use the tagged model and effort.`,
-		);
-	}
 	const selectorProblem = invalidModelSelectorReason(selector, "The call", {
 		settings,
 		invocationKind: request.invocationKind,
@@ -442,9 +414,7 @@ function preflightPerCallModel(
 	// A cold registry is checked again in the executor once models are loaded.
 	const available = modelRegistry?.getAvailable("all");
 	if (!modelRegistry || !available?.length) return grants;
-	const model = resolveModelOverride([perCallModel], { getAvailable: () => available }, settings, {
-		exactOnly: true,
-	}).model;
+	const model = resolveModelOverride([perCallModel], { getAvailable: () => available }, settings).model;
 	// Discovery still running may add it; the executor checks again once the refresh settles.
 	if (!model && modelRegistry.isBackgroundRefreshPending()) return grants;
 	if (!model || modelKind(model) !== "chat") {
@@ -452,14 +422,8 @@ function preflightPerCallModel(
 			"preflight",
 			model
 				? `\`model\` ${JSON.stringify(perCallModel)} is a ${modelKind(model)} model; a subagent needs a chat model.`
-				: `No available model matches \`model\` ${JSON.stringify(perCallModel)}. Use the exact provider/model-id and a supported thinking level. Stop and report an unavailable model instead of substituting another or dropping \`model\`.`,
+				: `No available model matches \`model\` ${JSON.stringify(perCallModel)}. Use a provider/model selector, role, or model id that resolves; stop and report an unavailable model instead of silently substituting another.`,
 		);
-	}
-	try {
-		assertPerCallModelApproved(model, grants, modelRegistry);
-	} catch (error) {
-		if (error instanceof PerCallModelError) fail(error.message);
-		throw error;
 	}
 	return grants;
 }
@@ -568,13 +532,8 @@ export async function resolveEffectiveSubagentPolicy(
 		: undefined;
 	const agentAccountPools = validateAgentAccountPools(cfgTaskAgentAccountPools.get(request.session.settings));
 	const oauthAccountPools = Object.hasOwn(agentAccountPools, agentName) ? agentAccountPools[agentName] : undefined;
-	const perCallSelector: unknown = request.perCallModel;
+	const perCallSelector: unknown = normalizeModelSelector(request.perCallModel);
 	const parentActiveModel = request.session.getActiveModel?.();
-	const userTaggedEffort =
-		sessionAgents.includes(agent) &&
-		agent.thinkingLevel !== undefined &&
-		agent.thinkingLevel !== AUTO_THINKING &&
-		agent.model?.[0]?.endsWith(`:${agent.thinkingLevel}`) === true;
 	const perCallModelGrants =
 		perCallSelector === undefined
 			? undefined
@@ -582,8 +541,6 @@ export async function resolveEffectiveSubagentPolicy(
 					request,
 					perCallSelector,
 					agent,
-					Object.hasOwn(agentModelOverrides, agentName),
-					userTaggedEffort,
 					// A multi-upstream or otherwise richer parent route cannot grant a simpler selector.
 					parentActiveModel
 						? parentModelGrantPattern(parentActiveModel)
@@ -639,7 +596,8 @@ export async function resolveEffectiveSubagentPolicy(
 			(request.enableIrc ??
 				(request.session.enableIrc !== false &&
 					isIrcEnabled(request.session.settings, request.session.taskDepth ?? 0))),
-		effort: userTaggedEffort ? undefined : request.effort,
+		effort: request.effort,
+		thinkingLevel: request.thinkingLevel,
 	};
 }
 
@@ -784,6 +742,7 @@ function buildExecutorOptions(
 		journalTaskLabel: journalCompletion(session.sessionManager, { purpose: "task-label" }),
 		perCallModelGrants: policy.perCallModelGrants,
 		thinkingLevel: policy.effectiveAgent.thinkingLevel,
+		thinkingLevelOverride: policy.thinkingLevel,
 		effort: policy.effort,
 		solutionSpace: request.solutionSpace?.trim() || undefined,
 		...(policy.schema.source === "none"

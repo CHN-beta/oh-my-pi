@@ -148,6 +148,7 @@ import {
 } from "./types";
 import {
 	type AgentProgress,
+	type CallerThinkingLevel,
 	type SingleResult,
 	type StructuredSubagentOutput,
 	type StructuredSubagentSchemaMode,
@@ -507,6 +508,11 @@ export interface ExecutorOptions {
 	/** Set for a per-call `model`; every model the child sends to must stay approved by these grants. */
 	perCallModelGrants?: PerCallModelGrants;
 	thinkingLevel?: ConfiguredThinkingLevel;
+	/**
+	 * Caller-supplied concrete thinking level; wins over `effort`, a `:level` suffix on the resolved model,
+	 * and the agent's own selector, and is never clamped by `task.maxEffort`.
+	 */
+	thinkingLevelOverride?: CallerThinkingLevel;
 	/** Caller-requested coarse effort (`lo`/`med`/`hi`); maps onto the resolved model's supported thinking range and wins over {@link thinkingLevel}. */
 	effort?: TaskEffort;
 	/** Caller's description of how open-ended the work is; rides the initial prompt into the child's `auto` thinking classifier. */
@@ -3985,6 +3991,12 @@ export interface FollowUpTurnOptions {
 	description?: string;
 	/** Explicit pre-expansion model role alias retained from the original run. */
 	modelRole?: string;
+	/** Switch the live worker to this model before the turn runs (a caller override, not the agent default). */
+	model?: Model;
+	/** Same as {@link model}, as a selector (`provider/model`, model id, role, or `model:level`) resolved against the live session. */
+	modelSelector?: string;
+	/** Thinking level applied with {@link model}, or on its own before the turn runs. */
+	thinkingLevel?: CallerThinkingLevel;
 	/** Output schema retained from the original invocation; absent = no `yield` tool (see {@link usesYield}). */
 	outputSchema?: unknown;
 	outputSchemaMode?: StructuredSubagentSchemaMode;
@@ -4122,6 +4134,23 @@ async function driveFollowUpTurn(
 		}
 		session = live;
 		await acquireOwnership();
+	}
+	// A caller can retarget an existing worker: switch its model and/or thinking level before this turn
+	// dispatches, so the very next request already runs on the requested combination.
+	const targetModel =
+		options.model ??
+		(options.modelSelector !== undefined
+			? resolveModelOverride([options.modelSelector], session.modelRegistry, session.settings).model
+			: undefined);
+	if (options.modelSelector !== undefined && targetModel === undefined) {
+		throw new Error(
+			`No available model matches \`model\` ${JSON.stringify(options.modelSelector)}; the worker stays on its current model.`,
+		);
+	}
+	if (targetModel !== undefined) {
+		await session.setModelTemporary(targetModel, options.thinkingLevel as ConfiguredThinkingLevel | undefined);
+	} else if (options.thinkingLevel !== undefined) {
+		session.setThinkingLevel(options.thinkingLevel as ConfiguredThinkingLevel);
 	}
 	// A kept-alive session reuses its YieldTool across turns; clear the prior
 	// run's incremental-section flag and retry counters so this turn's guards
@@ -4940,7 +4969,7 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 					modelRegistry,
 					settings,
 					id,
-					{ exactOnly: !!options.perCallModelGrants, allowedProvider },
+					{ allowedProvider },
 				),
 			);
 			if (cfgOffline.get(settings) && !model) {
@@ -5014,13 +5043,14 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 			// supported range, then respects the operator-configured ceiling.
 			// Undefined (no effort, or no controllable effort surface) falls
 			// through to the normal selectors below.
-			// The ceiling outlives initial resolution: it rides into the session so
-			// retry-fallback recovery can never clamp effort back up past it.
-			// A per-call `model` is caller-chosen too, so its `:level` is held to the same
-			// ceiling, and a model whose lowest effort is above it fails the spawn
-			// exactly as an `effort` hint does.
+			// A caller-chosen model or thinking level is never held to the operator ceiling; only the coarse
+			// `effort` hint (mapped onto the model's range) keeps the `task.maxEffort` cap.
 			const spawnEffortCeiling =
-				options.effort !== undefined || options.perCallModelGrants ? cfgTaskMaxEffort.get(settings) : undefined;
+				options.thinkingLevelOverride === undefined &&
+				options.perCallModelGrants === undefined &&
+				options.effort !== undefined
+					? cfgTaskMaxEffort.get(settings)
+					: undefined;
 			if (model && spawnEffortCeiling) assertModelSupportsEffortCeiling(model, spawnEffortCeiling);
 			const effortLevel =
 				options.effort !== undefined
@@ -5031,7 +5061,9 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 					? clampThinkingLevelToCeiling(model, resolvedThinkingLevel, spawnEffortCeiling)
 					: resolvedThinkingLevel;
 			if (model) {
-				const displayLevel = effortLevel ?? (explicitThinkingLevel ? explicitLevel : undefined);
+				const displayLevel = (options.thinkingLevelOverride ??
+					effortLevel ??
+					(explicitThinkingLevel ? explicitLevel : undefined)) as ConfiguredThinkingLevel | undefined;
 				progress.resolvedModelIdentity = formatModelStringWithRouting(model);
 				progress.resolvedThinkingLevel = displayLevel;
 				progress.resolvedModel =
@@ -5039,11 +5071,13 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 						? formatModelSelectorValue(progress.resolvedModelIdentity, displayLevel)
 						: progress.resolvedModelIdentity;
 			}
-			// Precedence: caller `effort` > explicit `:level` suffix on the resolved
-			// model pattern > agent-definition default (e.g. task's `auto`) >
+			// Precedence: caller `thinkingLevel` > caller `effort` > explicit `:level` suffix on the
+			// resolved model pattern > agent-definition default (e.g. task's `auto`) >
 			// pattern-derived level.
 			const effectiveThinkingLevel =
-				effortLevel ?? (explicitThinkingLevel ? explicitLevel : (thinkingLevel ?? resolvedThinkingLevel));
+				options.thinkingLevelOverride ??
+				effortLevel ??
+				(explicitThinkingLevel ? explicitLevel : (thinkingLevel ?? resolvedThinkingLevel));
 			resolvedAt = performance.now();
 			const effectiveCwd = worktree ?? cwd;
 			const sessionManagerPromise = sessionFile
@@ -5121,7 +5155,14 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 						pattern: prewalkPattern,
 						warning: resolvedPrewalk.warning,
 					});
-				} else if (prewalkWouldBeNoop(model, effectiveThinkingLevel, target, resolvedPrewalk.thinkingLevel)) {
+				} else if (
+					prewalkWouldBeNoop(
+						model,
+						effectiveThinkingLevel as ConfiguredThinkingLevel,
+						target,
+						resolvedPrewalk.thinkingLevel,
+					)
+				) {
 					// Same model AND same effective thinking level: switching would only
 					// inject the plan/checklist nudges for no gain — skip. An effort-only
 					// delta on the same model still arms (it is a real cheapening hand-off).
@@ -5184,7 +5225,7 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 						model || modelOverride === undefined ? undefined : subagentRetryFallbackRole(id),
 					modelPatternDefaultFallbackChain:
 						model || modelOverride === undefined ? undefined : inheritedRetryFallbackChain,
-					thinkingLevel: effectiveThinkingLevel,
+					thinkingLevel: effectiveThinkingLevel as ConfiguredThinkingLevel,
 					...(perCallModelGrants || allowedProvider !== undefined
 						? {
 								assertDispatchModel: (dispatchModel: Model) => {
@@ -5197,7 +5238,6 @@ async function runSubprocessOnThisThread(options: ExecutorOptions): Promise<Sing
 											assertModelSupportsEffortCeiling(dispatchModel, spawnEffortCeiling);
 									}
 								},
-								...(perCallModelGrants ? { disableModelFallback: true } : {}),
 								disableServerSideFallback: true,
 							}
 						: {}),

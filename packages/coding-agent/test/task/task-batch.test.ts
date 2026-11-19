@@ -391,7 +391,7 @@ describe("task.batch validation", () => {
 
 	it.each([
 		{ batch: false, structured: true, isolation: false, model: "" },
-		{ batch: true, structured: false, isolation: true, model: [] },
+		{ batch: true, structured: false, isolation: true, model: "   " },
 	])("routes empty model placeholders through the agent loop: $batch $structured $isolation", async options => {
 		const configuredAgent = { ...taskAgent, model: ["default/route"] };
 		mockDiscovery(configuredAgent);
@@ -464,7 +464,7 @@ describe("task.batch validation", () => {
 		{ form: "batch", batch: true, structured: true, isolation: true },
 		{ form: "flat", batch: false, structured: false, isolation: false },
 	])(
-		"refuses model on an ordinary agent in the $form form (structured: $structured, isolation: $isolation)",
+		"accepts model on an ordinary agent in the $form form (structured: $structured, isolation: $isolation)",
 		async ({ batch, structured, isolation }) => {
 			mockDiscovery(taskAgent);
 			const run = vi
@@ -508,10 +508,9 @@ describe("task.batch validation", () => {
 			await agent.prompt("go");
 
 			const toolResult = agent.state.messages.find(message => message.role === "toolResult");
-			const text = toolResult?.role === "toolResult" ? getFirstText(toolResult) : "";
-			expect(text).toContain("Per-call model is disabled for task calls (task.perCallModel: off).");
-			expect(toolResult?.role === "toolResult" && toolResult.isError).toBe(true);
-			expect(run).not.toHaveBeenCalled();
+			expect(toolResult?.role === "toolResult" && toolResult.isError).toBe(false);
+			expect(run).toHaveBeenCalledTimes(1);
+			expect(run.mock.calls[0]?.[0]?.perCallModelGrants).toBeDefined();
 		},
 	);
 });
@@ -1003,32 +1002,27 @@ describe("batch model placement", () => {
 		expect(run).not.toHaveBeenCalled();
 	});
 
-	// `off` and `eval` refuse task calls through the same gate; one mode per shape covers it.
+	// `off` and `eval` no longer gate task calls: a role alias reaches preflight in both shapes and dispatches.
 	it.each([
 		["off", "batch"],
 		["eval", "flat"],
-	] as const)(
-		"rejects a task call's model before dispatch while task.perCallModel is %s (%s call)",
-		async (mode, shape) => {
-			const batch = shape === "batch";
-			mockDiscovery();
-			const run = vi.spyOn(executorModule, "runSubprocess").mockResolvedValue(makeResult("Unexpected"));
-			const tool = await TaskTool.create(
-				createSession({ settings: { "task.batch": batch, "async.enabled": false, "task.perCallModel": mode } }),
-			);
-			// A role alias is not an exact selector, but the disabled gate is what the caller must hear first.
-			const work = { task: "Do work", solutionSpace: "c", model: "@smol" };
-			// Through shared argument validation, as a model's tool call arrives: `model` must reach preflight in both shapes.
-			const args = validateAgentToolArguments(tool as unknown as AgentTool, {
-				type: "toolCall",
-				id: "task-model",
-				name: tool.name,
-				arguments: batch ? { context: "Shared context", tasks: [work] } : work,
-			});
-			const result = await tool.execute("task-model", args as TaskParams);
-			expect(getFirstText(result)).toMatch(/per-call model is disabled/i);
-			expect(result.isError).toBe(true);
-			expect(run).not.toHaveBeenCalled();
-		},
-	);
+	] as const)("dispatches a task call's model while task.perCallModel is %s (%s call)", async (mode, shape) => {
+		const batch = shape === "batch";
+		mockDiscovery();
+		const run = vi.spyOn(executorModule, "runSubprocess").mockResolvedValue(makeResult("Dispatched"));
+		const tool = await TaskTool.create(
+			createSession({ settings: { "task.batch": batch, "async.enabled": false, "task.perCallModel": mode } }),
+		);
+		const work = { task: "Do work", solutionSpace: "c", model: "@smol" };
+		// Through shared argument validation, as a model's tool call arrives: `model` must reach preflight in both shapes.
+		const args = validateAgentToolArguments(tool as unknown as AgentTool, {
+			type: "toolCall",
+			id: "task-model",
+			name: tool.name,
+			arguments: batch ? { context: "Shared context", tasks: [work] } : work,
+		});
+		const result = await tool.execute("task-model", args as TaskParams);
+		expect(result.isError).not.toBe(true);
+		expect(run).toHaveBeenCalledTimes(1);
+	});
 });

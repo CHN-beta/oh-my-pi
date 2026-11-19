@@ -25,10 +25,11 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { logger, prompt, Snowflake } from "@oh-my-pi/pi-utils";
+import type { Model } from "@oh-my-pi/pi-ai";
 import type { AsyncJob, AsyncJobManagerApi, AsyncJobRunResult } from "../async/job-manager";
 import type { EffectiveExtensionRoots } from "../capability/types";
 import { validateAgentAccountPools } from "../config/account-pools";
-import { resolveAgentModelSelection } from "../config/model-resolver";
+import { resolveAgentModelSelection, resolveModelOverride } from "../config/model-resolver";
 import { sessionLocalProtocolOptions } from "../internal-urls/context";
 import { registerArtifactsDir } from "../internal-urls/registry-helpers";
 import { MCPManager } from "../mcp/manager";
@@ -36,15 +37,22 @@ import vibeTurnResultTemplate from "../prompts/tools/vibe-turn-result.md" with {
 import { AgentLifecycleManager } from "../registry/agent-lifecycle";
 import { type AgentRef, AgentRegistry, MAIN_AGENT_ID } from "../registry/agent-registry";
 import { SessionManager, SessionPersistenceIndeterminateError } from "../session/session-manager";
+import { isAgentViewSession } from "../session/agent-session-handle";
 import { getBundledAgent } from "../task/agents";
 import { discoverAgents, getAgent } from "../task/discovery";
 import { type ExecutorOptions, runSubagentFollowUpTurn, runSubprocess } from "../task/executor";
 import { generateTaskName, sanitizeAgentId } from "../task/name-generator";
 import { AgentOutputManager } from "../task/output-manager";
 import { type AgentDefinition } from "../task/types";
-import { type AgentProgress, oneLineLabel, type SingleResult } from "@oh-my-pi/pi-tui/tools/task";
+import {
+	type AgentProgress,
+	type CallerThinkingLevel,
+	oneLineLabel,
+	type SingleResult,
+} from "@oh-my-pi/pi-tui/tools/task";
 import type { ToolSession } from "../tools";
 import { formatDuration, shortenPath } from "@oh-my-pi/pi-tui/render/render-utils";
+import type { ConfiguredThinkingLevel } from "@oh-my-pi/pi-tui/render/render-utils";
 import { ToolError } from "@oh-my-pi/pi-tui/tools/tool-errors";
 import { calculateTokensPerSecond } from "../utils/token-rate";
 
@@ -182,6 +190,10 @@ interface VibeRecord {
 	modelOverride?: string | string[];
 	/** Pre-expansion role alias behind {@link modelOverride}, when the worker agent named one. */
 	modelRole?: string;
+	/** Selector the director supplied on spawn or send; re-applied to every later turn. */
+	callerModelOverride?: string;
+	/** Thinking level the director supplied; wins over the agent definition and any `:level` suffix. */
+	thinkingLevelOverride?: CallerThinkingLevel;
 	state: VibeSessionState;
 	createdAt: number;
 	lastActivityAt: number;
@@ -809,7 +821,10 @@ export class VibeSessionRegistry {
 				});
 				continue;
 			}
-			const { agent, modelOverride, modelRole } = resolved;
+			const { agent, modelRole } = resolved;
+			// A persisted director override outranks the slot agent's resolved model, so a resumed
+			// worker keeps the model and thinking level it was running with.
+			const modelOverride = spawn.model !== undefined ? [spawn.model] : resolved.modelOverride;
 			if (!existing) {
 				AgentRegistry.global().register({
 					id: spawn.id,
@@ -830,7 +845,9 @@ export class VibeSessionRegistry {
 				childSessionFile,
 				agent,
 				modelOverride,
-				modelRole,
+				modelRole: spawn.model !== undefined ? undefined : modelRole,
+				callerModelOverride: spawn.model,
+				thinkingLevelOverride: spawn.thinkingLevel as CallerThinkingLevel | undefined,
 				state: "idle",
 				createdAt: spawn.createdAt,
 				lastActivityAt: candidate.lastActivityAt,
@@ -851,7 +868,10 @@ export class VibeSessionRegistry {
 	}
 
 	/** Spawn a persistent worker session and start its first turn in the background. */
-	async spawn(session: ToolSession, args: { cli: VibeCli; name?: string; prompt: string }): Promise<VibeSpawnOutcome> {
+	async spawn(
+		session: ToolSession,
+		args: { cli: VibeCli; name?: string; prompt: string; model?: string; thinkingLevel?: CallerThinkingLevel },
+	): Promise<VibeSpawnOutcome> {
 		const scope = this.ownerScope(session);
 		return this.#withTerminationLock(scope, () => this.#spawnLocked(session, scope, args));
 	}
@@ -859,13 +879,18 @@ export class VibeSessionRegistry {
 	async #spawnLocked(
 		session: ToolSession,
 		scope: VibeOwnerScope,
-		args: { cli: VibeCli; name?: string; prompt: string },
+		args: { cli: VibeCli; name?: string; prompt: string; model?: string; thinkingLevel?: CallerThinkingLevel },
 	): Promise<VibeSpawnOutcome> {
 		if (this.#terminatedScopes.has(scopeKey(scope, ""))) {
 			throw new ToolError("Vibe mode has exited; enter Vibe mode again before spawning a worker.");
 		}
 		const manager = this.#manager(session);
-		const { agent, modelOverride, modelRole } = await this.#resolveWorker(session, args.cli);
+		const resolved = await this.#resolveWorker(session, args.cli);
+		const { agent } = resolved;
+		// A director-supplied model replaces the slot agent's model; a `:level` suffix stays part of the
+		// selector and is resolved by the executor. The caller's thinking level sits above both.
+		const modelOverride = args.model ? [args.model] : resolved.modelOverride;
+		const modelRole = args.model ? undefined : resolved.modelRole;
 		if (!session.agentOutputManager) {
 			session.agentOutputManager = new AgentOutputManager(session.getArtifactsDir ?? (() => null), {
 				settings: session.settings,
@@ -891,6 +916,8 @@ export class VibeSessionRegistry {
 			agent,
 			modelOverride,
 			modelRole,
+			callerModelOverride: args.model,
+			thinkingLevelOverride: args.thinkingLevel,
 			state: "starting",
 			createdAt,
 			lastActivityAt: createdAt,
@@ -914,6 +941,8 @@ export class VibeSessionRegistry {
 						agent: agent.name,
 						childSessionFile: childSessionName,
 						createdAt,
+						...(args.model !== undefined ? { model: args.model } : {}),
+						...(args.thinkingLevel !== undefined ? { thinkingLevel: args.thinkingLevel } : {}),
 					},
 					record.parentSessionFile,
 				);
@@ -943,7 +972,15 @@ export class VibeSessionRegistry {
 	 * otherwise → queued for the next turn; idle/parked → starts a new
 	 * background turn immediately.
 	 */
-	async send(session: ToolSession, args: { session: string; message: string }): Promise<VibeSendOutcome> {
+	async send(
+		session: ToolSession,
+		args: {
+			session: string;
+			message: string;
+			model?: string;
+			thinkingLevel?: CallerThinkingLevel;
+		},
+	): Promise<VibeSendOutcome> {
 		const scope = this.ownerScope(session);
 		const record = this.#record(scope, args.session);
 		if (record.state === "dead") {
@@ -954,6 +991,19 @@ export class VibeSessionRegistry {
 		const registered = this.#registeredAgent(record);
 		if (AgentRegistry.global().get(record.id) && !registered) {
 			throw new ToolError(`Vibe session "${record.id}" no longer resolves to this parent session.`);
+		}
+
+		// Retargeting is recorded first so every later turn re-applies it, then pushed into the live
+		// session where that is safe: a streaming turn takes the new thinking level at once (later steps
+		// honor it) while a model switch waits for the next turn.
+		if (args.model !== undefined || args.thinkingLevel !== undefined) {
+			if (args.model !== undefined) {
+				record.callerModelOverride = args.model;
+				record.modelOverride = [args.model];
+				record.modelRole = undefined;
+			}
+			if (args.thinkingLevel !== undefined) record.thinkingLevelOverride = args.thinkingLevel;
+			await this.#applyOverridesToLive(session, record, registered?.session);
 		}
 
 		if (record.turn) {
@@ -975,6 +1025,41 @@ export class VibeSessionRegistry {
 		const manager = this.#manager(session);
 		const jobId = this.#registerTurnJob(session, manager, record, message, { first: false });
 		return { id: record.id, mode: "turn", jobId };
+	}
+
+	/** Resolve one model selector for a worker and fail loudly when it names nothing available. */
+	#resolveCallerModel(session: ToolSession, selector: string): Model {
+		const registry = session.modelRegistry;
+		if (!registry) {
+			throw new ToolError(`Cannot resolve model ${JSON.stringify(selector)}: this session has no model registry.`);
+		}
+		const model = resolveModelOverride([selector], registry, session.settings).model;
+		if (!model) {
+			throw new ToolError(
+				`No available model matches \`model\` ${JSON.stringify(selector)}. Use a provider/model selector, a model id, or a role alias.`,
+			);
+		}
+		return model;
+	}
+
+	/**
+	 * Push recorded overrides into a live worker session. A model switch needs a resolved model and an
+	 * idle session (mid-turn model switches would strand the running request); the thinking level can
+	 * change at any time and takes effect on the turn's next request.
+	 */
+	async #applyOverridesToLive(
+		session: ToolSession,
+		record: VibeRecord,
+		live: AgentRef["session"] | undefined,
+	): Promise<void> {
+		if (!live || !isAgentViewSession(live)) return;
+		if (record.thinkingLevelOverride !== undefined) {
+			live.setThinkingLevel(record.thinkingLevelOverride as ConfiguredThinkingLevel);
+		}
+		if (record.callerModelOverride === undefined || live.isStreaming) return;
+		const model = this.#resolveCallerModel(session, record.callerModelOverride);
+		await live.setModelTemporary(model, record.thinkingLevelOverride as ConfiguredThinkingLevel | undefined);
+		record.resolvedModel = record.callerModelOverride;
 	}
 
 	/**
@@ -1349,7 +1434,8 @@ export class VibeSessionRegistry {
 			modelOverride: record.modelOverride,
 			modelRole: record.modelRole,
 			parentActiveModelPattern: session.getActiveModelString?.(),
-			thinkingLevel: record.agent.thinkingLevel,
+			thinkingLevel:
+				(record.thinkingLevelOverride as ConfiguredThinkingLevel | undefined) ?? record.agent.thinkingLevel,
 			sessionFile,
 			persistArtifacts: Boolean(sessionFile),
 			artifactsDir,
@@ -1449,6 +1535,8 @@ export class VibeSessionRegistry {
 								agent: record.agent,
 								message,
 								description: `vibe ${record.cli} session`,
+								modelSelector: record.callerModelOverride,
+								thinkingLevel: record.thinkingLevelOverride,
 								signal,
 								onProgress,
 								eventBus: session.eventBus,

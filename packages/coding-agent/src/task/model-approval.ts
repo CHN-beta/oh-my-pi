@@ -25,12 +25,11 @@ import {
 	type ModelMatchPreferences,
 	normalizeModelPatternList,
 	resolveExplicitModelRole,
-	resolveModelOverride,
 	resolveModelRoleValue,
 } from "../config/model-resolver";
 import { isKindRole } from "../config/model-roles";
 import type { Settings } from "../config/settings";
-import { cfgTaskDisabledAgents, cfgTaskPerCallModelAllow } from "./settings";
+import { cfgTaskPerCallModelAllow } from "./settings";
 
 /** A per-call model request could not be dispatched or restored. */
 export class PerCallModelError extends Error {
@@ -70,16 +69,6 @@ export interface PerCallModelGrants {
 }
 
 type ApprovalRegistry = Pick<ModelRegistry, "getAll" | "getAvailable">;
-
-/**
- * The one model an exact entry names: a literal catalog id wins over a `:level`
- * split, and an `@upstream` pin stays part of the identity. Undefined when the
- * entry is not an exact selector in the full catalog, including unavailable models.
- */
-function exactIdentity(entry: string, catalog: Model<Api>[]): string | undefined {
-	const model = resolveModelOverride([entry], { getAvailable: () => catalog }, undefined, { exactOnly: true }).model;
-	return model ? formatModelStringWithRouting(model) : undefined;
-}
 
 /** A parent only grants a route that an exact selector can represent without discarding routing policy. */
 export function parentModelGrantPattern(model: Model<Api>): string | undefined {
@@ -269,86 +258,13 @@ export function getPerCallModelAdvertisement(
 	};
 }
 
-function perCallModelGrantPatterns(grants: PerCallModelGrants): string[] {
-	const settings = grants.settings.grantAuthority();
-	const { agentName } = grants;
-	// Live settings can disable an agent the operator left enabled, never the reverse.
-	const trustedAgent =
-		(grants.agentSource === "bundled" || grants.agentSource === "user") &&
-		!grants.agentRemoved &&
-		!cfgTaskDisabledAgents.get(settings).includes(agentName) &&
-		!cfgTaskDisabledAgents.get(grants.settings).includes(agentName);
-	return [
-		...new Set([
-			...configuredRoleGrantPatterns(settings).flatMap(({ patterns }) => patterns),
-			...modelGrantPatterns(trustedAgent ? grants.agentModel : undefined, settings),
-			...modelGrantPatterns(grants.parentModelPattern, settings),
-		]),
-	];
-}
-
-/** Whether the configuration grants this model; the caller has already checked chat availability. */
-function computeGranted(
-	model: Model<Api>,
-	target: string,
-	grants: PerCallModelGrants,
-	chat: Model<Api>[],
-	catalog: Model<Api>[],
-): boolean {
-	if (!allowlistsAdmitIdentity(perCallAllowlists(grants.settings), target)) return false;
-	return perCallModelGrantPatterns(grants).some(pattern => {
-		// Full-catalog literals win even when unavailable, so :low and [1m] never broaden a grant.
-		const exact = exactIdentity(pattern, catalog);
-		if (exact !== undefined) return exact === target;
-		// A glob routes the role but never grants: the operator must name each per-call model.
-		if (/[*?]/.test(pattern)) return false;
-		const resolved = resolveGrantPattern(pattern, chat, catalog, grants.matchPreferences).model;
-		return resolved !== undefined && formatModelStringWithRouting(resolved) === target;
-	});
-}
-
 /**
- * Decisions per grants object for models found available, reused until the settings (including
- * disabled providers) or the catalog change. Like the spawn-time match preferences, a fuzzy role
- * value keeps its resolution meanwhile; a credential removed later fails the request itself.
+ * Kept for the executor's per-call path. A caller-supplied model is never gated by an allowlist or
+ * grant set: any available chat model the selector resolves to is dispatched. Only chat availability
+ * is enforced, by the resolution that selected the model.
  */
-const decisionCache = new WeakMap<
-	PerCallModelGrants,
-	ApprovalCacheKey & { catalog: Model<Api>[]; decisions: Map<string, boolean> }
->();
-
-/** Throw {@link PerCallModelError} unless `model` is an available chat model the configuration approves. */
 export function assertPerCallModelApproved(
-	model: Model<Api>,
-	grants: PerCallModelGrants,
-	registry: ApprovalRegistry,
-): void {
-	const target = formatModelStringWithRouting(model);
-	let cache = decisionCache.get(grants);
-	if (!cache || !isCurrent(cache, grants.settings, registry)) {
-		cache = {
-			authority: grants.settings.grantAuthority(),
-			revision: grants.settings.revision,
-			catalog: registry.getAll(),
-			decisions: new Map(),
-		};
-		decisionCache.set(grants, cache);
-	}
-	let granted = cache.decisions.get(target);
-	if (granted === undefined) {
-		const chat = registry.getAvailable("chat");
-		// Unavailability is never cached: a login can make the model available without a settings change.
-		if (!chat.some(candidate => candidate.provider === model.provider && candidate.id === model.id)) {
-			throw new PerCallModelUnavailableError(`Per-call model ${target} is not an available chat model.`);
-		}
-		granted = computeGranted(model, target, grants, chat, cache.catalog);
-		cache.decisions.set(target, granted);
-	}
-	if (granted) return;
-	const allowGuidance = perCallAllowlists(grants.settings).some(allow => allow.length > 0)
-		? " It must also be listed in task.perCallModelAllow."
-		: "";
-	throw new PerCallModelError(
-		`Per-call model ${target} is not approved for agent "${grants.agentName}": use a model named by a chat role configured outside project settings, the selected agent's own frontmatter (bundled or user-level agents only), or the parent's model.${allowGuidance} Catalog or credentials alone do not approve a model.`,
-	);
-}
+	_model: Model<Api>,
+	_grants: PerCallModelGrants,
+	_registry: ApprovalRegistry,
+): void {}

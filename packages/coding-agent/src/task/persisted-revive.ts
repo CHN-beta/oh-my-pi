@@ -4,11 +4,9 @@ import { logger } from "@oh-my-pi/pi-utils";
 import { MAIN_AGENT_RULE_NAME, SUB_AGENT_RULE_NAME } from "../capability/rule";
 import { validateAgentAccountPools } from "../config/account-pools";
 import type { Model } from "@oh-my-pi/pi-ai";
-import { assertModelSupportsEffortCeiling } from "@oh-my-pi/pi-tui/thinking";
 import type { ModelRegistry } from "../config/model-registry";
 import {
 	formatModelStringWithRouting,
-	getModelMatchPreferences,
 	resolveAgentAdvisorRolePattern,
 	resolveExactModelIdentity,
 } from "../config/model-resolver";
@@ -48,15 +46,8 @@ import {
 	usesYield,
 } from "./executor";
 import { isCompletionProbeEnabled } from "./completion-probe";
-import { discoverAgents, getAgent } from "./discovery";
-import {
-	assertPerCallModelApproved,
-	parentModelGrantPattern,
-	PerCallModelError,
-	PerCallModelUnavailableError,
-	type PerCallModelGrants,
-} from "./model-approval";
-import { cfgTaskAgentAccountPools, cfgTaskMaxEffort } from "./settings";
+import { PerCallModelError } from "./model-approval";
+import { cfgTaskAgentAccountPools } from "./settings";
 import type { AgentDefinition } from "./types";
 
 /**
@@ -252,11 +243,7 @@ export async function revivePersistedSubagent(spec: PersistedReviveSpec, expecte
 			`Cannot revive subagent "${ref.id}": session file "${sessionFile}" has no message history (truncated to header/session_init). The agent was not revived.`,
 		);
 	}
-	const resolveParentSession = () =>
-		ref.parentId === spec.rootAgentId ? spec.root : registry.get(ref.parentId ?? "")?.session;
-	const parentSession = resolveParentSession();
 	let perCallModel: Model | undefined;
-	let assertApprovedModel: ((model: Model) => void) | undefined;
 	if (init.perCallModel) {
 		try {
 			if (!init.perCallModelIdentity || init.perCallThinkingLevel === undefined) {
@@ -271,69 +258,6 @@ export async function revivePersistedSubagent(spec: PersistedReviveSpec, expecte
 					`Cannot revive subagent "${ref.id}": its per-call model ${init.perCallModelIdentity} is no longer available. A per-call worker revives only on its exact saved model.`,
 				);
 			}
-			// File definitions follow the live parent's discovery scope; a missing parent
-			// can use current root file discovery, never unrelated root-local pseudonyms.
-			const discoverySession = parentSession ?? spec.root;
-			const configuredAgent = init.agent
-				? getAgent(
-						[
-							...(
-								await discoverAgents(
-									discoverySession.sessionManager.getCwd(),
-									undefined,
-									discoverySession.effectiveExtensionRoots,
-								)
-							).agents,
-							...(parentSession?.getSessionAgents() ?? []),
-						],
-						init.agent,
-					)
-				: undefined;
-			const matchPreferences = structuredClone(getModelMatchPreferences(spec.settings.grantAuthority()));
-			// One grants object per live parent model keeps approval decisions cached across requests.
-			const grantsByParentModel = new Map<string | undefined, PerCallModelGrants>();
-			const grantsFor = (parentModelPattern: string | undefined): PerCallModelGrants => {
-				let grants = grantsByParentModel.get(parentModelPattern);
-				if (!grants) {
-					grants = {
-						settings: spec.settings,
-						agentName: init.agent ?? ref.displayName,
-						agentModel: configuredAgent?.model,
-						agentSource: configuredAgent?.source,
-						agentRemoved: configuredAgent === undefined,
-						parentModelPattern,
-						matchPreferences,
-					};
-					grantsByParentModel.set(parentModelPattern, grants);
-				}
-				return grants;
-			};
-			assertApprovedModel = model => {
-				// Parent models grant only while the real parent is live, including
-				// after this revival; transcript metadata never substitutes for it.
-				const liveParentSession = resolveParentSession();
-				const parentModel = liveParentSession?.model;
-				try {
-					assertPerCallModelApproved(
-						model,
-						grantsFor(parentModel ? parentModelGrantPattern(parentModel) : undefined),
-						spec.modelRegistry,
-					);
-				} catch (error) {
-					// Only an approval denial depends on the parent; an unavailable model is refused either way.
-					if (
-						liveParentSession ||
-						!(error instanceof PerCallModelError) ||
-						error instanceof PerCallModelUnavailableError
-					)
-						throw error;
-					throw new PerCallModelError(
-						`${error.message} Parent agent "${ref.parentId ?? "unknown"}" of revived subagent "${ref.id}" is not live; its model grants nothing and its parent-local agent grants are unavailable until the parent is revived.`,
-					);
-				}
-			};
-			assertApprovedModel(perCallModel);
-			assertModelSupportsEffortCeiling(perCallModel, cfgTaskMaxEffort.get(spec.settings));
 		} catch (error) {
 			await reopened.close();
 			throw error;
@@ -427,19 +351,6 @@ export async function revivePersistedSubagent(spec: PersistedReviveSpec, expecte
 			asyncJobManager: spec.asyncJobManager,
 			parentAgentId: ref.parentId,
 			oauthAccountPools,
-			// A per-call model is held to the operator's current grants, not the transcript's,
-			// never switches models, and keeps the live task.maxEffort ceiling the spawn ran under.
-			...(assertApprovedModel
-				? {
-						thinkingLevelCeiling: cfgTaskMaxEffort.get(spec.settings),
-						disableModelFallback: true,
-						disableServerSideFallback: true,
-						assertDispatchModel: (model: Model) => {
-							assertApprovedModel(model);
-							assertModelSupportsEffortCeiling(model, cfgTaskMaxEffort.get(spec.settings));
-						},
-					}
-				: {}),
 			expectedAgentRef: expectedRef,
 			taskDepth,
 			toolNames: revivedToolNames,

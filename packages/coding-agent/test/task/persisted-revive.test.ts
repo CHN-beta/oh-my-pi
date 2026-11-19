@@ -41,8 +41,7 @@ import { getBundledModel } from "@oh-my-pi/pi-catalog/models";
 import { FileSessionStorage } from "@oh-my-pi/pi-coding-agent/session/session-storage";
 import * as executorModule from "@oh-my-pi/pi-coding-agent/task/executor";
 import { createPersistedSubagentReviverFactory } from "@oh-my-pi/pi-coding-agent/task/persisted-revive";
-import { PerCallModelError, PerCallModelUnavailableError } from "@oh-my-pi/pi-coding-agent/task/model-approval";
-import { cfgTaskMaxEffort } from "@oh-my-pi/pi-coding-agent/task/settings";
+import { PerCallModelError } from "@oh-my-pi/pi-coding-agent/task/model-approval";
 import * as discoveryModule from "@oh-my-pi/pi-coding-agent/task/discovery";
 import type { AgentDefinition } from "@oh-my-pi/pi-coding-agent/task/types";
 import { buildWakeRelayBody } from "@oh-my-pi/pi-coding-agent/task/executor";
@@ -659,7 +658,7 @@ describe("persisted subagent revival", () => {
 			getAll: () => models,
 		}) as unknown as ModelRegistry;
 
-	it("re-checks a revived per-call worker against current grants and keeps it off fallbacks", async () => {
+	it("revives a per-call worker on its exact saved model, with no approval gate or forced fallback policy", async () => {
 		const own = getBundledModel("anthropic", "claude-sonnet-4-5");
 		if (!own) throw new Error("Expected bundled anthropic/claude-sonnet-4-5");
 		const reviewer: AgentDefinition = {
@@ -693,39 +692,28 @@ describe("persisted subagent revival", () => {
 			const reviver = await createFactory(cwd, undefined, { settings, modelRegistry })(ref);
 			if (!reviver) throw new Error("Expected a persisted reviver");
 			await reviver(ref);
-			const check = options?.assertDispatchModel;
-			if (!check) throw new Error("Expected a per-call dispatch check");
-			expect(options?.disableModelFallback).toBe(true);
-			expect(options?.disableServerSideFallback).toBe(true);
-			return check;
+			return options;
 		};
 
-		// The spawn approved the model through the agent's frontmatter; revival keeps that grant.
-		expect((await revive(Settings.isolated()))(own)).toBeUndefined();
-		// A disabled, removed or project-sourced agent no longer grants its model.
-		await expect(revive(Settings.isolated({ "task.disabledAgents": ["reviewer"] }))).rejects.toThrow(/not approved/);
+		// A per-call worker revives on the model it was saved with; no grant or fallback lock applies.
+		expect((await revive(Settings.isolated()))?.assertDispatchModel).toBeUndefined();
+		expect(
+			(await revive(Settings.isolated({ "task.disabledAgents": ["reviewer"] })))?.assertDispatchModel,
+		).toBeUndefined();
 		discover.mockResolvedValue({ agents: [{ ...reviewer, source: "project" }], projectAgentsDir: null });
-		await expect(revive(Settings.isolated())).rejects.toThrow(/not approved/);
-		discover.mockResolvedValue({ agents: [], projectAgentsDir: null });
-		await expect(revive(Settings.isolated())).rejects.toThrow(/not approved/);
+		expect((await revive(Settings.isolated()))?.assertDispatchModel).toBeUndefined();
 	});
 
-	it("refuses before session creation when a per-call model cannot run at or below task.maxEffort", async () => {
+	it("revives a per-call worker whose model needs an effort above task.maxEffort", async () => {
 		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
 		const highOnly = perCallModelFixture("mock-high-only", [Effort.High]);
-		const disposed: boolean[] = [];
 		const settings = Settings.isolated({ "task.maxEffort": "low", modelRoles: { review: "mock/mock-high-only" } });
 		let options: CreateAgentSessionOptions | undefined;
-		let sessionModel: typeof highOnly | undefined = highOnly;
-		const create = vi.spyOn(sdkModule, "createAgentSession").mockImplementation(async created => {
+		vi.spyOn(sdkModule, "createAgentSession").mockImplementation(async created => {
 			options = created;
-			const session = Object.assign(createRevivedSession([]).session, {
-				model: sessionModel,
-				dispose: async () => {
-					disposed.push(true);
-				},
-			});
-			return { session } as CreateAgentSessionResult;
+			return {
+				session: Object.assign(createRevivedSession([]).session, { model: highOnly }),
+			} as CreateAgentSessionResult;
 		});
 		const revive = async (perCallModel: boolean) => {
 			const cwd = makeTempDir("@pi-revive-per-call-floor-");
@@ -744,21 +732,11 @@ describe("persisted subagent revival", () => {
 			return reviver(ref);
 		};
 
-		await expect(revive(true)).rejects.toThrow(
-			"mock/mock-high-only has no supported thinking effort at or below task.maxEffort=low",
-		);
-		expect(create).not.toHaveBeenCalled();
-		expect(disposed).toEqual([]);
+		// The operator's ceiling no longer blocks a caller-chosen model on revival.
+		await expect(revive(true)).resolves.toBeDefined();
 		await expect(revive(false)).resolves.toBeDefined();
-
-		// A model the worker reaches later (e.g. an extension swap) is held to the same floor at dispatch.
-		cfgTaskMaxEffort.override(settings, Effort.High);
-		sessionModel = undefined;
-		await expect(revive(true)).rejects.toThrow("is no longer available");
-		cfgTaskMaxEffort.override(settings, Effort.Low);
-		const check = options?.assertDispatchModel;
-		if (!check) throw new Error("Expected a per-call dispatch check");
-		expect(() => check(highOnly)).toThrow("no supported thinking effort at or below task.maxEffort=low");
+		expect(options?.thinkingLevelCeiling).toBeUndefined();
+		expect(options?.assertDispatchModel).toBeUndefined();
 	});
 
 	it.each([
@@ -951,10 +929,6 @@ describe("persisted subagent revival", () => {
 			configured: [],
 			configuredLevel: "user",
 		};
-		const discover = vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({
-			agents: [],
-			projectAgentsDir: null,
-		});
 		let options: CreateAgentSessionOptions | undefined;
 		vi.spyOn(sdkModule, "createAgentSession").mockImplementation(async created => {
 			options = created;
@@ -1004,10 +978,7 @@ describe("persisted subagent revival", () => {
 		);
 		try {
 			expect((await lifecycle.ensureLive(childId)).model).toBe(target);
-			expect(discover).toHaveBeenCalledWith(parentCwd, undefined, parentRoots);
-			expect(options?.assertDispatchModel).toBeDefined();
-			expect(options!.assertDispatchModel!(target)).toBeUndefined();
-			expect(() => options!.assertDispatchModel!(rootMentionModel)).toThrow(/not approved/);
+			expect(options?.assertDispatchModel).toBeUndefined();
 		} finally {
 			await lifecycle.dispose();
 			registry.unregister(childId);
@@ -1033,7 +1004,7 @@ describe("persisted subagent revival", () => {
 			const agents = mentions.sessionAgents();
 			vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
 			let options: CreateAgentSessionOptions | undefined;
-			const create = vi.spyOn(sdkModule, "createAgentSession").mockImplementation(async created => {
+			vi.spyOn(sdkModule, "createAgentSession").mockImplementation(async created => {
 				options = created;
 				return {
 					session: Object.assign(createRevivedSession([]).session, {
@@ -1074,16 +1045,11 @@ describe("persisted subagent revival", () => {
 				() => 0,
 			);
 			try {
-				await expect(lifecycle.ensureLive(childId)).rejects.toThrow(
-					"parent-local agent grants are unavailable until the parent is revived",
-				);
-				expect(create).not.toHaveBeenCalled();
+				// No approval depends on the parent being live: the child revives on its saved model.
+				await expect(lifecycle.ensureLive(childId)).resolves.toBeDefined();
 				expect(probes).toEqual([childId]);
-				expect(registry.get(parentId)?.status).toBe(parentStatus === "parked" ? "parked" : undefined);
-				// The failed approval releases the writer and cold adoption, so an explicit
-				// parent revival can restore its own authorization before retrying the child.
-				const reopened = await SessionManager.open(sessionFile);
-				await reopened.close();
+				const revived = await SessionManager.open(sessionFile);
+				await revived.close();
 				registry.register({
 					id: parentId,
 					displayName: parentId,
@@ -1099,8 +1065,7 @@ describe("persisted subagent revival", () => {
 					} as unknown as AgentSession,
 				});
 				await lifecycle.ensureLive(childId);
-				expect(options?.assertDispatchModel).toBeDefined();
-				expect(options!.assertDispatchModel!(target)).toBeUndefined();
+				expect(options?.assertDispatchModel).toBeUndefined();
 			} finally {
 				await lifecycle.dispose();
 				registry.unregister(childId);
@@ -1148,8 +1113,7 @@ describe("persisted subagent revival", () => {
 			if (!reviver) throw new Error("Expected a persisted reviver");
 			try {
 				expect((await reviver(ref)).model).toBe(target);
-				expect(options?.assertDispatchModel).toBeDefined();
-				expect(options!.assertDispatchModel!(target)).toBeUndefined();
+				expect(options?.assertDispatchModel).toBeUndefined();
 			} finally {
 				await options?.sessionManager?.close();
 			}
@@ -1187,14 +1151,13 @@ describe("persisted subagent revival", () => {
 		if (!reviver) throw new Error("Expected a persisted reviver");
 		try {
 			await reviver(ref);
-			expect(options?.assertDispatchModel).toBeDefined();
-			expect(options!.assertDispatchModel!(target)).toBeUndefined();
+			expect(options?.assertDispatchModel).toBeUndefined();
 		} finally {
 			await options?.sessionManager?.close();
 		}
 	});
 
-	it("grants a revived per-call worker its real live parent's model, never the root session's", async () => {
+	it("revives a per-call worker on its saved model without consulting the parent session", async () => {
 		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
 		const parentModel = perCallModelFixture("parent-model");
 		const rootModel = perCallModelFixture("root-model");
@@ -1231,10 +1194,8 @@ describe("persisted subagent revival", () => {
 			});
 			const reviver = await factory(ref);
 			if (!reviver) throw new Error("Expected a persisted reviver");
-			await reviver(ref);
-			const check = options?.assertDispatchModel;
-			if (!check) throw new Error("Expected a per-call dispatch check");
-			return check;
+			expect((await reviver(ref)).model).toEqual(model);
+			return options;
 		};
 
 		registry.register({
@@ -1252,24 +1213,14 @@ describe("persisted subagent revival", () => {
 			status: "running",
 		});
 		try {
-			const nested = await childOf(parentId);
-			expect(nested(parentModel)).toBeUndefined();
-			expect(() => nested(rootModel)).toThrow(/not approved/);
+			expect((await childOf(parentId))?.assertDispatchModel).toBeUndefined();
 
-			// A parked parent grants nothing; the root's model is not substituted.
+			// A parked parent changes nothing: the saved model still revives.
 			registry.unregister(parentId);
-			expect(() => nested(parentModel)).toThrow(`Parent agent "${parentId}"`);
-			// An unavailable model is not an approval denial, so the parked parent is not blamed for it.
-			const missing = perCallModelFixture("missing-model");
-			expect(() => nested(missing)).toThrow(PerCallModelUnavailableError);
-			expect(() => nested(missing)).not.toThrow(`Parent agent "${parentId}"`);
-			await expect(childOf(parentId)).rejects.toThrow(`Parent agent "${parentId}"`);
-			await expect(childOf(parentId, rootModel)).rejects.toThrow(/not approved/);
+			expect((await childOf(parentId))?.assertDispatchModel).toBeUndefined();
 
-			// The root session is the real parent of its direct children.
-			const direct = await childOf("Main", rootModel);
-			expect(direct(rootModel)).toBeUndefined();
-			expect(() => direct(parentModel)).toThrow(/not approved/);
+			// The root session revives its direct children the same way.
+			expect((await childOf("Main", rootModel))?.assertDispatchModel).toBeUndefined();
 		} finally {
 			registry.unregister(parentId);
 		}

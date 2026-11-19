@@ -1,12 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "bun:test";
 import { type } from "@oh-my-pi/omptype";
-import type { Model } from "@oh-my-pi/pi-ai";
-import { createMockModel } from "@oh-my-pi/pi-ai/providers/mock";
 import { Settings } from "@oh-my-pi/pi-coding-agent/config/settings";
 import { TaskTool, taskSchema } from "@oh-my-pi/pi-coding-agent/task";
-import { loadBundledAgents } from "@oh-my-pi/pi-coding-agent/task/agents";
 import * as discoveryModule from "@oh-my-pi/pi-coding-agent/task/discovery";
-import { cfgTaskPerCallModel, cfgTaskPerCallModelAllow } from "@oh-my-pi/pi-coding-agent/task/settings";
 import { getTaskSchema } from "@oh-my-pi/pi-coding-agent/task/types";
 import type { AgentDefinition } from "@oh-my-pi/pi-coding-agent/task/types";
 import type { ToolSession } from "@oh-my-pi/pi-coding-agent/tools";
@@ -101,29 +97,25 @@ describe("task schema (single-spawn)", () => {
 	});
 });
 
-describe("task schema per-call model field", () => {
-	it("advertises model only as one string when per-call model is enabled", () => {
+describe("task schema model overrides", () => {
+	it("always advertises model and thinkingLevel as strings", () => {
 		for (const batchEnabled of [false, true]) {
 			for (const isolationEnabled of [false, true]) {
-				const schema = getTaskSchema({ batchEnabled, isolationEnabled });
-				const wireSchema = JSON.stringify(schema.toJsonSchema());
-				expect(wireSchema).not.toContain('"model"');
-				const perCall = JSON.stringify(
-					getTaskSchema({ batchEnabled, isolationEnabled, perCallModel: true }).toJsonSchema(),
-				);
-				expect(perCall).toContain('"model":{"type":"string"}');
+				for (const perCallModel of [false, true]) {
+					const wireSchema = JSON.stringify(
+						getTaskSchema({ batchEnabled, isolationEnabled, perCallModel }).toJsonSchema(),
+					);
+					expect(wireSchema).toContain('"model":{"type":"string"}');
+					expect(wireSchema).toContain('"thinkingLevel"');
+				}
 			}
 		}
 	});
 
-	it.each([
-		["off", false],
-		["eval", false],
-		["on", true],
-	] as const)("advertises model only when task.perCallModel allows task calls (%s)", async (mode, advertised) => {
+	it.each(["off", "eval", "on"] as const)("advertises model regardless of task.perCallModel (%s)", async mode => {
 		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
 		const tool = await TaskTool.create(createSession({ settings: { "task.perCallModel": mode } }));
-		expect(JSON.stringify(tool.parameters.toJsonSchema()).includes('"model"')).toBe(advertised);
+		expect(JSON.stringify(tool.parameters.toJsonSchema())).toContain('"model"');
 	});
 
 	afterEach(() => vi.restoreAllMocks());
@@ -164,7 +156,8 @@ describe("task spawn validation", () => {
 	])("refuses $label", async ({ params, refusal }) => {
 		expect(await executeText({ ...params, solutionSpace: "c" })).toContain(refusal);
 	});
-	it("rejects a model override for an ordinary task while task.perCallModel is off", async () => {
+
+	it("accepts a model override for an ordinary task with task.perCallModel off", async () => {
 		const schema = getTaskSchema({
 			isolationEnabled: false,
 			batchEnabled: false,
@@ -174,142 +167,23 @@ describe("task spawn validation", () => {
 			task: "Map the auth module.",
 			solutionSpace: "focused inspection",
 			model: "anthropic/claude-sonnet-4-5",
+			thinkingLevel: "high",
 		};
-		expect(schema(params) instanceof type.errors).toBe(false);
-		const scout = loadBundledAgents().find(agent => agent.name === "scout");
-		if (!scout) throw new Error("Expected the bundled scout agent");
-		expect(await executeText(params, [scout])).toContain("task.perCallModel: off");
-	});
-
-	it("advertises approved selectors only while task.perCallModel is on", async () => {
-		const description = async (mode: string) => {
-			vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
-			return (
-				await TaskTool.create(
-					createSession({
-						settings: {
-							"task.perCallModel": mode,
-							modelRoles: { smol: "anthropic/claude-haiku-4-5", slow: "openai/gpt-5.5" },
-							"task.perCallModelAllow": ["openai/gpt-5.5"],
-						},
-					}),
-				)
-			).description;
-		};
-		for (const mode of ["off", "eval"]) {
-			const text = await description(mode);
-			for (const guidance of ["`model`: single exact", "anthropic/claude-haiku-4-5", "openai/gpt-5.5"]) {
-				expect(text).not.toContain(guidance);
-			}
+		const parsed = schema(params) as { model?: string; thinkingLevel?: string } | type.errors;
+		expect(parsed instanceof type.errors).toBe(false);
+		if (!(parsed instanceof type.errors)) {
+			expect(parsed.model).toBe("anthropic/claude-sonnet-4-5");
+			expect(parsed.thinkingLevel).toBe("high");
 		}
-		const text = await description("on");
-		expect(text).toContain("`model`: single exact");
-		// The allowlist admits only slow's model; smol's would be refused at dispatch.
-		expect(text).toContain("`openai/gpt-5.5` (slow)");
-		expect(text).not.toContain("anthropic/claude-haiku-4-5");
+		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
+		const tool = await TaskTool.create(createSession({ settings: { "task.perCallModel": "off" } }));
+		expect(tool.description).toContain("`model`");
+		expect(tool.description).toContain("`thinkingLevel`");
+		expect(tool.description).not.toContain("task.perCallModel");
 	});
 
-	it("omits kind roles, role aliases, and default/inherit selectors from approved models", async () => {
-		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
-		const tool = await TaskTool.create(
-			createSession({
-				settings: {
-					"task.perCallModel": "on",
-					modelRoles: {
-						smol: "anthropic/claude-haiku-4-5",
-						image: "hidden/image",
-						judge: "hidden/judge",
-						alias: "@smol",
-						legacyAlias: "pi/slow",
-						wildcardAlias: "*",
-						useDefault: "default",
-						inherited: "inherit",
-						slow: "openai/gpt-5.5",
-					},
-				},
-			}),
-		);
-		const text = tool.description;
-		for (const advertised of ["anthropic/claude-haiku-4-5", "openai/gpt-5.5"]) expect(text).toContain(advertised);
-		for (const omitted of ["hidden/image", "hidden/judge", "`@smol`", "`pi/slow`", "`*`", "`default`", "`inherit`"]) {
-			expect(text).not.toContain(omitted);
-		}
-	});
-
-	it("advertises provider-qualified role values as written and omits globs, without consulting the model registry", async () => {
-		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
-		const session = createSession({
-			settings: {
-				"task.perCallModel": "on",
-				modelRoles: { review: " mock/second:high, mock/*, mock/first, mock/* " },
-			},
-		});
-		const catalogLookup = vi.fn(() => [{ provider: "mock", id: "registry-expanded" }]);
-		Object.assign(session, { modelRegistry: { getAll: catalogLookup, getAvailable: catalogLookup } });
-		const text = (await TaskTool.create(session)).description;
-		expect(text).toContain("`mock/second:high`, `mock/first` (review)");
-		expect(text).not.toContain("mock/*");
-		expect(catalogLookup).not.toHaveBeenCalled();
-	});
-
-	it("advertises a bare role's resolved exact model selector", async () => {
-		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
-		const model = createMockModel({ id: "target" });
-		const session = createSession({
-			settings: { "task.perCallModel": "on", modelRoles: { review: "target" } },
-		});
-		Object.assign(session, { modelRegistry: { getAll: () => [model], getAvailable: () => [model] } });
-		const text = (await TaskTool.create(session)).description;
-		expect(text).toContain("`mock/target` (review)");
-		expect(text).not.toContain("`target` (review)");
-	});
-
-	it("offers the caller's own model only when one selector can name it", async () => {
-		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
-		const ownModel = createMockModel({ id: "own" });
-		// Several `only` upstreams: no single selector names this route.
-		const multiRouteModel = {
-			...ownModel,
-			compat: { openRouterRouting: { only: ["anthropic", "google-vertex"] } },
-		} as unknown as Model;
-		const description = async (activeModel: Model) => {
-			// No roles grant a model; the allowlist entry shows the advertisement still renders when the clause is withheld.
-			const session = createSession({
-				settings: { "task.perCallModel": "on", modelRoles: {}, "task.perCallModelAllow": ["mock/own"] },
-			});
-			Object.assign(session, { getActiveModel: () => activeModel });
-			return (await TaskTool.create(session)).description;
-		};
-		const offered = await description(ownModel);
-		expect(offered).toContain("your own current model");
-		expect(offered).toContain("mock/own");
-		const withheld = await description(multiRouteModel);
-		expect(withheld).not.toContain("your own current model");
-		expect(withheld).toContain("mock/own");
-	});
-
-	it("refreshes approved selectors and their allowlist from current settings", async () => {
-		vi.spyOn(discoveryModule, "discoverAgents").mockResolvedValue({ agents: [], projectAgentsDir: null });
-		// Distinct role and allowlist text, so each check proves its own refresh.
-		const session = createSession({
-			settings: {
-				"task.perCallModel": "on",
-				modelRoles: { smol: "mock/original-role" },
-				"task.perCallModelAllow": ["mock/original-role", "mock/original-allowed"],
-			},
-		});
-		const tool = await TaskTool.create(session);
-		expect(tool.description).toContain("`mock/original-role` (smol)");
-		expect(tool.description).toContain("mock/original-allowed");
-
-		session.settings.overrideModelRoles({ smol: "mock/replacement-role" });
-		cfgTaskPerCallModelAllow.override(session.settings, ["mock/replacement-role", "mock/replacement-allowed"]);
-		const refreshed = tool.description;
-		expect(refreshed).toContain("`mock/replacement-role` (smol)");
-		expect(refreshed).toContain("mock/replacement-allowed");
-		expect(refreshed).not.toContain("mock/original");
-
-		cfgTaskPerCallModel.override(session.settings, "off");
-		expect(tool.description).not.toContain("mock/replacement");
+	it.each(["ultra", "HIGHEST", "1"])("refuses an unknown thinkingLevel %p", async level => {
+		const text = await executeText({ agent: "scout", task: "Map auth.", solutionSpace: "c", thinkingLevel: level });
+		expect(text).toContain("invalid `thinkingLevel`");
 	});
 });

@@ -94,39 +94,37 @@ describe("runEvalWorkpool", () => {
 });
 
 describe("workpool model validation", () => {
-	it("eval mode admits an approved pinned worker and rejects an unapproved model before creating a pool", async () => {
+	it("accepts any resolvable worker model, including one the operator never approved", async () => {
 		const approved = createMockModel();
 		const unapproved = createMockModel({ id: "unapproved" });
-		// A project agent's frontmatter never grants its own model.
 		const agent: AgentDefinition = { ...SCOUT, source: "project", model: ["mock/unapproved"] };
 		vi.spyOn(discovery, "discoverAgents").mockResolvedValue({ agents: [agent], projectAgentsDir: null });
-		const session = Object.assign(
-			makeSession({ "task.perCallModel": "eval", modelRoles: { review: "mock/mock-model" } }),
-			{ modelRegistry: { getAll: () => [approved, unapproved], getAvailable: () => [approved, unapproved] } },
-		);
+		const session = Object.assign(makeSession({ "task.perCallModel": "off" }), {
+			modelRegistry: { getAll: () => [approved, unapproved], getAvailable: () => [approved, unapproved] },
+		});
 		await expect(
-			runEvalWorkpool({ op: "create", name: "denied", agent: "scout", model: "mock/unapproved" }, { session }),
-		).rejects.toThrow(/not approved/);
-		expect(WorkPoolRegistry.global().get("Main", "denied")).toBeUndefined();
+			runEvalWorkpool({ op: "create", name: "unapproved", agent: "scout", model: "mock/unapproved" }, { session }),
+		).resolves.toEqual({ name: "unapproved", agent: "scout", limit: 2 });
 		await expect(
 			runEvalWorkpool({ op: "create", name: "approved", agent: "scout", model: "mock/mock-model" }, { session }),
 		).resolves.toEqual({ name: "approved", agent: "scout", limit: 2 });
 	});
 
-	for (const { mode, model, reason } of [
-		// The gate wins over the selector check, so an invalid selector still reports the disabled gate.
-		{ mode: "off", model: "@smol", reason: /task\.perCallModel: off/ },
-		{ mode: "on", model: "@smol", reason: /invalid `model` value/ },
-	]) {
-		it(`rejects ${JSON.stringify(model)} under ${mode} before registering a pool`, async () => {
-			vi.spyOn(discovery, "discoverAgents").mockResolvedValue({ agents: [SCOUT], projectAgentsDir: null });
-			const session = makeSession({ "task.perCallModel": mode });
-			await expect(
-				runEvalWorkpool({ op: "create", name: "invalid", agent: "scout", model }, { session }),
-			).rejects.toThrow(reason);
-			expect(WorkPoolRegistry.global().get("Main", "invalid")).toBeUndefined();
+	it("rejects a model no available catalog entry matches before registering a pool", async () => {
+		vi.spyOn(discovery, "discoverAgents").mockResolvedValue({ agents: [SCOUT], projectAgentsDir: null });
+		const known = createMockModel();
+		const session = Object.assign(makeSession({ "task.perCallModel": "off" }), {
+			modelRegistry: {
+				getAll: () => [known],
+				getAvailable: () => [known],
+				isBackgroundRefreshPending: () => false,
+			},
 		});
-	}
+		await expect(
+			runEvalWorkpool({ op: "create", name: "invalid", agent: "scout", model: "mock/missing" }, { session }),
+		).rejects.toThrow(/No available model matches/);
+		expect(WorkPoolRegistry.global().get("Main", "invalid")).toBeUndefined();
+	});
 
 	it.each(["", "   "])("treats a blank model (%p) as omitted", async model => {
 		vi.spyOn(discovery, "discoverAgents").mockResolvedValue({ agents: [SCOUT], projectAgentsDir: null });

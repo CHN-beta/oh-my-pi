@@ -2251,14 +2251,23 @@ export interface StructuredSubagentOutput {
 /** Display cap for a normalized one-line label (roster line, registry `displayName`, prompt field). */
 export const LABEL_MAX = 80;
 
+/**
+ * Concrete thinking level a caller passes on `task` or a vibe tool. Plain string literals so wire
+ * schemas (arktype string unions) assign without casts; converted to {@link ConfiguredThinkingLevel}
+ * where a session applies it.
+ */
+export type CallerThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
+
 /** Single task item. Fields are optional defensively: args stream in token by token. */
 export interface TaskItem {
 	/** Stable agent name; becomes the registry/IRC id. Default = generated AdjectiveNoun. */
 	name?: string;
 	/** Agent type to run this item (e.g. "scout"). Defaults to the spawn policy's default agent. */
 	agent?: string;
-	/** One exact per-call model, gated by `task.perCallModel`. */
+	/** One model selector for this spawn (any `provider/model`, role, or `model:thinkingLevel` form); overrides the agent's model. */
 	model?: string;
+	/** Thinking level for this spawn; overrides the agent's thinking level and any `:level` suffix on `model`. */
+	thinkingLevel?: CallerThinkingLevel;
 	/** Inline instructions; exactly one of task or steps is required. */
 	task?: string;
 	/** Ordered stages sent instead of `task` (`task.steps`), each once the child delivered the previous (several share a prompt past four). */
@@ -2290,6 +2299,8 @@ export interface TaskParams {
 	agent?: string;
 	/** See {@link TaskItem.model}. */
 	model?: string;
+	/** See {@link TaskItem.thinkingLevel} (flat form). */
+	thinkingLevel?: CallerThinkingLevel;
 	/** The work (flat form). */
 	task?: string;
 	/** Ordered stages (flat form); see {@link TaskItem.steps}. */

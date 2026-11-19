@@ -157,6 +157,8 @@ modelRoles:
 
 A missing definition fails the spawn with both config paths and the searched directories in the error.
 
+`vibe_spawn` and `vibe_send` accept optional `model` (any selector the resolver understands, including `model:level`) and `thinkingLevel` (`off`/`minimal`/`low`/`medium`/`high`/`xhigh`). They override the slot definition, `task.agentModelOverrides` and any `:level` suffix for this and every later turn. `vibe_send` applies a new thinking level to a live worker immediately and switches an idle worker's model through `setModelTemporary`; on a streaming worker the model switch waits for the next turn. A spawn's overrides are persisted with the lifecycle event so a resumed worker keeps them.
+
 ## Bundled agents
 
 Bundled agents are embedded at build time (`src/task/agents.ts`) using text imports.
@@ -258,23 +260,21 @@ For task dispatch, model precedence is:
 2. the agent frontmatter's prioritized `model` list
 3. the parent's active model, then its configured/default model fallback
 
-A call's per-call `model` (task item / flat call, eval `agent()` / `workpool()`; see below) replaces steps 2 and 3 when it is approved. It is a conflict error, rather than outranking anything, for an agent with a step-1 entry or a mention agent whose tag names a level. Role aliases in steps 1 and 2 are expanded through `modelRoles`. Host callers (SDK `runStructuredSubagent({ model })`, `omp cleanse --model`) supply an ungated model ahead of the settings override.
+A call's per-call `model` (task item / flat call, eval `agent()` / `workpool()`; see below) replaces steps 1-3 whenever it is supplied: it overrides the settings override, the agent frontmatter and the parent's model. Role aliases in every source are expanded through `modelRoles`. Host callers (SDK `runStructuredSubagent({ model })`, `omp cleanse --model`) supply an ungated model as well.
 
-### Per-call `model`
+### Per-call `model` and `thinkingLevel`
 
-`task.perCallModel` decides where a model-facing call may pick its model:
+A model-facing call may always pick its own model: `task` items and flat calls, eval `agent()` and `workpool()`, and the vibe tools. `task.perCallModel` and `task.perCallModelAllow` are deprecated and ignored; there is no approval, role-grant, frontmatter-grant or allowlist check, and an agent's `task.agentModelOverrides` entry never conflicts with the caller's choice — the caller wins.
 
-| Value           | Behavior                                                                                                                                                                                                    |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `off` (default) | A task item, flat call, `agent()` or `workpool()` that passes `model` fails preflight. The task schema does not advertise the field, but a sent one still reaches preflight; an empty task `model` (`""`) counts as omitted. |
-| `eval`          | Accepted by eval `agent()` and `workpool()` only; task items behave as `off`. Use it to route a specialist (e.g. a pinned `reviewer`) from a script while ordinary delegation keeps its configured routing. |
-| `on`            | Accepted everywhere.                                                                                                                                                                                        |
+A `model` accepts any selector the model resolver understands: one exact `provider/model-id[@upstream][:level]`, a bare model id, a role alias (`@smol`, `@review`, a legacy `pi/<role>`), or a glob. The optional `@upstream` pin is supported by aggregators and is part of the model identity. The optional `:level` names a supported thinking level; an explicit `thinkingLevel` (task/vibe) outranks it. A blank or whitespace-only `model` (or `[]`) counts as omitted, so the agent's configured model applies.
 
-Only the operator's layers can turn it on: a project's `task.perCallModel` can lower the mode (`on` → `eval` → `off`) but never raise it.
+The selector is resolved against the available chat models. An unresolvable selector or a non-chat model fails the call before dispatch instead of silently substituting another model. Because resolution is not exact-only, retry fallback and context promotion remain available to the child.
 
-A `model` that is empty or whitespace, or an empty array, counts as omitted for every per-call selector: a task item, flat call, `agent()` or `workpool()` uses the agent's configured model instead of failing the gate.
+A caller's `model` and `thinkingLevel` are never bounded by `task.maxEffort`. That ceiling applies only to the coarse `effort` hint (`lo`/`med`/`hi`).
 
-A per-call `model` is exactly one `provider/model-id[@upstream][:level]` (for example `anthropic/claude-sonnet-4-5:high`). The optional `@upstream` pin is supported only by aggregators and is part of the model identity: pinned and unpinned routes are different models for approval. The optional `:level` is clamped to a level the model supports, still bounded by `task.maxEffort`; a literal catalog id wins over splitting a level-shaped suffix. Role aliases (including `@default` and a legacy `pi/<role>` naming a built-in or configured custom role), arrays, comma lists, globs and partial ids fail preflight; when `task.perCallModel` refuses the call, that error is reported first. It is matched literally against the available chat models; there is no fuzzy resolution, and a non-chat model is rejected with that reason.
+The paragraphs below describe the removed approval/grant system and no longer apply.
+
+A per-call `model` was exactly one `provider/model-id[@upstream][:level]` (for example `anthropic/claude-sonnet-4-5:high`). The optional `@upstream` pin is supported only by aggregators and is part of the model identity: pinned and unpinned routes are different models for approval. The optional `:level` is clamped to a level the model supports, still bounded by `task.maxEffort`; a literal catalog id wins over splitting a level-shaped suffix. Role aliases (including `@default` and a legacy `pi/<role>` naming a built-in or configured custom role), arrays, comma lists, globs and partial ids fail preflight; when `task.perCallModel` refuses the call, that error is reported first. It is matched literally against the available chat models; there is no fuzzy resolution, and a non-chat model is rejected with that reason.
 
 The model must be one the operator already routes to:
 

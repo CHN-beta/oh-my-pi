@@ -6,3 +6,5 @@ Returns immediately with an acknowledgment status:
 - `queued`: worker is mid-turn and cannot currently be steered → runs automatically as the next turn.
 
 Use for follow-up tasks, corrections, scope updates, or review requests. NEVER repeat earlier context; the session retains it already.
+
+`model` and `thinkingLevel` retarget the worker before the message lands: `model` accepts `provider/model`, a bare model id, a role alias, or `model:thinkingLevel`; `thinkingLevel` accepts `off`/`minimal`/`low`/`medium`/`high`/`xhigh` and wins over the model's suffix. Both stick for this and every later turn. A new thinking level applies immediately (a streaming turn honors it on its next request); a model switch applies at once on an idle worker and is recorded for the next turn otherwise.

@@ -30,6 +30,10 @@ export interface VibeSpawnLifecycleEvent extends VibeLifecycleBase {
 	agent: string;
 	childSessionFile: string;
 	createdAt: number;
+	/** Director-supplied model selector, persisted so a resumed worker keeps it. */
+	model?: string;
+	/** Director-supplied thinking level, persisted so a resumed worker keeps it. */
+	thinkingLevel?: string;
 }
 
 export interface VibeTurnLifecycleEvent extends VibeLifecycleBase {
@@ -73,6 +77,8 @@ const LifecycleEvent = type({
 	agent: "string",
 	childSessionFile: "string",
 	createdAt: "number",
+	"model?": "string",
+	"thinkingLevel?": "string",
 })
 	.or({ ...lifecycleBase, action: "'turn-started' | 'turn-settled'", turn: "number.integer >= 1" })
 	.or({

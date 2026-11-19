@@ -29,18 +29,32 @@ import type { Tool, ToolSession } from "./index";
 
 export const VIBE_TOOL_NAMES = ["vibe_spawn", "vibe_send", "vibe_wait", "vibe_kill", "vibe_list"] as const;
 
+const VIBE_THINKING_LEVELS = "'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'" as const;
+
 const vibeSpawnSchema = type({
 	cli: type("'doc' | 'code' | 'debug' | 'design' | 'math' | 'exec'").describe(
 		"worker specialization: doc = prose writing, documentation, research, and language tasks; code = feature implementation, refactoring, and tests; debug = root-cause investigation, failure analysis, and code audit; design = system architecture, interface contracts, and frontend/UI design; math = derivations, formal proofs, and numerical reasoning; exec = operational tasks like inspecting git status/diff and committing, running shell commands, and mechanical file/repo edits",
 	),
 	"name?": type("string <= 48").describe("optional session label; auto-generated if omitted"),
 	prompt: type("string > 0").describe("initial instruction; the worker begins with no prior context"),
+	"model?": type("string > 0").describe(
+		"optional model for this worker: `provider/model`, a model id, a role alias, or `model:thinkingLevel`; overrides the slot agent's model for this and every later turn",
+	),
+	"thinkingLevel?": type(VIBE_THINKING_LEVELS).describe(
+		"optional thinking level for this worker; overrides the slot agent's level and any `:level` suffix on `model`",
+	),
 });
 
 const vibeSendSchema = type({
 	session: type("string > 0").describe("session identifier returned by vibe_spawn / vibe_list"),
 	message: type("string > 0").describe(
 		"message sent to the session; steers if mid-turn, otherwise starts its next turn",
+	),
+	"model?": type("string > 0").describe(
+		"optional model to switch this worker to (`provider/model`, model id, role, or `model:thinkingLevel`); applies to this and every later turn",
+	),
+	"thinkingLevel?": type(VIBE_THINKING_LEVELS).describe(
+		"optional thinking level to switch this worker to; takes effect for the turn's next request",
 	),
 });
 

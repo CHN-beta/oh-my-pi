@@ -44,6 +44,9 @@ export interface SubagentEventPayload {
 const outputSchemaInputSchema = type("object | boolean | string | null");
 // Coarse per-spawn thinking effort; must stay in sync with TASK_EFFORTS in ../thinking.
 const effortRule = '"lo" | "med" | "hi"' as const;
+// Concrete per-spawn thinking level: the selectors a resolved chat model can honor. `auto`/`inherit` stay
+// agent-definition selectors, not caller overrides.
+const thinkingLevelRule = '"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"' as const;
 
 /**
  * Keep a batch item's `model` key through undeclared-key deletion: argument
@@ -70,6 +73,8 @@ export const taskItemSchema = type({
 	"outputSchema?": outputSchemaInputSchema,
 	"schemaMode?": '"permissive" | "strict"',
 	"tools?": "string[]",
+	"model?": "string",
+	"thinkingLevel?": thinkingLevelRule,
 	"+": "delete",
 });
 const taskItemSchemaIsolated = type({
@@ -80,6 +85,8 @@ const taskItemSchemaIsolated = type({
 	"outputSchema?": outputSchemaInputSchema,
 	"schemaMode?": '"permissive" | "strict"',
 	"tools?": "string[]",
+	"model?": "string",
+	"thinkingLevel?": thinkingLevelRule,
 	"isolated?": "boolean",
 	"+": "delete",
 });
@@ -92,6 +99,8 @@ export const taskSchema = type({
 	"outputSchema?": outputSchemaInputSchema,
 	"schemaMode?": '"permissive" | "strict"',
 	"tools?": "string[]",
+	"model?": "string",
+	"thinkingLevel?": thinkingLevelRule,
 	"isolated?": "boolean",
 	"+": "delete",
 });
@@ -103,6 +112,8 @@ const taskSchemaNoIsolation = type({
 	"outputSchema?": outputSchemaInputSchema,
 	"schemaMode?": '"permissive" | "strict"',
 	"tools?": "string[]",
+	"model?": "string",
+	"thinkingLevel?": thinkingLevelRule,
 	"+": "delete",
 });
 function guardBatchAgent(schema: BaseType): BaseType {
@@ -157,7 +168,6 @@ function createTaskSchema(options: {
 	evalToolsEnabled: boolean;
 	structured: boolean;
 	steps: boolean;
-	perCallModel: boolean;
 }): BaseType {
 	const agent = taskAgentSchemaRule(options.defaultAgent);
 	const taskFields = options.steps ? { steps: "string[]" } : { task: "string" };
@@ -166,11 +176,9 @@ function createTaskSchema(options: {
 		? { "outputSchema?": outputSchemaInputSchema, "schemaMode?": '"permissive" | "strict"' }
 		: {};
 	const toolsField = options.evalToolsEnabled ? { "tools?": "string[]" } : {};
-	// `model` is declared only when the caller may send it: a per-call selector
-	// while `task.perCallModel` allows task calls. An
-	// undeclared `model` still reaches preflight (root keys survive lenient
-	// validation; batch items keep it via keepItemModelKey) and is refused there.
-	const gatedFields = options.perCallModel ? { "model?": "string" } : {};
+	// Caller-supplied model and thinking level are always accepted: they override the agent definition, any
+	// `task.agentModelOverrides` entry and the `task.maxEffort` ceiling for this spawn.
+	const callerModelFields = { "model?": "string", "thinkingLevel?": thinkingLevelRule };
 	if (options.batchEnabled) {
 		if (options.isolationEnabled) {
 			const item = type.raw({
@@ -181,7 +189,7 @@ function createTaskSchema(options: {
 				...effortField,
 				...schemaFields,
 				...toolsField,
-				...gatedFields,
+				...callerModelFields,
 				"isolated?": "boolean",
 				"+": "delete",
 			});
@@ -201,7 +209,7 @@ function createTaskSchema(options: {
 			...effortField,
 			...schemaFields,
 			...toolsField,
-			...gatedFields,
+			...callerModelFields,
 			"+": "delete",
 		});
 		return guardBatchAgent(
@@ -221,7 +229,7 @@ function createTaskSchema(options: {
 			...effortField,
 			...schemaFields,
 			...toolsField,
-			...gatedFields,
+			...callerModelFields,
 			"isolated?": "boolean",
 			"+": "delete",
 		});
@@ -234,7 +242,7 @@ function createTaskSchema(options: {
 		...effortField,
 		...schemaFields,
 		...toolsField,
-		...gatedFields,
+		...callerModelFields,
 		"+": "delete",
 	});
 }
@@ -251,7 +259,7 @@ export function getTaskSchema(options: {
 	/** Advertise `steps` instead of `task` (`task.steps`); default off. */
 	steps?: boolean;
 	defaultAgent?: string;
-	/** Advertise the per-call `model` field (`task.perCallModel` allows task calls); default off. */
+	/** Retained for callers; `model`/`thinkingLevel` are always advertised. */
 	perCallModel?: boolean;
 }): TaskToolSchemaInstance {
 	const defaultAgent = options.defaultAgent ?? "task";
@@ -259,12 +267,11 @@ export function getTaskSchema(options: {
 	const evalToolsEnabled = options.evalToolsEnabled ?? true;
 	const structured = options.structured ?? true;
 	const steps = options.steps ?? false;
-	const perCallModel = options.perCallModel ?? false;
-	if (defaultAgent === "task" && !effortEnabled && evalToolsEnabled && structured && !steps && !perCallModel) {
+	if (defaultAgent === "task" && !effortEnabled && evalToolsEnabled && structured && !steps) {
 		if (options.batchEnabled) return options.isolationEnabled ? taskSchemaBatch : taskSchemaBatchNoIsolation;
 		return options.isolationEnabled ? taskSchema : taskSchemaNoIsolation;
 	}
-	const key = `${options.isolationEnabled ? "iso" : "flat"}:${options.batchEnabled ? "batch" : "single"}:${effortEnabled ? "effort" : "default"}:${evalToolsEnabled ? "tools" : "notools"}:${structured ? "structured" : "prose"}:${steps ? "steps" : "task"}:${perCallModel ? "model" : "nomodel"}:${defaultAgent}`;
+	const key = `${options.isolationEnabled ? "iso" : "flat"}:${options.batchEnabled ? "batch" : "single"}:${effortEnabled ? "effort" : "default"}:${evalToolsEnabled ? "tools" : "notools"}:${structured ? "structured" : "prose"}:${steps ? "steps" : "task"}:${defaultAgent}`;
 	const cached = taskSchemaCache.get(key);
 	if (cached) return cached;
 	const schema = createTaskSchema({
@@ -274,7 +281,6 @@ export function getTaskSchema(options: {
 		evalToolsEnabled,
 		structured,
 		defaultAgent,
-		perCallModel,
 	});
 	taskSchemaCache.set(key, schema);
 	return schema;

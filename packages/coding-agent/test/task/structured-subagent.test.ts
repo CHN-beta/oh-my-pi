@@ -457,11 +457,11 @@ describe("structured subagent primitive", () => {
 		}
 
 		expect(create.mock.calls.map(([options]) => options?.thinkingLevel)).toEqual([
-			Effort.High,
+			Effort.Low,
 			Effort.Low,
 			Effort.Low,
 		]);
-		expect(create.mock.calls[0]?.[0]?.thinkingLevelCeiling).toBeUndefined();
+		expect(create.mock.calls[0]?.[0]?.thinkingLevelCeiling).toBe(Effort.Low);
 	});
 	it("holds the parent on an inline child until it settles, but not on a detached one", async () => {
 		mockDiscovery();
@@ -1416,22 +1416,21 @@ describe("per-call model preflight", () => {
 		);
 	}
 
-	// `off` refuses every kind and `eval` refuses task calls. The selector is invalid on purpose:
-	// the disabled gate is reported first, so a caller is never told to fix a selector it may not send.
+	// The per-call gate no longer exists: every invocation kind accepts the caller's model, including
+	// role aliases like `@smol`.
 	it.each([
 		["off", "eval"],
 		["eval", "task"],
-	] as const)("rejects model under task.perCallModel: %s for %s calls", async (mode, invocationKind) => {
-		mockDiscovery();
-		await expect(
-			resolveEffectiveSubagentPolicy(
-				request({
-					session: perCallSession({ "task.perCallModel": mode }),
-					invocationKind,
-					perCallModel: "@smol",
-				}),
-			),
-		).rejects.toThrow(`task.perCallModel: ${mode}`);
+	] as const)("accepts model under task.perCallModel: %s for %s calls", async (mode, invocationKind) => {
+		mockDiscovery({ ...AGENT, model: ["mock/agent-own"] });
+		const policy = await resolveEffectiveSubagentPolicy(
+			request({
+				session: perCallSession({ "task.perCallModel": mode }),
+				invocationKind,
+				perCallModel: "mock/target:high",
+			}),
+		);
+		expect(policy.modelOverride).toEqual(["mock/target:high"]);
 	});
 
 	it.each([
@@ -1451,7 +1450,7 @@ describe("per-call model preflight", () => {
 		expect(policy.parentActiveModelPattern).toBeUndefined();
 	});
 
-	it.each(["SDK overlay", "nested subagent"])("reloads removed on-disk role grants through an %s", async kind => {
+	it.each(["SDK overlay", "nested subagent"])("keeps the caller's model through an %s role edit", async kind => {
 		const root = await fs.mkdtemp(path.join(os.tmpdir(), "omp-task-grant-reload-"));
 		const projectDir = path.join(root, "project");
 		const agentDir = path.join(root, "agent");
@@ -1471,9 +1470,7 @@ describe("per-call model preflight", () => {
 		try {
 			expect((await resolveEffectiveSubagentPolicy(call)).modelOverride).toEqual(["mock/target:high"]);
 			await Bun.write(configPath, taskConfig);
-			await expect(resolveEffectiveSubagentPolicy(call)).rejects.toThrow(
-				'Per-call model mock/target is not approved for agent "worker"',
-			);
+			expect((await resolveEffectiveSubagentPolicy(call)).modelOverride).toEqual(["mock/target:high"]);
 		} finally {
 			liveSettings.cancelPendingSaves();
 			AgentStorage.close();
@@ -1482,20 +1479,9 @@ describe("per-call model preflight", () => {
 	});
 
 	it.each([
-		["a selector that is not provider/model-id", "@smol", {}, false, /invalid `model`/],
-		// Shaped like provider/model-id, but names the configured custom role `review`.
-		["a legacy alias of a custom role", "pi/review", {}, false, /invalid `model`/],
 		["an unavailable model", "mock/missing", {}, false, /No available model matches/],
 		["a non-chat model", "mock/painter", {}, false, /image model; a subagent needs a chat model/],
 		["a non-chat model while discovery is running", "mock/painter", {}, true, /image model/],
-		["an unapproved model", "mock/target", { modelRoles: {} }, false, /not approved/],
-		[
-			"a model for an agent with an override",
-			"mock/target",
-			{ "task.agentModelOverrides": { worker: "mock/target" } },
-			false,
-			/conflicts with task\.agentModelOverrides/,
-		],
 	] as const)("rejects %s", async (_name, perCallModel, settings, refreshPending, error) => {
 		mockDiscovery();
 		await expect(
@@ -1510,6 +1496,25 @@ describe("per-call model preflight", () => {
 				}),
 			),
 		).rejects.toThrow(error);
+	});
+
+	it.each([
+		["a role alias", "@smol"],
+		["a custom-role alias", "pi/review"],
+		["a model while the agent has an override", "mock/target"],
+	])("accepts %s for an ordinary task", async (_name, perCallModel) => {
+		mockDiscovery({ ...AGENT, model: ["mock/agent-own"] });
+		const policy = await resolveEffectiveSubagentPolicy(
+			request({
+				session: perCallSession({
+					"task.perCallModel": "off",
+					modelRoles: { review: "mock/target", smol: "mock/target" },
+					"task.agentModelOverrides": { worker: "mock/target" },
+				}),
+				perCallModel,
+			}),
+		);
+		expect(policy.modelOverride?.length).toBe(1);
 	});
 
 	// Both defer to the executor's post-refresh check: an unloaded model while discovery runs,
@@ -1536,19 +1541,17 @@ describe("per-call model preflight", () => {
 		expect(policy.parentActiveModelPattern).toBe("mock/parent");
 	});
 
-	it("rejects a per-call model for a level-tagged agent, even its own selector", async () => {
+	it("lets a per-call model win over a level-tagged agent's own selector and ceiling", async () => {
 		mockDiscovery();
 		const tagged: AgentDefinition = { ...AGENT, name: "m1", model: ["mock/target:high"], thinkingLevel: Effort.High };
 		const taggedSession = Object.assign(perCallSession({ "task.perCallModel": "on", "task.maxEffort": "low" }), {
 			getSessionAgents: () => [tagged],
 		});
-		const error = await resolveEffectiveSubagentPolicy(
+		const policy = await resolveEffectiveSubagentPolicy(
 			request({ session: taggedSession, agent: "m1", perCallModel: "mock/target:high" }),
-		).catch((cause: unknown) => cause);
-		expect(error).toBeInstanceOf(StructuredSubagentError);
-		expect((error as StructuredSubagentError).kind).toBe("preflight");
-		expect((error as Error).message).toContain('agent "m1"');
-		expect((error as Error).message).toContain("Omit model");
+		);
+		expect(policy.modelOverride).toEqual(["mock/target:high"]);
+		expect(policy.parentActiveModelPattern).toBeUndefined();
 	});
 
 	it("routes a per-call model for an untagged mention through its own model grant", async () => {

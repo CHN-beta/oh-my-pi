@@ -358,20 +358,31 @@ describe("runEvalAgent", () => {
 		expect(runSpy.mock.calls[0]?.[0]?.modelOverride).toEqual(["p/requested:high"]);
 	});
 
-	it.each([
-		// The gate wins over the selector check, so an invalid selector still reports the disabled gate.
-		{ mode: "off", model: "@smol", error: /task\.perCallModel: off/ },
-		{ mode: "on", model: "default", error: /invalid `model`/ },
-		// The argument schema accepts only a string, so a candidate array never reaches preflight.
-		{ mode: "on", model: ["p/preferred:high", "p/alternative"], error: /model must be a string/ },
-	])("rejects agent() model $model under $mode before dispatch", async ({ mode, model, error }) => {
+	it.each(["off", "eval", "on"] as const)("accepts a role alias as agent() model under %s", async mode => {
 		mockAgents();
 		const runSpy = vi.spyOn(taskExecutor, "runSubprocess").mockImplementation(async options => singleResult(options));
 		const settings = Settings.isolated({ "task.perCallModel": mode, "task.isolation.enabled": false });
 
+		await runEvalAgentAndWait(
+			{ prompt: "work", agent: "reviewer", model: "@smol" },
+			{
+				session: makeSession({ settings }),
+			},
+		);
+		expect(runSpy).toHaveBeenCalledTimes(1);
+	});
+
+	it("rejects a candidate array before dispatch (the argument schema takes one string)", async () => {
+		mockAgents();
+		const runSpy = vi.spyOn(taskExecutor, "runSubprocess").mockImplementation(async options => singleResult(options));
+		const settings = Settings.isolated({ "task.perCallModel": "on", "task.isolation.enabled": false });
+
 		await expect(
-			runEvalAgent({ prompt: "work", agent: "reviewer", model }, { session: makeSession({ settings }) }),
-		).rejects.toThrow(error);
+			runEvalAgent(
+				{ prompt: "work", agent: "reviewer", model: ["p/preferred:high", "p/alternative"] },
+				{ session: makeSession({ settings }) },
+			),
+		).rejects.toThrow(/model must be a string/);
 		expect(runSpy).not.toHaveBeenCalled();
 	});
 

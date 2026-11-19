@@ -308,6 +308,8 @@ function validateSpawnParams(
 			if (effortError) return effortError;
 			const modelError = validateModel(item, label, settings);
 			if (modelError) return modelError;
+			const thinkingError = validateThinkingLevel(item, label);
+			if (thinkingError) return thinkingError;
 		}
 		const seen = new Map<string, string>();
 		for (const item of tasks) {
@@ -331,7 +333,8 @@ function validateSpawnParams(
 	return (
 		validateTaskInput(params, "The call", stepsEnabled) ??
 		validateEffort(params.effort, "The call") ??
-		validateModel(params, "The call", settings)
+		validateModel(params, "The call", settings) ??
+		validateThinkingLevel(params, "The call")
 	);
 }
 
@@ -339,9 +342,29 @@ function validateModel(item: TaskItem | TaskParams, label: string, settings: Set
 	return invalidModelSelectorReason(item.model, label, { settings, invocationKind: "task" });
 }
 
+const THINKING_LEVEL_VALUES = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
+
+function validateThinkingLevel(item: TaskItem | TaskParams, label: string): string | undefined {
+	const level = item.thinkingLevel;
+	if (level === undefined || level === null) return undefined;
+	if (typeof level === "string" && (THINKING_LEVEL_VALUES as readonly string[]).includes(level.trim().toLowerCase()))
+		return undefined;
+	return `${label} has an invalid \`thinkingLevel\` value ${JSON.stringify(level)}. Use one of: ${THINKING_LEVEL_VALUES.join(", ")}.`;
+}
+
 function spawnModelFields(params: TaskParams): Pick<StructuredSubagentRequest, "perCallModel"> {
-	// `validateModel` rejected anything but one string before dispatch.
 	return typeof params.model === "string" ? { perCallModel: params.model } : {};
+}
+
+/** Caller-supplied thinking level for a spawn; wins over the agent definition and any `:level` suffix on `model`. */
+function spawnThinkingLevelFields(params: TaskParams): Pick<StructuredSubagentRequest, "thinkingLevel"> {
+	return typeof params.thinkingLevel === "string"
+		? {
+				thinkingLevel: params.thinkingLevel.trim().toLowerCase() as NonNullable<
+					StructuredSubagentRequest["thinkingLevel"]
+				>,
+			}
+		: {};
 }
 
 /**
@@ -363,6 +386,7 @@ function resolveSpawnItems(params: TaskParams): TaskItem[] {
 	if ("effort" in params) item.effort = params.effort;
 	if ("isolated" in params) item.isolated = params.isolated;
 	if ("model" in params) item.model = params.model;
+	if ("thinkingLevel" in params) item.thinkingLevel = params.thinkingLevel;
 	return [item];
 }
 
@@ -387,6 +411,7 @@ function spawnParamsFor(params: TaskParams, item: TaskItem, defaultAgent: string
 	if ("tools" in item) spawn.tools = item.tools;
 	if ("effort" in item) spawn.effort = item.effort;
 	if ("model" in item) spawn.model = item.model;
+	if ("thinkingLevel" in item) spawn.thinkingLevel = item.thinkingLevel;
 	if (item.isolated !== undefined) {
 		spawn.isolated = item.isolated;
 	} else if ("isolated" in params) {
@@ -1010,6 +1035,7 @@ export class TaskTool implements AgentTool<TaskToolSchemaInstance, TaskToolDetai
 			context: this.#isBatchEnabled() ? params.context?.trim() || undefined : undefined,
 			agent: params.agent,
 			...spawnModelFields(params),
+			...spawnThinkingLevelFields(params),
 			...this.#resultParams(params),
 			...this.#effortParams(params),
 			...("isolated" in params ? { isolation: { requested: params.isolated } } : {}),
@@ -1875,6 +1901,7 @@ export class TaskTool implements AgentTool<TaskToolSchemaInstance, TaskToolDetai
 				steps: params.steps,
 				agent: params.agent,
 				...spawnModelFields(params),
+				...spawnThinkingLevelFields(params),
 				...this.#resultParams(params),
 				...this.#effortParams(params),
 				solutionSpace: params.solutionSpace,
