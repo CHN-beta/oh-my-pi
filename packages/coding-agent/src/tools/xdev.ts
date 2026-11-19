@@ -37,6 +37,7 @@ import {
 	validateAgentToolArguments,
 } from "@oh-my-pi/pi-agent-core";
 import { type Tool as AiTool, jsonSchemaToTypeScript, toolWireSchema } from "@oh-my-pi/pi-ai";
+import { isEvalBridgeToolCall, isEvalBridgeToolCallable } from "../eval/tool-bridge-policy";
 import { schemaDeclaresIntentField } from "../utils/tool-schema";
 import { resolveToolWireName } from "../utils/tool-wire-name";
 import { stripXdevUrlPrefix, XDEV_URL_PREFIX } from "@oh-my-pi/pi-tui/tools/xdev-url";
@@ -458,6 +459,12 @@ export async function dispatchXdevTool(
 				result: { content: [{ type: "text", text: renderDocs(canonical) }] },
 				xdev: { tool: name, mode: "help" },
 			};
+		}
+
+		if (isEvalBridgeToolCall(state) && !isEvalBridgeToolCallable(canonical)) {
+			throw new ToolError(
+				`\`${canonical.name}\` cannot run through the eval bridge; call the direct \`${canonical.name}\` tool.`,
+			);
 		}
 
 		const validated = parseDeviceArgs(canonical, content, toolCallId, () => renderDocs(canonical));

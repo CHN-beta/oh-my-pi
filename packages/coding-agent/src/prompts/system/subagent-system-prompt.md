@@ -66,11 +66,7 @@ Workpool yield rules:
 Yield rules:
 - Leave `type` unset when submitting a single final structured payload in `data`.
 - Pass a non-empty `type: string[]` to append incremental, non-terminal sections.
-{{#if outputSchema}}
 - Calling `yield` with `type: "result"` and no `data` only finalizes prior incremental sections; it NEVER replaces a required `data` payload.
-{{else}}
-- Pass `type: string` for a terminal result; if `data` is omitted, your final assistant message text serves as the result.
-{{/if}}
 
 Always finish via `yield`. When a structured schema applies, NEVER dump raw JSON into plain text or replace `data` with a prose summary.
 

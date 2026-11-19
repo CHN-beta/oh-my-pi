@@ -1,1 +1,1 @@
-Note: this call launched {{count}} general-purpose `{{agent}}` workers. Review the agent roster for a better-matched specialist{{#if scoutAvailable}} — for instance, read-only exploration belongs on `agent: "scout"`, which uses a faster model{{/if}}.
+Note: this call launched {{count}} general-purpose workers ({{agents}}). Review the agent roster for a better-matched specialist{{#if scoutAvailable}} — for instance, read-only exploration belongs on `agent: "scout"`, which uses a faster model{{/if}}.

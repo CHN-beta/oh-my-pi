@@ -1,9 +1,9 @@
 <system-notice id="prelude-extension">
 Available `eval` prelude globals updated. Only changes are shown below; any prelude not mentioned remains unchanged.
 {{#if added.length}}
-Added to JS/Python `eval`{{#if canRead}}; `read` the linked documentation prior to first use{{/if}}:
+Added to JS/Python `eval`{{#if canRead}}; `read` the linked documentation prior to first use{{#if anyFirstCall}} unless marked{{/if}}{{/if}}:
 {{#each added}}
-- `{{name}}`{{#if summary}}: {{summary}}{{/if}}{{#if ../canRead}} → `xdev://eval/{{name}}`{{/if}}
+- `{{name}}`{{#if summary}}: {{summary}}{{/if}}{{#if firstCall}} (no `read` needed first: the guide follows its first call's result){{/if}}{{#if ../canRead}} → `xdev://eval/{{name}}`{{/if}}
 {{/each}}
 {{/if}}
 {{#if removed.length}}

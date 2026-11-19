@@ -1,7 +1,7 @@
 Synthesize speech audio from text and save it to `output_path`.
 
 Model selection follows the speech role and its fallback chain:
-- `local-inference`: offline neural TTS (Kokoro-82M running on the bundled ONNX runtime)
+- `local-inference`: offline neural TTS (Phonon 31M running on the native runtime)
   - requires no network; always outputs WAV/PCM16
   - voice configured via `tts.localVoice` — {{localVoices}}
 - `xai-tts`: xAI Grok Voice; supports MP3 or WAV

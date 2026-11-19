@@ -59,7 +59,7 @@ import {
 } from "./lifecycle";
 import { type VibeCli } from "@oh-my-pi/pi-tui/tools/vibe";
 
-import { cfgTaskAgentAccountPools, cfgTaskAgentModelOverrides, cfgTaskEnableLsp } from "../task/settings";
+import { cfgTaskAgentAccountPools, cfgTaskAgentModelOverrides } from "../task/settings";
 /**
  * Slot → agent name. Each slot runs a full agent definition resolved through
  * normal agent discovery (project `.omp/agents`, user `~/.omp/agent/agents`,
@@ -867,7 +867,9 @@ export class VibeSessionRegistry {
 		const manager = this.#manager(session);
 		const { agent, modelOverride, modelRole } = await this.#resolveWorker(session, args.cli);
 		if (!session.agentOutputManager) {
-			session.agentOutputManager = new AgentOutputManager(session.getArtifactsDir ?? (() => null));
+			session.agentOutputManager = new AgentOutputManager(session.getArtifactsDir ?? (() => null), {
+				settings: session.settings,
+			});
 		}
 		const reservedIds = this.#persistedIds(session, scope);
 		for (const ref of AgentRegistry.global().list()) reservedIds.add(ref.id);
@@ -1351,7 +1353,7 @@ export class VibeSessionRegistry {
 			sessionFile,
 			persistArtifacts: Boolean(sessionFile),
 			artifactsDir,
-			enableLsp: (session.enableLsp ?? true) && cfgTaskEnableLsp.get(session.settings),
+			enableLsp: session.enableLsp ?? true,
 			signal,
 			eventBus: session.eventBus,
 			subagentEventBus: session.subagentEventBus,

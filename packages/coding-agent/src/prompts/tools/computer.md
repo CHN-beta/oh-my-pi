@@ -38,11 +38,15 @@ Automate the host desktop from JavaScript or Python Eval via the global `compute
       `await el.actions()` returns all available actions including the default press.
 - AX element values:
   - macOS dates use local ISO-8601 format, matching what `setValue` expects.
+  - A macOS slider, stepper, or other numeric control accepts `setValue(75)` or `setValue("0.5")` (plain decimal); when the app clamps or rounds it, the call throws `AxFailed` naming the value it settled on. A control whose value is not settable names the `AXIncrement`/`AXDecrement` actions for stepping it.
+  - A letter sent to a focused macOS popup button may choose an option without opening the menu; the next read of that popup waits up to 1.5 s for it. To choose an option deliberately, use `menu:`; when the user's setting refuses takeover, it refuses `menu:` too (see below).
   - Long macOS values truncate after 200 characters with `… (+N chars; (await computer.ref("eN")).value())`; calling that retrieves the complete value.
   - Linux and Windows truncate previews at 80 characters without that helper; AT-SPI on Linux may already clip text values.
   - To inspect parts of a long value, slice or search in JS (`v.slice(-300)`, `v.indexOf("…")`, or regex with context) instead of printing the whole string;
     oversized printed output spills to a greppable artifact.
-- `await win.menu.items(path?)` enumerates native menu entries;
+- `await win.menu.items(path?)` enumerates native menu entries: with no path the menu bar's menus; with a path, that menu's items and exposed descendants depth-first, each with its full `path`.
+  - Enabled submenus expand up to 150 total items (the named menu's own items are never dropped); a submenu that would exceed the limit or cannot be read stays listed with `hasSubmenu`, so request its path explicitly.
+  - The first unreadable submenu stops further expansion, keeping the items already discovered.
   `await win.menu.select(["File", "Export…"])` triggers an enabled, unambiguous menu command for that window.
   Matching ignores case and optional trailing ellipses; missing, disabled, or ambiguous menu paths fail instead of guessing keyboard shortcuts.
 - `computer.apps.list({query?, runningOnly?})` lists installed/running application IDs, bundle paths, and PIDs.
@@ -165,7 +169,7 @@ await win.click(120, 48, button="right")
 - Window input operates in the background without moving the user's cursor or raising the target app, regardless of acquired control.
   Supply `takeover` solely in the case below.
   - When a background mechanism is unavailable, the tool either:
-    - executes that call in takeover, restores focus to the user's app, and notes it in the result
+    - executes that call in takeover, hands the keyboard back to the user's window, and notes it in the result
       (`… ran in takeover because …; the input was delivered, and focus returned to …`), or,
     - if user settings forbid takeover, throws `BackgroundUnavailable` without taking over; fall back to AX or an alternate route.
   - Only when a screenshot confirms a background call had no effect and AX cannot perform the action should you retry with `{ takeover: true }`.
@@ -176,11 +180,13 @@ await win.click(120, 48, button="right")
   - on non-macOS systems, `el.focus()`
   - on macOS, `perform("AXOpen")`, which may raise an Open panel's application
   - on macOS, any call opening a menu or passing a `menu` path (right-click, Control-click, `perform("AXShowMenu")`, `menu:`,
-    `press()` or click/hold/drag on a popup button or menu button, `setValue` on a popup button), because open menus capture the user's keyboard
+    `press()` or click/hold/drag on a popup button or menu button, `setValue` on a popup button), because open menus capture the user's keyboard;
+    Space and Up/Down keys on those controls are still sent, and any menu they open is closed before the call returns.
 - `raise()` and `apps.open(…, { activate: true })` pull the application to the foreground and capture keyboard focus.
   NEVER use them merely to make input succeed; app launch, reopen, and window input all operate in the background.
 - On macOS, background input supports left-button drags and `holdMouse` originating on sliders, scroll bars, splitters, or steppers,
   as well as middle-button drags, modified clicks, right-clicks, and scroll events.
+  - A background `win.move` gives the app no hover, and a takeover move's hover ends before it returns. On a web page a plain click often reaches a control shown only on hover; otherwise click it with `{ takeover: true }`.
   - A plain left drag across text inside a single native text control (TextEdit and other AppKit text views/fields)
     is translated into an AX text selection with no pointer movement: `drag` returns `{start, length, text}`,
     or throws `AxFailed`/`AxUnconfirmed` like `selectText` (verify selection state before retrying).
@@ -189,10 +195,11 @@ await win.click(120, 48, button="right")
     - To select web page text in the background, click the start position and shift-click the end position, or double-/triple-click.
     - Favor the app's native menu command (e.g., Font Book: File ▸ New Collection from Selection) or AX actions.
   - Because an open menu steals the user's keyboard, background right-clicks, Control-clicks,
-    or clicks/`press()`/`perform("AXShowMenu")` on a menu button or popup button never leave the menu open.
+    or clicks/`press()`/`perform("AXShowMenu")`, Space, or an up/down arrow key on a menu button or popup button never leave the menu open.
     - To trigger a menu entry, supply its path inline: `win.click(x, y, {button: "right", menu: ["Add to", "Fonts"]})`,
       `el.click({button: "right", menu: […]})`, `el.press({menu: ["New Folder"]})`; matching follows `win.menu.select` rules.
     - Omitting `menu` closes the menu and throws a partial-delivery `InputFailed` listing its items; inspect the list and retry with `menu`.
+      Keys take no `menu`: press or click the control with it instead, unless takeover is refused; then use `win.menu.select` when the menu bar holds the command, or tell the user the step needs their screen.
   - Right-button or Control drags, `holdMouse`, and multi-clicks lack background support,
     as do drags, `holdMouse`, or multi-clicks on menu/popup buttons: invoke a single click with `menu` instead.
 - On partial-delivery or focus-restoration errors, inspect the target window before retrying—the input may have already arrived. NEVER blindly replay it.
@@ -200,8 +207,8 @@ await win.click(120, 48, button="right")
   and any alias `perform()` accepts for `AXOpen` or `AXShowMenu` are blocked as well.
 - On macOS, `AxUnconfirmed` signals that an AX call might have succeeded despite lacking confirmation.
   Check fresh AX state or take a screenshot before repeating; NEVER retry blindly.
-- `UserIntervened` (macOS or X11): on macOS, the user switched to that app or typed/clicked inside it;
-  on X11, the user kept typing/clicking up to the takeover admission deadline, or pressed a key/button while takeover ran.
+- `UserIntervened` (macOS or X11): the user kept typing or clicking until the takeover admission deadline, so no takeover started;
+  on macOS they also switched to that app or typed/clicked inside it; on X11 they pressed a key/button while takeover ran.
   Further input is aborted and the tool never automatically re-runs in takeover.
   - Respect the user's input: NEVER revert or type over what they entered.
   - Re-inspect the window (`win.ax()`, `win.observe()`, or `win.screenshot()`) and proceed from its updated state.

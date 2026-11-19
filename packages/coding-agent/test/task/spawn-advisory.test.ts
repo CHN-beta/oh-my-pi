@@ -41,7 +41,7 @@ describe("buildSpecializationAdvisory", () => {
 	it("counts sonic as generic alongside task", () => {
 		const advice = buildSpecializationAdvisory(["sonic", "task"], true);
 		expect(advice).toBeDefined();
-		expect(advice).toContain("2 general-purpose");
+		expect(advice).toContain("2 general-purpose workers (`sonic`, `task`)");
 	});
 });
 

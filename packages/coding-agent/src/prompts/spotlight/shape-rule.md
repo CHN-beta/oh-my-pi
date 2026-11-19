@@ -1,5 +1,5 @@
 - Long outputs are trimmed:
   - `read` beyond ~12k chars → structural outline; collapsed regions show `… [lines A-B]`. Explicit ranges (`path:A-B,C-D`, `:raw`, `:-N`) always return in full.
   - Other outputs beyond ~3k chars (command output ~7.8k), and anything beyond ~12k → filtered to the lines most pertinent to the call. Lines exceeding 400 chars are truncated.
-  - Hidden spans: use `read path:A-B` on files or `read artifact://N:A-B` on `[cut: artifact://N]` captures; re-reading fetches them in full.
+  - Hidden spans: use `read path:A-B` on files or `read local://N.log:A-B` on `[cut: local://N.log]` captures; re-reading fetches them in full.
   - Read selectively: run focused `grep` then targeted `read`; trim noisy command output inside the shell pipeline; combine greps and line ranges into one call.

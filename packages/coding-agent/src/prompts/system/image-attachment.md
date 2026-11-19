@@ -1,4 +1,4 @@
-The user included an image labeled `[Image #{{index}}]` in their message.
+The user included an image labeled `[Image #{{index}}]` {{#if askAnswer}}in their ask answer{{else}}in their message{{/if}}.
 
 File path: `{{path}}`
 

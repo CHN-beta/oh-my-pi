@@ -8,6 +8,10 @@
 {{#if isolated}}
 {{agentId}} executed in isolation and cannot be resumed or messaged — transcript at history://{{agentId}}
 {{else}}
+{{#if resumable}}
 {{agentId}} is now idle — {{#if ircEnabled}}send a message via `write agent://{{agentId}}` to follow up; {{/if}}transcript at history://{{agentId}}
+{{else}}
+{{agentId}} stopped and cannot be messaged — {{#if transcriptAvailable}}transcript at history://{{agentId}}{{else}}transcript unavailable{{/if}}
+{{/if}}
 {{/if}}
 {{/if}}

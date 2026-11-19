@@ -19,6 +19,6 @@ Sources:
 {{/if}}
 - Directory: shows the full root; nested directory listings cap at 12 entries (`… N more`)—read child paths directly or paginate with `:N-M` / `:-N`.
 - URLs: reader-mode text/Markdown, `:raw` for raw HTML; bare `host:port` requires a trailing slash.
-- PDF/documents: extracted text; notebooks: editable cells; images: decoded inline.
+- PDF/DOCX/PPTX/XLSX/EPUB: extracted text; notebooks: editable cells; images: decoded inline.
 - Additional selectors are documented in `xdev://read/sources` (read it prior to first use):
-  - SQLite, archives (ZIP, TAR, 7z, RAR, etc.), JSON/JSONL via jq filter, {{#if BINARY_VIEWS}}executables, {{/if}}video, SVG rendered as image, and merge conflicts.
+  - SQLite, archives (ZIP, TAR, 7z, RAR, etc.), JSON/JSONL via jq filter, executable metadata, video, SVG rendered as image, and merge conflicts.

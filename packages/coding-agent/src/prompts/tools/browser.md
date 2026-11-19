@@ -1,4 +1,4 @@
-Control real browser tabs.
+Control real browser tabs; begin with `const tab = await browser.open({ name, url })`.
 
 <instruction>
 - Static pages? Use `read`. Reserve `browser` for pages needing JavaScript execution, authenticated sessions, or interactive input.
@@ -17,7 +17,7 @@ BrowserTab, every helper awaited:
 navigation: url title goto back forward reload pushState
 inspection: observe({selector?, compact?, viewportOnly?, includeAll?}) ariaSnapshot(selector?, {interactive?, compact?, urls?, diff?}) a11y extract(format?, {selector?, outline?, filter?}) text html value attr count box styles isVisible isEnabled isChecked
 capture: screenshot({selector?, fullPage?, silent?, annotate?, format?, quality?, ifChanged?, threshold?}) diffScreenshot(baselinePath, {threshold?, output?}) pdf({path?, format?, landscape?, scale?, printBackground?, margin?, pageRanges?})
-interaction: click(selector, {button?, count?}) dblclick hover focus check uncheck type fill press keyDown keyUp mouseMove(x, y, {steps?, css?}) mouseDown mouseUp clickAt(x, y, {button?, count?, css?}) wheel scroll drag highlight scrollIntoView select uploadFile
+interaction: click(selector, {button?, count?}) dblclick hover focus check uncheck type(selector, text) fill(selector, text) press(key, {selector?}) keyDown keyUp mouseMove(x, y, {steps?, css?}) mouseDown mouseUp clickAt(x, y, {button?, count?, css?}) wheel scroll(dx, dy) drag(from, to) highlight scrollIntoView select(selector, …values) uploadFile(selector, …paths)
 waiting: waitFor waitForSelector waitForUrl(urlPattern, {timeout?}) waitForText
 frames: frames() → frame tree; frame(selectorOrNameOrUrl) → handle with click fill type press text html value attr count isVisible ariaSnapshot evaluate waitFor waitForSelector screenshot
 dialogs: dialog handleDialog setDialogs
@@ -31,7 +31,7 @@ recording: recordStart(path, options?) recordStop recordRestart(path, options?) 
 vitals, React: vitals reactEnable reactTree reactInspect reactRenders reactSuspense
 network: route(urlGlob, {abort?, status?, headers?, contentType?, body?, delay?, resourceType?}) unroute routes requests({filter?, type?, method?, status?, since?, limit?}) → metadata request(id) → with bodies clearRequests harStart harStop allowedDomains
 WebMCP (experimental, Chromium only): webmcpList webmcpInvoke webmcpEvents
-execution: evaluate run(fnOrCode, {args?, timeout?})
+execution: evaluate(fnOrExpression) run(fnOrCode, {args?, timeout?})
 elements: id(n) ref("e5") → BrowserElement with click dblclick check uncheck highlight type fill press hover focus select uploadFile scrollIntoView boundingBox isVisible isHidden text html value attr styles isEnabled isChecked evaluate
 close()
 
@@ -45,7 +45,8 @@ selectors: CSS, or Puppeteer aria/… text/… xpath/… pierce/… label/… pl
   - Chrome tabs exposed by the relay (`shown`: the currently active tab).
   - Always supply an entry's `target` value; never guess.
 - `viewportOnly`: restrict to visible on-screen elements (no-op on cmux). `includeAll`: include non-interactive elements as well. Calling `text()` or `html()` with no selector reads `<body>`.
-- `click`: `button` triggers alternate mouse buttons (`"right"` opens the context menu); `count` performs repeated clicks. For `<select>` elements use `select` rather than `fill`.
+- `click`: `button` triggers alternate mouse buttons (`"right"` opens the context menu); `count` performs repeated clicks.
+- `<select>` elements: use `select(selector, …choices)` or `handle.select(…choices)` rather than `fill`. Choices mix strings (exact value, then label), `{label: "full text"}`, `{value: "exact value"}`, or `{index: 0}`; labels match exactly or as the full option text with whitespace collapsed and trimmed.
 - `clickAt`, `mouseMove`, and `drag` `{x, y}` coordinates are measured on the tab's most recent screenshot.
   - Coordinates are in viewport CSS pixels unless the screenshot output line notes scaling.
   - Following a scaled screenshot, pass page-measured coordinates (`box`, `evaluate`) with `css: true` rather than rescaling manually: `clickAt(x, y, {css: true})`, `{x, y, css: true}`.
@@ -87,6 +88,7 @@ Browser selection:
   4. cmux
   5. built-in browser: headless WebKit if installed, downloaded on demand when no browser is present (disable via `browser.webkit` or `PI_BROWSER_WEBKIT=0`),
      otherwise managed Chromium (downloaded on first use)
+- A subagent skips the relay, Tern, and cmux: pass `app: "relay"` or `app: "tern"` when the task needs the user's browser or pane.
 - The `open` response reports the chosen browser and any fallback used.
 - `app` accepts a single string:
   - `"relay"` (user's Chrome), `"tern"`, `"webkit"`, `"chromium"` (managed)
@@ -124,17 +126,7 @@ Relay (`app: "relay"`: user's Chrome via the browser relay):
 - With `target`: attaches to an existing tab matched by URL or title substring. Reopening an already-open name reuses its tab.
 - `app: "auto"` bypasses the relay regardless of configuration and falls through to the next option.
 - Operates in the user's actual logged-in browser: sites attribute actions to the user. NEVER navigate an adopted tab without authorization.
-{{#if linux}}
-- On Linux X11, Chrome 150+ raises its window—capturing the user's subsequent keystrokes—whenever a mouse or touch press hits a visible tab (`shown` in relay `browser.targets()`) while another window holds focus.
-  - Actions that press: `click`, `dblclick`, `tap`, `drag`, `mouseDown`, `clickAt`,
-    `check`/`uncheck` when not already in the target state (a blocked toggle still presses; unchecking a native radio does not),
-    `uploadFile` on elements other than `<input type=file>`.
-  - Any control opening a new tab or popup can also raise Chrome regardless of activation method.
-  - Non-pressing actions: keyboard input (`type`, `fill`, `press`), `focus`, `select`, `hover`, scrolling, screenshots.
-  - Hidden tabs never raise the window.
-  - To leave the user's current app focused when interacting with a shown tab, use
-    `focus()` followed by `press("Enter")` for buttons, `press("Space")` for checkboxes, and `uploadFile` directly on the file input.
-{{/if}}
+{{{x11Guidance}}}
 
 Tern:
 

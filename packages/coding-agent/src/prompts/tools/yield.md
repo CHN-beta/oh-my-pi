@@ -10,15 +10,12 @@ NEVER send multiple items in one call.
 Return subagent output as `{ data: <your output> }` on success, or `{ error: "message" }` on failure.
 Never supply both, and never pass a bare payload outside `data`.
 
-Leave `type` omitted for a standard single terminal structured result.
-Supply `type: ["section"]` to record an incremental, non-terminal section that accumulates.
+Omit `type` for the usual single terminal structured result.
+Supply `type: ["<field>"]` with `data` to record an incremental, non-terminal section that accumulates.
+A data-less `type: "result"` finalizes previously submitted sections; it is invalid when none were submitted.
 {{/if}}
 {{#unless workPoolItems}}
 {{#if hasOutputSchema}}
-This task specifies an output schema: the final `data` MUST be a complete object conforming to it.
-Calling `type: "result"` without `data` finalizes previously submitted incremental sections.
-That is invalid if no sections were submitted—plain prose in your final turn never satisfies the schema.
-{{else}}
-Supply `type: "result"` to finalize; omitting `data` uses your final assistant turn as the raw final result.
+This task specifies an output schema: the terminal `data` MUST be a complete object conforming to it.
 {{/if}}
 {{/unless}}

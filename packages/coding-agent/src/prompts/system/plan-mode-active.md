@@ -107,7 +107,7 @@ Approval choices:
 - **Approve and execute** — clean context (session wiped).
 - **Approve and compact context** — conversation summarized, then executes in this session.
 - **Approve and keep context** — executes in this session retaining exploration history.
-- **Save and quit** — exports the plan to a target path, then opens a fresh session.
+- **Save** — exports the plan to a target path; the review stays open.
 
 Every choice demands a self-contained plan file.
 </caution>
