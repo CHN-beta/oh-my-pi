@@ -22,7 +22,8 @@ Every modified line in the repository, attributed from your edit log:
 
 <instruction>
 - Use the eval `commit` namespace; `d = await commit.draft()` refreshes this draft (supply `agents=` if the user specified a scope). If Review is empty and Selected covers your changes, commit inside the same eval cell.
-- Handle every `?` item: `await d.show()` displays them; call `take` or `drop` by file path, unit, or grep. Files updated by a generator, formatter, or script you invoked belong to you.
+- Handle every `?` item: `await d.show()` displays them; call `take` or `drop` by file path, unit, or grep.
+- Files and lines a generator, formatter, or script you ran wrote are yours, but unrecorded: `take` them from Unrecorded, from `left out: unrecorded`, and from Review.
 - Separate independent work into distinct commits using `only()`, and re-draft after each commit.
 - Match the repository's commit style for subject and body.
 - Skip running tests, builds, or other checks; the user requested a commit only.

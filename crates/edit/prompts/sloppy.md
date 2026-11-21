@@ -1,37 +1,28 @@
-Anchored patch format: Find matches existing lines; Replace substitutes them; Insert Before and Insert After add lines while keeping the matched anchor.
+One `input` string = one complete patch. Start `*** Edit File: path`; repeat operations under it. Use current text from a read or the user's quote. Read only for missing context.
 
-<ops>
-- `*** Edit File: path` starts edits for a file; bare `*** Edit File:` continues targeting the same file. Add blocks to edit additional files. Append ` all` to either header to update every occurrence. Quote ambiguous paths as JSON strings.
-- `*** Find` MUST match uniquely unless `all` is set. Copy exact text and indentation from your latest verbatim file read—never from Markdown, diffs, or summaries. Pick the smallest unique anchor; if ambiguous, expand with parent context and NEVER retry the bare line.
-- Pair Find with `*** Replace` (full replacement text; empty body deletes), `*** Insert Before` (inserts lines ahead of the first matched line), or `*** Insert After` (inserts lines following the last matched line). Inserts preserve the matched anchor. Replace MUST include part of the modified line; inserts MUST anchor on an adjacent line and supply new lines. Modifying the anchor itself requires Replace. Leaving out an action does not delete anything.
-- Headers MUST appear on their own lines; bodies hold raw lines up to the next header or EOF, with no closing marker or `*** End …` line. NEVER write diff prefixes (`+`/`-`/space) or `@@` hunks. Edits target the original file state rather than positions shifted by prior edits; if an edit overlaps an earlier one, it operates on the earlier edit's output.
-- `…` in Find acts as a wildcard capturing skipped text: within a line it spans that single line; at a line end it spans multiple lines. Each `…` in Replace replays the next capture in sequence. A standalone `…` line without a matching capture fails: write those lines explicitly. `…` in Insert is treated as literal text. Prefer Insert or captures over retyping unchanged lines.
-- Replace/Insert preserve indentation verbatim; whitespace, operators, and delimiters are NEVER auto-fixed. A failing edit is rejected individually while valid ones apply. Resend ONLY the failed edits using any copy-ready suggestion verbatim; NEVER resend edits that already succeeded. "No change" means Replace already matches the file text—check another location. If the file contains a standalone edit header line, use `write` instead.
-</ops>
+**Whole function, conditional, class or multiline call:** put the action and the start of its opening line in ONE header. The tool locates the closing line. NEVER quote the old body, even when rewriting or dedenting every line.
 
-<example>
-Relocate code: delete via an empty Replace, then insert before an unchanged anchor:
 ```text
-*** Edit File: src/util.ts
-*** Find
-const helper = () => 1;
-*** Replace
-*** Find
-run(target);
-*** Insert Before
-const helper = () => 1;
+*** Edit File: queue.ts
+*** Replace Block: if (useLegacyQueue) {
+if (useLegacyQueue) {
+  drain(queue);
+}
+*** Delete Block: function obsolete(
+*** Cut Block: async function flushPending(
+*** Paste Before Block: export function shutdown(
 ```
 
-Preserve elided lines and partial-line matches:
+`Replace Block:` uses the header only to locate the old block. Give the complete final code below it, including the opening line if it stays. `Delete Block:` has no body. To remove one of two adjacent identical copies, name the duplicated opener. Otherwise the opening-line prefix must be unique. Cut takes whole lines; paste once in the same file. To land beside one line instead of a block use `*** Find` plus `*** Paste Before`/`*** Paste After`.
+
+**Small changes:** `*** Find` is the old side, not a search call. Append the action AND its body to the SAME string before sending. Use the shortest unique fragment. Editing a one-line doc comment? Quote its actual delimiters, not a ` * ` continuation. `*** Find all` renames every whole-word match of a bare identifier:
+
 ```text
-*** Edit File: src/users.ts
-*** Find
-function load(…){
-…
-return old(…);
+*** Edit File: jobs.ts
+*** Find all
+retrunValue
 *** Replace
-function load(…){
-…
-return fresh(…);
+returnValue
 ```
-</example>
+
+For arbitrary ranges or unsupported syntax, Find the first line, a literal `…` line, then the last line. Add a distinctive neighbour if ambiguous, not the middle of the block. `*** Replace` writes the new span (header alone deletes); `…` in a text Replace reuses its Find capture. `*** Insert Before` / `*** Insert After` keeps the anchor; supply only new lines. `*** Cut` followed by a destination Find/Paste moves a text range. Indentation is literal.

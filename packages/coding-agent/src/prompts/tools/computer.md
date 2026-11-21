@@ -222,6 +222,9 @@ await win.click(120, 48, button="right")
   - Inform the user that the screen is locked instead of retrying keyboard calls.
 - A screenshot's `path` points to the delivered PNG (`width`×`height`, scaled down if required by capture limits) rather than a separate full-res file;
   use `zoom` for closer inspection rather than cropping the PNG. Pass `{ silent: true }` inside polling loops.
+- Windows `covered` (a screenshot result, or a tree's closing `… covered:` line): the window appeared fully covered around the read and Chromium can stop drawing it,
+  so its screenshot and tree may be stale; while it stays covered, do not wait and read it again by any route (screenshot, `ax()`, `find`), and never report a change as verified from it.
+  For a current view: the browser tool if it is connected to that app, else `raise()` (it takes the user's keyboard, and Windows refuses it while they use another window) and read again, checking for the expected state rather than trusting the first unmarked read, else tell the user what you could not confirm.
 </rules>
 
 <critical>
