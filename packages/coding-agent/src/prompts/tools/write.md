@@ -1,2 +1,2 @@
-SHOULD use `edit` for existing files; use `write` when creating required new files or replacing an entire file. NEVER generate documentation or emojis unless explicitly asked.
-{{#if readActive}}Archive entries and SQLite rows can also be written: `xdev://read/sources`.{{else}}`archive.ext:member`: ZIP/tar families and `.asar` support writes, others are read-only. `db.sqlite:table`: inserts row; `db.sqlite:table:key`: updates via JSON, empty content deletes.{{/if}}
+SHOULD `edit` existing files; `write` for required new files or whole-file replacement. NEVER create docs or emojis unless requested.
+{{#if readActive}}Archive members and SQLite rows are writable too: help://read/sources.{{else}}`archive.ext:member`: ZIP/tar families and `.asar` writable, others read-only. `db.sqlite:table`: insert; `db.sqlite:table:key`: JSON update, empty content deletes.{{/if}}

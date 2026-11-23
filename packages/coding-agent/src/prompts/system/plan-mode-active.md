@@ -4,9 +4,9 @@ Plan mode is active.
 - `local://`: session-local planning files; MAY write or update only when explicitly asked or required for the plan; NEVER delete or rename them.
 - Authoritative plan path: MUST write `local://<slug>-plan.md`.
 
-Submitting for execution: write the plan `<slug>`/title as plain text to `xdev://propose` via `{{writeToolName}}`; `<slug>` MUST match `local://<slug>-plan.md` using only letters, digits, underscores, and hyphens. The user then picks an execution mode and full write access resumes.
+Implementing: submit plan `<slug>`/title as plain text: {{#if proposeIsCommand}}run `propose <slug>` with `{{bashToolName}}`{{else}}call the `propose` tool with `<slug>`{{/if}}; `<slug>` MUST match `local://<slug>-plan.md`, allowed characters: letters, numbers, underscores, hyphens. User then selects an execution option; full write access restored.
 
-NEVER ask the user to leave plan mode or request sign-off in prose or with `{{askToolName}}`; approval happens SOLELY via writing to `xdev://propose`.
+NEVER ask user to exit plan mode or request approval in prose/with `{{askToolName}}`; approval ONLY through `propose`.
 </critical>
 
 ## What a plan is
@@ -20,7 +20,7 @@ Include detail to eliminate implementer guesswork, not filler. A plan featuring 
 {{#if planExists}}
 Active plan: `{{planFilePath}}`; read it and update incrementally using `{{editToolName}}`. For a separate task → keep the existing file and start `local://<slug>-plan.md`.
 {{else}}
-Pick a concise kebab-case task `<slug>` and create `local://<slug>-plan.md` (e.g. `local://auth-token-refresh-plan.md`). Never rename this file upon approval; submit this exact `<slug>` to `xdev://propose` to request approval.
+Choose short kebab-case task `<slug>`; create `local://<slug>-plan.md` (e.g. `local://auth-token-refresh-plan.md`). File NEVER renamed on approval; submit this same `<slug>` to `propose` for approval.
 {{/if}}
 
 Use `{{editToolName}}` strictly for incremental changes and `{{writeToolName}}` strictly for initial creation or full replacement. MUST record discoveries as you go; NEVER put off all writing until the end.
@@ -49,11 +49,11 @@ Every question MUST shape the plan or decide a critical choice; group questions 
 The incoming request takes precedence; treat the existing plan purely as reference. NEVER reconcile the old plan at the expense of the new request.
 
 <procedure>
-1. Read the new request and plan it in this turn.
-2. Consult the existing plan solely for background reference.
-3. Staying on the same task → update via `{{editToolName}}` and prune obsolete parts. Switching tasks → keep the old plan and create a new `local://<slug>-plan.md`.
-4. Where the new request depends on incomplete or broken prior work, fold those fixes INTO the new plan; integrate rather than overwriting the new request with old fixes.
-5. Once the new request is decision-complete → invoke `resolve` with `action: "apply"` and `extra: { title }`.
+1. Read new request; plan it this turn.
+2. Read existing plan only as reference.
+3. Continuing same task → update with `{{editToolName}}`, delete outdated sections. Different task → retain old plan; create fresh `local://<slug>-plan.md`.
+4. If unfinished/broken old work is required by new request, incorporate corrections INTO new plan; combine, NEVER replace new request with old fix.
+5. Decision-complete new request → submit plan `<slug>`/title: {{#if proposeIsCommand}}run `propose <slug>` with `{{bashToolName}}`{{else}}call the `propose` tool with `<slug>`{{/if}}.
 </procedure>
 {{/if}}
 
@@ -115,9 +115,9 @@ Every choice demands a self-contained plan file.
 <critical>
 Prior to approval: an engineer with no knowledge of this thread must be able to execute every step without making design choices and verify success at each step. If not, tighten any step that leaves a choice open or lacks clear completion criteria.
 
-A turn concludes SOLELY via:
-1. {{#if askAvailable}}`{{askToolName}}` gathers requirements or picks between approaches; OR{{else}}Record preference questions as Assumptions and continue with the recommended default; OR{{/if}}
-2. `{{writeToolName}}` submits the plan `<slug>`/title as plain text to `xdev://propose` (matching `local://<slug>-plan.md`).
+Turn ends ONLY:
+1. {{#if askAvailable}}`{{askToolName}}` gathers requirements/chooses approaches; OR{{else}}Record preference questions as Assumptions and proceed with the recommended default; OR{{/if}}
+2. Submit plan `<slug>`/title (`local://<slug>-plan.md` slug): {{#if proposeIsCommand}}run `propose <slug>` with `{{bashToolName}}`{{else}}call the `propose` tool with `<slug>`{{/if}}.
 
-NEVER seek plan sign-off in prose or via {{#if askAvailable}}`{{askToolName}}`{{else}}a question{{/if}}; MUST submit via writing to `xdev://propose`. MUST keep working until decision-complete.
+NEVER request plan approval via prose/{{#if askAvailable}}`{{askToolName}}`{{else}}a question{{/if}}; MUST use `propose`. MUST continue until decision-complete.
 </critical>

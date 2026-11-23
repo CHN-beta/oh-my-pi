@@ -11,8 +11,8 @@
 - Executable analysis (ELF/PE/Mach-O):
   - `:overview` lists functions; `:<func|0xaddr>` decompiled pseudocode; `:<func>:asm` disassembly; `:imports`, `:exports`, `:strings`, `:xrefs:<func|0xaddr>`.
   - These selectors open the selected disassembler and may provision Ghidra on first analysis.
-  - Append line ranges after the view selector (`bin:main:10-40`); `bin:@x86_64:main` analyzes a chosen universal slice (the host slice is the default).
-  - For edits and Python scripting, use eval's `dsm` namespace → xdev://eval/dsm.
+  - Line ranges apply after the view (bin:main:10-40); bin:@x86_64:main analyzes a chosen universal slice.
+  - For edits and Python scripting, use eval's `dsm` namespace → help://eval/dsm.
 {{/if}}
 - Video (requires `ffmpeg`/`ffprobe`): bare path gives preview grid and metadata, `:412` extracts frame 412, `:1h5m42s` / `:90s` / `:01:23` seeks by timestamp.
 - SVG/SVGZ defaults to text; `:img` rasterizes into an image and `:raw` returns original source.

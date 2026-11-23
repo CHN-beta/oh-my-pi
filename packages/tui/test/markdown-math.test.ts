@@ -7,12 +7,7 @@ import {
 	renderInlineMarkdown,
 } from "../src/components/markdown";
 import { KITTY_PLACEHOLDER } from "../src/kitty-graphics";
-import {
-	ImageProtocol,
-	setTerminalImageProtocol,
-	setTerminalTextSizing,
-	TERMINAL,
-} from "../src/terminal-capabilities";
+import { ImageProtocol, setTerminalImageProtocol, setTerminalTextSizing, TERMINAL } from "../src/terminal-capabilities";
 import { defaultMarkdownTheme } from "./test-themes.js";
 
 // Image rows are only special-cased when a graphics protocol is active; without

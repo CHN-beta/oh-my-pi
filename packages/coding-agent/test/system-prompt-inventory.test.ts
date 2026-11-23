@@ -121,7 +121,7 @@ describe("system prompt tool inventory", () => {
 			rules: [],
 			toolNames: opts.toolNames,
 			tools: opts.tools,
-			xdevTools: [{ name: "fetch", summary: "Fetches URLs." }],
+			mountedCommands: [{ name: "fetch", summary: "Fetches URLs." }],
 			workspaceTree: { ...EMPTY_TREE, rootPath: tempDir },
 		});
 		return systemPrompt.join("\n\n");
@@ -163,8 +163,8 @@ describe("system prompt tool inventory", () => {
 			workspaceTree: { ...EMPTY_TREE, rootPath: tempDir },
 			nativeTools: opts.nativeTools,
 			inlineToolDescriptors: false,
-			xdevTools: [{ name: "web_search", summary: "Searches the web.", dynamic: opts.dynamic }],
-			xdevDocs: "Mounted web search documentation.",
+			mountedCommands: [{ name: "web_search", summary: "Searches the web.", dynamic: opts.dynamic }],
+			toolCommandDocs: "Mounted web search documentation.",
 		});
 		const text = systemPrompt.join("\n\n");
 		return { text, inventory: opts.nativeTools ? inventoryFrom(text) : text };
@@ -503,7 +503,7 @@ describe("system prompt tool inventory", () => {
 		expect(text).not.toContain("Reads files from disk.");
 	});
 
-	it("references xdev://-only tools by their xdev:// URL", async () => {
+	it("references mounted-only tools by their bare command name", async () => {
 		const { systemPrompt } = await buildSystemPrompt({
 			cwd: tempDir,
 			contextFiles: [],
@@ -511,13 +511,12 @@ describe("system prompt tool inventory", () => {
 			rules: [],
 			toolNames: ["read", "bash"],
 			tools: TOOLS,
-			xdevTools: [{ name: "lsp", summary: "Language server." }],
+			mountedCommands: [{ name: "lsp", summary: "Language server." }],
 			workspaceTree: { ...EMPTY_TREE, rootPath: tempDir },
 		});
 		const text = systemPrompt.join("\n\n");
-		expect(text).toContain("MUST use `xdev://lsp` for definitions");
-		expect(text).toContain("MUST check its callers via `xdev://lsp` references");
-		expect(text).not.toContain("`lsp`");
+		expect(text).toContain("MUST use `lsp` for definitions");
+		expect(text).toContain("MUST check its callers via `lsp` references");
 	});
 
 	it("renders exactly one of the map-unknown-code, explore and inline-first delegation rules per bias", async () => {
@@ -533,7 +532,11 @@ describe("system prompt tool inventory", () => {
 				eagerTasks,
 			});
 			const count = (needle: string) => systemPrompt[0].split(needle).length - 1;
-			return [count("Map unfamiliar code through `task`"), count("Exploring an unfamiliar subsystem?"), count("Work inline first.")];
+			return [
+				count("Map unfamiliar code through `task`"),
+				count("Exploring an unfamiliar subsystem?"),
+				count("Work inline first."),
+			];
 		};
 		expect(await renderDelegation("eager", false)).toEqual([1, 0, 0]);
 		expect(await renderDelegation("eager", true)).toEqual([1, 0, 0]);
@@ -585,24 +588,27 @@ describe("system prompt tool inventory", () => {
 	it.each([
 		["compact", true],
 		["inline", false],
-	] as const)("omits xdev-only tools from the %s inventory", async (_mode, nativeTools) => {
+	] as const)("omits mounted-only tools from the %s inventory", async (_mode, nativeTools) => {
 		const { text, inventory } = await renderMountedWebSearch({ nativeTools, directDefinition: false });
 
 		expect(inventory).toContain(nativeTools ? "\nread" : "type read = (_: {");
 		expect(inventory).not.toContain(nativeTools ? "web_search" : "type web_search = (");
-		expect(text).toContain("# xdev:// Tool Devices");
+		expect(text).toContain("# Tool Commands");
 		expect(text).toContain("Mounted web search documentation.");
 	});
 
 	it.each([
 		["compact", true],
 		["inline", false],
-	] as const)("keeps direct tools that share an xdev device name in the %s inventory", async (_mode, nativeTools) => {
-		const { inventory } = await renderMountedWebSearch({ nativeTools, directDefinition: true });
+	] as const)(
+		"keeps direct tools that share a mounted command name in the %s inventory",
+		async (_mode, nativeTools) => {
+			const { inventory } = await renderMountedWebSearch({ nativeTools, directDefinition: true });
 
-		expect(inventory).toContain(nativeTools ? "\nread, web_search" : "type web_search = (");
-		if (!nativeTools) expect(inventory).toContain(DIRECT_WEB_SEARCH.description);
-	});
+			expect(inventory).toContain(nativeTools ? "\nread, web_search" : "type web_search = (");
+			if (!nativeTools) expect(inventory).toContain(DIRECT_WEB_SEARCH.description);
+		},
+	);
 
 	it("keeps Eval preludes out of the inventory while their guidance ships", async () => {
 		const tools = new Map(TOOLS);
@@ -1017,7 +1023,7 @@ describe("system prompt tool inventory", () => {
 		expect(withTodo).toContain("Keep the todo list updated");
 	});
 
-	// A session without `read` cannot open `xdev://read/urls`, so the grammar that link stands for must ship inline.
+	// A session without `read` cannot open `help://read/urls`, so the grammar that link stands for must ship inline.
 	it("links the internal URL reference only while read can fetch it", async () => {
 		const opts = {
 			cwd: tempDir,
@@ -1030,11 +1036,11 @@ describe("system prompt tool inventory", () => {
 			inlineToolDescriptors: false,
 		};
 		const withRead = (await buildSystemPrompt({ ...opts, toolNames: ["read", "bash"] })).systemPrompt.join("\n\n");
-		expect(withRead).toContain("xdev://read/urls");
+		expect(withRead).toContain("help://read/urls");
 		expect(withRead).not.toContain("named service");
 
 		const withoutRead = (await buildSystemPrompt({ ...opts, toolNames: ["bash"] })).systemPrompt.join("\n\n");
-		expect(withoutRead).not.toContain("xdev://read/urls");
+		expect(withoutRead).not.toContain("help://read/urls");
 		expect(withoutRead).toContain("named service");
 	});
 });

@@ -235,7 +235,8 @@ export function holdPartialTableRow(text: string): string {
 	let lineStart = text.lastIndexOf("\n", lastBreak - 1) + 1;
 	let table = false;
 	while (matchesAt(PIPE_IN_LINE_AT, text, lineStart)) {
-		const above = lineStart > 0 ? text.lastIndexOf("\n", lineStart - 2) + 1 : -1;
+		// `lastIndexOf` clamps a negative start to 0: under a leading "\n" it would find that same break again.
+		const above = lineStart > 1 ? text.lastIndexOf("\n", lineStart - 2) + 1 : lineStart - 1;
 		if (matchesAt(DELIMITER_ROW_AT, text, lineStart)) {
 			table = above >= 0 && matchesAt(PIPE_IN_LINE_AT, text, above);
 			lineStart = above;
@@ -4360,7 +4361,6 @@ export class Markdown implements Component {
 		switch (token.type) {
 			case "heading": {
 				const headingLevel = token.depth;
-				const headingPrefix = `${"#".repeat(headingLevel)} `;
 				const headingText = this.#renderInlineTokens(token.tokens || [], {
 					...(this.#proseFgExemptContext(styleContext) ?? this.#getDefaultInlineStyleContext()),
 					availableWidth: undefined,
@@ -5337,7 +5337,9 @@ export class Markdown implements Component {
 		lines.push(`${t.topLeft}${h}${topBorderCells.join(`${h}${t.teeDown}${h}`)}${h}${t.topRight}`);
 
 		// Render header with wrapping
-		const headerStyleContext = this.#theme.tableHeader ? this.#proseFgExemptContext(cellStyleContext) : cellStyleContext;
+		const headerStyleContext = this.#theme.tableHeader
+			? this.#proseFgExemptContext(cellStyleContext)
+			: cellStyleContext;
 		const headerCellLines: string[][] = token.header.map((cell, i) => {
 			const text = this.#renderInlineTokens(cell.tokens || [], headerStyleContext);
 			return this.#wrapCellText(text, columnWidths[i]);

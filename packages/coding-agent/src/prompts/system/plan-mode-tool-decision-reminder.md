@@ -1,9 +1,9 @@
 <system-reminder>
 Your plan-mode turn finished without issuing a mandatory tool call.
 
-You MUST pick one of these two actions right now:
-1. Invoke `{{askToolName}}` to request needed clarification, OR
-2. Submit the plan slug/title (`<slug>`, matching `local://<slug>-plan.md`) as plain text to `xdev://propose` via `{{writeToolName}}` to wrap up planning and seek approval
+You MUST choose exactly one next action now:
+1. Call `{{askToolName}}` to gather required clarification, OR
+2. Submit the plan `<slug>`/title as plain text: {{#if proposeIsCommand}}run `propose <slug>` with `{{bashToolName}}`{{else}}call the `propose` tool with `<slug>`{{/if}} (`<slug>` must match `local://<slug>-plan.md`) to finish planning and request approval
 
 NEVER emit bare plain text on this turn.
 </system-reminder>

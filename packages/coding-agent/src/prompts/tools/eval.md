@@ -1,4 +1,5 @@
-Executes one cell per invocation; top-level bindings persist across calls and compaction.{{#if spawns}} Subagents run in separate kernels.{{/if}}
+One cell per call; top-level state persists, including across compaction.{{#if spawns}} Subagents have separate kernels.{{/if}}
+A cell without `timeout` stops after {{timeoutDefault}}s{{#if timeoutRaisable}}; pass a larger `timeout` for slow subprocesses, network calls or large scans{{/if}}.
 {{#if spawns}}
 {{#if eagerDelegation}}
 When processing 2+ independent items, prefer a named `workpool()`; results deliver automatically.
@@ -62,19 +63,19 @@ await sh(command, { cwd?, timeout? })  await sh`cmd ${arg}` — embedded bash en
 {{{inlineTopics}}}
 {{else}}
 <namespaces>
-Additional globals; `read` the linked docs before first use:
-- `judge`, `{{#if py}}judge_batch{{else}}judgeBatch{{/if}}`, `completion`: classification, batch judgment, and model calls → xdev://eval/judge
-- `%load`{{#if py}}, `%pip`{{/if}}{{#if js}}, `%bun add`{{/if}}, `budget`{{#if evalTools}}, `@tool`/`tool(fn)`{{/if}}: setup scripts, package installs, and utilities → xdev://eval/helpers
+More globals; `read` the linked docs before first use:
+- `judge`, `{{#if py}}judge_batch{{else}}judgeBatch{{/if}}`, `completion`: classification, bulk judgment, model calls → help://eval/judge
+- `%load`{{#if py}}, `%pip`{{/if}}{{#if js}}, `%bun add`{{/if}}, `budget`{{#if evalTools}}, `@tool`/`tool(fn)`{{/if}}: setup, installs, utilities → help://eval/helpers
 {{#if spawns}}
-- `agent`, `workpool`: background subagents and DAG waves → xdev://eval/agents
+- `agent`, `workpool`: background subagents, DAG waves → help://eval/agents
 {{/if}}
 {{#each preludes}}
-- `{{name}}`{{#if summary}}: {{summary}}{{/if}} → xdev://eval/{{name}}
+- `{{name}}`{{#if summary}}: {{summary}}{{/if}} → help://eval/{{name}}
 {{/each}}
 {{#if firstCallPreludes}}
 No `read` needed before first use; the guide follows the first call's result (full reference linked):
 {{#each firstCallPreludes}}
-- `{{name}}`{{#if summary}}: {{summary}}{{/if}} → `xdev://eval/{{name}}`
+- `{{name}}`{{#if summary}}: {{summary}}{{/if}} → `help://eval/{{name}}`
 {{/each}}
 {{/if}}
 </namespaces>

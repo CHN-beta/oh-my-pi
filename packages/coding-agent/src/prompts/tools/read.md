@@ -5,12 +5,17 @@ Embed line ranges inside `path` rather than passing separate range/offset/limit 
 - Supply the selector on every ranged request; calling a bare path repeatedly does not paginate forward.
 
 Path suffixes:
-- `:50` or `:50-` begins at line 50; `:50-200` is inclusive; `:50+150` reads 150 lines starting at 50; `:-60` reads the final 60 lines.
-- Separate multiple ranges (`:5-16,960-973`) or single lines (`:19,59`) with commas.
-- A single non-raw range automatically includes 1 line of leading context and 3 lines of trailing context (`:50-80` displays 49–83).
-- Non-raw reads (including comma-separated lists) may emit the opening or closing line of a truncated block; only `:raw` is strictly exact.
-- `:raw` outputs exact lines without hash anchors or prefixes; `:2-4:raw` or `:raw:2-4` yields those exact lines.
-- With `:raw`, a single number selects that lone line (`:17:raw`), while `:17-:raw` reads from line 17 onward.
+- :50 line 50; :50- from line 50 on; :50-200 inclusive; :50+150 counts lines; :-60 last 60.
+- Commas join ranges (:5-16,960-973) or individual lines (:19,59).
+- A single non-raw range also shows 1 line before and 3 after (:50-80 shows 49-83).
+- Non-raw reads (comma lists too) may add the open/close line of a cut block; only :raw stays exact.
+{{#if IS_HL_MODE}}
+- :raw verbatim without anchors/prefixes (skips folding and the display-width limit); combine :2-4:raw or :raw:2-4 for exactly those lines.
+{{else if HAS_LINE_NUMBERS}}
+- :raw verbatim without line prefixes (skips folding and the display-width limit); combine :2-4:raw or :raw:2-4 for exactly those lines.
+{{else}}
+- :raw verbatim (skips folding and the display-width limit); combine :2-4:raw or :raw:2-4 for exactly those lines.
+{{/if}}
 
 Sources:
 - Bare code files show declarations only; re-read ONLY omissions named in the footer, NEVER guess `..` or `…`.
@@ -20,5 +25,5 @@ Sources:
 - Directory: shows the full root; nested directory listings cap at 12 entries (`… N more`)—read child paths directly or paginate with `:N-M` / `:-N`.
 - URLs: reader-mode text/Markdown, `:raw` for raw HTML; bare `host:port` requires a trailing slash.
 - PDF/DOCX/PPTX/XLSX/EPUB: extracted text; notebooks: editable cells; images: decoded inline.
-- Additional selectors are documented in `xdev://read/sources` (read it prior to first use):
-  - SQLite, archives (ZIP, TAR, 7z, RAR, etc.), JSON/JSONL via jq filter, executable metadata, video, SVG rendered as image, and merge conflicts.
+- Also, with selectors in help://read/sources (read it before first use):
+  - SQLite, archives (ZIP, TAR, 7z, RAR and more), JSON/JSONL by jq filter, executable metadata, video, SVG as image, merge conflicts.

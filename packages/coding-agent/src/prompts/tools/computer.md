@@ -27,62 +27,76 @@ Automate the host desktop from JavaScript or Python Eval via the global `compute
   - An empty `title` match does not guarantee the window is missing.
 - `await win.observe({silent?, all?, maxDepth?})` captures and emits both the full screenshot and AX tree together
   (`ax`, `nodeCount`, `truncated`, plus screenshot metadata).
-  Prefer it when both visual layout and semantic structure are needed.
-- Each `ax()` line is formatted as `- role "label" [ref=eN]: "value"` followed by state flags:
-  - `(disabled)`, `(focused)` (keyboard focus inside that app)
-  - macOS-specific flags:
-    - `(selected)`
-    - `(settable)` (date field writable via `setValue`)
-    - `(readonly)` (web text input marked read-only by the page; typing into it has no effect)
-    - `actions=…` enumerating supported actions beyond the role's default press (`perform("open")`);
-      `await el.actions()` returns all available actions including the default press.
-- AX element values:
-  - macOS dates use local ISO-8601 format, matching what `setValue` expects.
-  - A macOS slider, stepper, or other numeric control accepts `setValue(75)` or `setValue("0.5")` (plain decimal); when the app clamps or rounds it, the call throws `AxFailed` naming the value it settled on. A control whose value is not settable names the `AXIncrement`/`AXDecrement` actions for stepping it.
-  - A letter sent to a focused macOS popup button may choose an option without opening the menu; the next read of that popup waits up to 1.5 s for it. To choose an option deliberately, use `menu:`; when the user's setting refuses takeover, it refuses `menu:` too (see below).
-  - Long macOS values truncate after 200 characters with `… (+N chars; (await computer.ref("eN")).value())`; calling that retrieves the complete value.
-  - Linux and Windows truncate previews at 80 characters without that helper; AT-SPI on Linux may already clip text values.
-  - To inspect parts of a long value, slice or search in JS (`v.slice(-300)`, `v.indexOf("…")`, or regex with context) instead of printing the whole string;
-    oversized printed output spills to a greppable artifact.
-- `await win.menu.items(path?)` enumerates native menu entries: with no path the menu bar's menus; with a path, that menu's items and exposed descendants depth-first, each with its full `path`.
-  - Enabled submenus expand up to 150 total items (the named menu's own items are never dropped); a submenu that would exceed the limit or cannot be read stays listed with `hasSubmenu`, so request its path explicitly.
-  - The first unreadable submenu stops further expansion, keeping the items already discovered.
-  `await win.menu.select(["File", "Export…"])` triggers an enabled, unambiguous menu command for that window.
-  Matching ignores case and optional trailing ellipses; missing, disabled, or ambiguous menu paths fail instead of guessing keyboard shortcuts.
-- `computer.apps.list({query?, runningOnly?})` lists installed/running application IDs, bundle paths, and PIDs.
-- `computer.apps.open(idOrNameOrNativeAppPath, {activate?})` opens an app by exact ID/path or unique exact name.
-  - On macOS, launches or reopens only when necessary, behind the user's active app,
-    returning the app along with `window`, its frontmost `ComputerWindow` (null if none opens within 3 s); non-macOS platforms return `window: null`.
-  - Requires exec approval and fails when `read_only: true`.
-  - Focus activation is off by default, though an app may still self-activate.
-  - On macOS, `computer.apps.open(fileFolderOrUrl, {app?, reveal?})` opens a document, directory, or URL
-    in its default app (or specified `app`) behind the user's app in one call;
-    `reveal: true` instead highlights the file or folder in Finder, bringing Finder forward. Relative paths resolve from the session's working directory.
-- `await computer.display(id | "active" | "all")` returns a display target offering screenshot, zoom, and input helpers in its own coordinate space.
-  - Full screenshots re-evaluate `"active"`; subsequent input and zoom remain bound to that captured display.
-  - Keyboard input fails if the focused window resides on a different display.
+  Use it when you need both visual and semantic context.
+- An `ax()` line is `- role "label" [ref=eN]: "value"` plus states:
+  - `(disabled)`, `(focused)` (the app's keyboard focus)
+  - on macOS and Linux, `(selected)`
+  - on macOS:
+    - `(settable)` (a date `setValue` writes)
+    - `(readonly)` (a web text field the page declares read-only; typing into it is expected to change nothing)
+    - `actions=…` listing what the element offers beyond its role's own press (`perform("open")`);
+      `await el.actions()` lists every action, the role's own press included.
+- AX values:
+  - macOS dates are local ISO-8601, the form `setValue` takes.
+  - A macOS slider, stepper or other number control takes `setValue(75)` or `setValue("0.5")` (plain decimal); when the app clamps or rounds it,
+    the call throws `AxFailed` naming the value it settled on. One whose value is not settable names the `AXIncrement`/`AXDecrement` actions to step it.
+  - A letter sent to a focused macOS popup button may choose an option without opening the menu; the next read of that popup waits up to 1.5 s
+    for it. To choose an option, use `menu:`; when the user's setting refuses takeover, it refuses `menu:` too (below).
+  - On macOS a long value shows its first 200 characters and ends `… (+N chars; (await computer.ref("eN")).value())`; that call returns it whole.
+  - Linux and Windows show 80-character previews without that promise; Linux text values may already be clipped by AT-SPI.
+  - To look inside a long value, slice or search it in JS (`v.slice(-300)`, `v.indexOf("…")`, a regex with context) rather than printing all of it;
+    large printed output is saved as an artifact you can grep.
+- `await win.menu.items(path?)` lists native menu items: with no path the menu bar's menus;
+  with a path that menu's items and exposed descendants depth-first, every item with its full `path`.
+  - Enabled submenus expand up to 150 total items (the named menu's own items are never dropped);
+    a submenu that would exceed the limit or cannot be read stays listed with `hasSubmenu`, so request its path explicitly.
+  - The first unreadable submenu stops further expansion, keeping items already discovered.
+  - `await win.menu.select(["File", "Export…"])` selects an enabled, unambiguous command in that window's menu context.
+    Matching is case-insensitive and tolerates a trailing ellipsis; missing/disabled/ambiguous paths fail rather than guessing shortcuts.
+- `computer.apps.list({query?, runningOnly?})` discovers native application IDs, paths and running PIDs.
+- `computer.apps.open(idOrNameOrNativeAppPath, {activate?})` launches an exact ID/path or unique exact name.
+  - On macOS it launches or reopens only when needed, behind the user's app,
+    and returns the app with `window`, its frontmost `ComputerWindow` (null if none appeared within 3 s); other platforms return `window: null`.
+  - It requires exec approval and cannot run with `read_only: true`.
+  - Deliberate activation defaults off, and an app may still activate itself.
+  - On macOS `computer.apps.open(fileFolderOrUrl, {app?, reveal?})` opens a document, folder or URL
+    in its default app (or `app`) behind the user's app, in one call;
+    `reveal: true` instead shows the file or folder selected in Finder, which comes to the front. A relative path resolves against the session's folder.
+- `await computer.display(id | "active" | "all")` returns a live display target with screenshot/zoom/input helpers and its own coordinate frame.
+  - Full screenshots reselect `"active"`; later input/zoom stay pinned to that delivered frame.
+  - Keyboard input refuses a focused window on another monitor.
+{{#if ompTakeover}}
+- `holdKeys(keys, {duration})` and `holdMouse(x, y, {button?, duration, keys?})`
+  hold input for 0–100 seconds and release it on every exit.
+  `drag(points, {keys?, modifiers?})` supports Space-drag and other held-key gestures. Do not invent cross-call key-down/button-down state.
+{{else}}
 - `holdKeys(keys, {duration, takeover?})` and `holdMouse(x, y, {button?, duration, keys?, takeover?})`
-  hold input for 0–100 seconds and guarantee release on any exit path.
-  `drag(points, {keys?, modifiers?, takeover?})` handles Space-drag and similar held-key drags. Do not assume key-down or button-down state persists across calls.
-- `computer.control.acquire({reason})` prompts a live user for task-scoped foreground control;
-  background window input requires no grant (it runs in the background whether control is acquired or not).
-  - Returns `{active: true}` or `{active: false, reason}`:
-    - `"denied"`: user refused or cancelled the prompt.
-    - `"no-ui"`: no interactive user is present (e.g., subagent or headless session), so retrying will always fail.
-      Continue with background window input and report to the user or parent only if a step strictly requires foreground control.
-    - `"unanswered"`: confirmation timed out shortly before the call deadline.
-      Inform the user that the step awaits their approval before re-prompting.
-  - Does not alter input routing: omitted `takeover` remains background; only `takeover: true` takes over foreground focus.
-  - Release via `control.release()` in a `finally` block; interrupts, task completion, and disposal also release automatically. Check active status with `control.state()`.
-  - Acquiring control does not authorize consequential external actions.
-- On macOS, `win.bringToCurrentSpace()` relocates that window without changing the user's active Space or raising the app; capture a new screenshot afterward.
-  OS permission denials are reported directly—never alter system security settings as a workaround.
-- `win.ax()` produces a formatted TEXT tree—a single STRING with one node per line tagged `[ref=eN]`; NEVER iterate or call `.map` on it.
-- `await win.ref("e5")`, `computer.elementAt`, `computer.focusedElement`, and `computer.ref` yield live `ComputerElement` handles,
-  while `win.find(…)` yields an ARRAY of handles (`const [el] = await win.find(…)`).
-  - Properties: `ref`, `role`, `nativeRole`, `title`, `description`, `enabled`, `focused`, `childCount`.
-  - Methods: `value`, `setValue`, `selectText`, `bounds`, `attributes`, `actions`, `perform`,
-    `press` (no args: native AX press; `press("enter")`: key chord directed at the element),
+  hold input for 0–100 seconds and release it on every exit.
+  `drag(points, {keys?, modifiers?, takeover?})` supports Space-drag and other held-key gestures. Do not invent cross-call key-down/button-down state.
+{{/if}}
+- `computer.control.acquire({reason})` requires live human confirmation for task-scoped control;
+  window input needs no grant (it runs in the background with or without acquired control).
+  - It returns `{active: true}` or `{active: false, reason}`:
+    - `"denied"`: the user declined or the confirmation was cancelled.
+    - `"no-ui"`: this session has nobody to ask, e.g. a subagent or headless run, and asking again cannot succeed.
+      Keep working through background window input, and tell the user or your parent only about a step that needs foreground control.
+    - `"unanswered"`: nobody answered before the confirmation expired, shortly before the call's timeout.
+      Tell the user the step is waiting on their approval before asking again.
+{{#if ompTakeover}}
+  - It does not change delivery, which omp decides from the user's setting (below).
+{{else}}
+  - It does not change delivery: omitted takeover stays background; only `takeover: true` takes over.
+{{/if}}
+  - Use `control.release()` in `finally`; interruption, task completion and disposal also revoke. `control.state()` reads the live grant.
+  - This is not authorization for consequential external effects.
+- On macOS, `win.bringToCurrentSpace()` moves that window without switching the user's Space or activating the app; take a fresh screenshot afterward.
+  OS refusal is explicit—never change security settings as a workaround.
+- `win.ax()` returns a formatted TEXT tree — one STRING, one node per line with `[ref=eN]` tags; NEVER iterate or `.map` it.
+- `await win.ref("e5")`, `computer.elementAt`, `computer.focusedElement`, `computer.ref` return live `ComputerElement` handles,
+  and `win.find(…)` returns an ARRAY of them (`const [el] = await win.find(…)`).
+  - Fields: `ref`, `role`, `nativeRole`, `title`, `description`, `enabled`, `focused`, `childCount`.
+  - Helpers: `value`, `setValue`, `selectText`, `bounds`, `attributes`, `actions`, `perform`,
+    `press` (no argument: native press; `press("enter")`: a key chord in that element),
     `type(text)`, `click({button?, count?, modifiers?})`, `doubleClick`, `focus`, `parent`, `children`.
   - `ref("e5")` calls chain directly without an extra await: `await win.ref("e5").click({count: 2})`.
 - macOS: `await el.selectText(text, {prefix?, suffix?, select?: "text" | "start" | "end"})` highlights text inside a text element's value
@@ -94,24 +108,24 @@ Automate the host desktop from JavaScript or Python Eval via the global `compute
 - JavaScript `await computer.run(fnOrCode, { args?, read_only?, timeout? })` executes a multi-step function or code snippet.
   - Functions receive `{ desktop, wait, assert }` followed by each `args` item:
     `computer.run(async ({ desktop }, path) => …, { args: [path] })`.
-  - `desktop` mirrors `computer`; outer cell closures are not captured.
-  - Supports plain values, functions, and `RegExp` instances in `args`.
-  - Batch deterministic steps and their verification into one `run`; pause and inspect whenever results are uncertain.
-- Python exposes the same methods with keyword arguments mapped to the trailing options object (`await win.click(10, 20, button="right")`);
-  `win.raise_()` avoids the Python `raise` keyword. Python `computer.run(code, read_only=…, timeout=…)` takes a JavaScript code string only.
-- Approval tiers:
-  - Read-only inspection (`windows`, `screenshot`, `ax`, `find`, `value`, `bounds`, `clipboard.read`, …) requires read approval.
-  - Input and state-changing calls require exec approval.
-  - `computer.run` accepts `read_only: true` for the read tier, which also disallows mutating calls on `desktop`.
-- `computer.run` executes inside the persistent JavaScript runtime with full Bun/Node and tool-bridge access; it is unsandboxed.
-  Window handles, screenshot frames, and AX refs stay valid across calls until `computer.close()`, after which the next call starts a fresh session.
-- `computer.capabilities()` returns OS permission status and support flags for `applications`, `menus`, `heldInput`, `spaces`, and `globalEscape`;
-  unsupported actions fail with explicit errors.
-  - `globalEscape` means pressing physical Escape anywhere halts takeover input (`takeover: true`, held control, desktop-root input, `raise`, activating launches);
-    without held control, background window input ignores Escape so the user can work normally in their own app, stopping only on host interrupt.
-  - After the user stops a call via Escape, all subsequent `computer` calls in that turn fail immediately without sending input:
-    cease computer use and inform the user what completed and what remains.
-  - On Wayland, host interrupt replaces global Escape.
+  - `desktop` has the same helpers as `computer`; cell closures are not captured.
+  - Plain data, functions, and `RegExp` values are supported in `args`.
+  - Group predictable actions and their verification in one run; stop and inspect when the outcome is uncertain.
+- Python helpers use the same names with keyword arguments becoming the trailing options object (`await win.click(10, 20, button="right")`);
+  `win.raise_()` replaces the keyword `raise`. Python `computer.run(code, read_only=…, timeout=…)` accepts a JavaScript code string only.
+- Approval:
+  - Inspection helpers (`windows`, `screenshot`, `ax`, `find`, `value`, `bounds`, `clipboard.read`, …) need read approval.
+  - Input and mutation helpers need exec approval.
+  - `computer.run` uses `read_only: true` for the read tier, which also blocks facade mutation.
+- `computer.run` executes in the persistent JavaScript session with full Bun/Node and tool-bridge access; it is not sandboxed.
+  Window handles, screenshot frames, and AX refs persist across calls until `computer.close()`, which ends the session; the next call opens a new one.
+- `computer.capabilities()` reports native permissions and `applications`, `menus`, `heldInput`, `spaces`, and `globalEscape` support;
+  unsupported operations fail explicitly.
+  - `globalEscape` means physical Escape anywhere stops takeover input ({{#if ompTakeover}}input omp runs in takeover{{else}}`takeover: true`{{/if}}, held control, desktop-level input, raises, activating launches);
+    without held control, background window input ignores the user's Escape, so they can keep working in their own app, and only the host interrupt stops it.
+  - Once the user's Escape stops a call, every later `computer` call you make that turn fails before sending anything:
+    stop using the computer and tell the user what you did and what remains.
+  - Wayland uses the host interrupt instead of global Escape.
 </instruction>
 
 <examples>
@@ -141,87 +155,98 @@ await win.click(120, 48, button="right")
 </examples>
 
 <rules>
-- Pick the interaction mode based on the UI surface:
-  - Use AX for semantic native controls (`win.ax()` → `el.press()`/`el.setValue()`). AX element actions require no screenshot.
-  - Use window screenshots and pixel coordinates for canvases, mirrored device screens, and custom-rendered UIs.
-  - When target controls do not appear in the AX tree, switch to pixel interaction instead of re-reading the same tree repeatedly.
-- When typing into a known control, prefer `el.type(text)` over `win.type(text)`:
-  on macOS it targets that specific element or aborts safely reporting which control holds focus, whereas `win.type` sends keys to whatever currently has window focus.
-- Mirrored/remote windows (Screen Sharing, iPhone Mirroring) accept background clicks, scrolls, and keystrokes like ordinary windows.
-  - `type` there maps characters onto the user's keyboard layout: characters without a key mapping (emoji, foreign scripts) throw `InvalidKey`, which takeover cannot resolve.
-  - Screen Sharing cannot inject Shift, Option, Control, or Command in the background; text or shortcuts needing those modifiers throw `BackgroundUnavailable` (switch to takeover).
-    Its background typing also fails with `BackgroundUnavailable` if the user is holding a modifier key or has Caps Lock active.
-- Pointer `(x, y)` coordinates refer to pixels in the MOST RECENT FULL screenshot of the SAME target.
-  - `zoom` crops a region from that frame to return a magnified view without altering the base frame; follow-up clicks still use coordinates from the full screenshot, never zoomed pixels.
-  - AX coordinates use global desktop space. NEVER mix screenshot and AX coordinates.
-- Prefer per-window screenshots over full-desktop captures.
-  Desktop captures default to the monitor hosting the focused window (falling back to the primary monitor); setting `all` captures the entire virtual desktop.
-- An element retains its `[ref=eN]` across `.ax()`/`find()` snapshots as long as its role and label stay unchanged;
-  a ref absent from the window's two most recent `.ax()` snapshots throws `StaleRef`. Refresh the snapshot; NEVER guess.
-  - On macOS, an element action also aborts with `StaleRef` without sending input if the element now reports a different role or label;
-    the error includes the updated ref (`eN now reads as textfield "Street" [ref=eM]`).
-  - On macOS, if the app removed the element, `StaleRef` may suggest a replacement candidate
+- Choose the route by the surface:
+  - Use AX for exposed semantic controls (`win.ax()` → `el.press()`/`el.setValue()`). Element actions need no screenshot.
+  - Use window screenshots/pixels for canvases, mirrored devices, and custom-drawn controls.
+  - If the relevant controls are absent from AX, switch to pixels rather than repeatedly inspecting the same tree.
+- To type into a field you know, prefer `el.type(text)` over `win.type(text)`:
+  on macOS it reaches that field or sends nothing and names what holds focus instead, while `win.type` goes wherever the window's focus is.
+- Remote screens (Screen Sharing, iPhone Mirroring) take background clicks, scrolls and keys like any window.
+  - `type` there presses keys of the user's keyboard layout: text no key types (emoji, other scripts) throws `InvalidKey`, and takeover cannot fix that.
+  - Screen Sharing cannot get Shift, Option, Control or Command in the background; such text or shortcuts {{#if ompTakeover}}run in takeover{{else}}throw `BackgroundUnavailable` (use takeover){{/if}}.
+    Its background keys also stop with `BackgroundUnavailable` while the user holds a modifier key or Caps Lock is on.
+- Pointer `x,y`: pixels in the MOST RECENT FULL screenshot of the SAME target.
+  - `zoom` uses a rectangle in that frame and returns a detailed view without changing it; subsequent clicks still use the full screenshot, never zoom pixels.
+  - AX coordinates are global desktop coordinates. NEVER mix them.
+- Prefer a window screenshot to a desktop overview.
+  Desktop capture defaults to the monitor containing the focused window, with primary-monitor fallback; an explicit `all` setting captures the combined desktop.
+- An element keeps its `[ref=eN]` across `.ax()`/`find()` reads until its role or label changes;
+  a ref whose element is missing from the window's last two `.ax()` snapshots throws `StaleRef`. Re-snapshot; NEVER guess.
+  - On macOS, an element action also refuses with `StaleRef`, sending nothing, if its element now reads with another role or label;
+    the error gives that element a new ref (`eN now reads as textfield "Street" [ref=eM]`).
+  - On macOS, when the app destroyed the element, `StaleRef` may name a candidate
     (`eN destroyed; eM is the one element in the window with the role, labels and value eN was read with`),
-    but only when the original ref came from a full-window read (not truncated by `maxDepth` or a node cap).
-  - A relabeled-element error may likewise suggest the sole other element found in that window read sharing the prior role and label,
-    even if truncated by `maxDepth` or a node cap; additional uninspected matches could exist.
-  - Identical attributes do not guarantee `eM` is the same widget: verify it before acting.
-- Window input operates in the background without moving the user's cursor or raising the target app, regardless of acquired control.
-  Supply `takeover` solely in the case below.
-  - When a background mechanism is unavailable, the tool either:
-    - executes that call in takeover, hands the keyboard back to the user's window, and notes it in the result
-      (`… ran in takeover because …; the input was delivered, and focus returned to …`), or,
-    - if user settings forbid takeover, throws `BackgroundUnavailable` without taking over; fall back to AX or an alternate route.
-  - Only when a screenshot confirms a background call had no effect and AX cannot perform the action should you retry with `{ takeover: true }`.
-  - OS success alone does not guarantee the target application reacted.
-- When user settings disallow takeover, the calls listed below are also blocked before dispatch.
-  Keep everything in the background using AX, `win.menu`, or another window method, or inform the user that their screen is required:
-  - `takeover: true`, `raise()`, `apps.open(…, { activate: true })`, `apps.open(…, { reveal: true })`, `control.acquire`, desktop-level input
-  - on non-macOS systems, `el.focus()`
-  - on macOS, `perform("AXOpen")`, which may raise an Open panel's application
-  - on macOS, any call opening a menu or passing a `menu` path (right-click, Control-click, `perform("AXShowMenu")`, `menu:`,
-    `press()` or click/hold/drag on a popup button or menu button, `setValue` on a popup button), because open menus capture the user's keyboard;
-    Space and Up/Down keys on those controls are still sent, and any menu they open is closed before the call returns.
-- `raise()` and `apps.open(…, { activate: true })` pull the application to the foreground and capture keyboard focus.
-  NEVER use them merely to make input succeed; app launch, reopen, and window input all operate in the background.
-- On macOS, background input supports left-button drags and `holdMouse` originating on sliders, scroll bars, splitters, or steppers,
-  as well as middle-button drags, modified clicks, right-clicks, and scroll events.
-  - A background `win.move` gives the app no hover, and a takeover move's hover ends before it returns. On a web page a plain click often reaches a control shown only on hover; otherwise click it with `{ takeover: true }`.
-  - A plain left drag across text inside a single native text control (TextEdit and other AppKit text views/fields)
-    is translated into an AX text selection with no pointer movement: `drag` returns `{start, length, text}`,
-    or throws `AxFailed`/`AxUnconfirmed` like `selectText` (verify selection state before retrying).
-  - A left-button drag or `holdMouse` elsewhere (files, table rows, font tiles, links, already-selected text, RTL text, web pages including web text)
-    risks initiating a drag-and-drop operation that macOS resolves at the user's physical cursor, so no background route exists.
-    - To select web page text in the background, click the start position and shift-click the end position, or double-/triple-click.
-    - Favor the app's native menu command (e.g., Font Book: File ▸ New Collection from Selection) or AX actions.
-  - Because an open menu steals the user's keyboard, background right-clicks, Control-clicks,
-    or clicks/`press()`/`perform("AXShowMenu")`, Space, or an up/down arrow key on a menu button or popup button never leave the menu open.
-    - To trigger a menu entry, supply its path inline: `win.click(x, y, {button: "right", menu: ["Add to", "Fonts"]})`,
-      `el.click({button: "right", menu: […]})`, `el.press({menu: ["New Folder"]})`; matching follows `win.menu.select` rules.
-    - Omitting `menu` closes the menu and throws a partial-delivery `InputFailed` listing its items; inspect the list and retry with `menu`.
-      Keys take no `menu`: press or click the control with it instead, unless takeover is refused; then use `win.menu.select` when the menu bar holds the command, or tell the user the step needs their screen.
-  - Right-button or Control drags, `holdMouse`, and multi-clicks lack background support,
-    as do drags, `holdMouse`, or multi-clicks on menu/popup buttons: invoke a single click with `menu` instead.
-- On partial-delivery or focus-restoration errors, inspect the target window before retrying—the input may have already arrived. NEVER blindly replay it.
-- When user settings forbid takeover, `perform("open")`, `perform("showMenu")`,
-  and any alias `perform()` accepts for `AXOpen` or `AXShowMenu` are blocked as well.
-- On macOS, `AxUnconfirmed` signals that an AX call might have succeeded despite lacking confirmation.
-  Check fresh AX state or take a screenshot before repeating; NEVER retry blindly.
-- `UserIntervened` (macOS or X11): the user kept typing or clicking until the takeover admission deadline, so no takeover started;
-  on macOS they also switched to that app or typed/clicked inside it; on X11 they pressed a key/button while takeover ran.
-  Further input is aborted and the tool never automatically re-runs in takeover.
-  - Respect the user's input: NEVER revert or type over what they entered.
-  - Re-inspect the window (`win.ax()`, `win.observe()`, or `win.screenshot()`) and proceed from its updated state.
-- After modifying UI state, confirm the expected outcome via fresh AX data or a screenshot.
-  Inside `run`, wait on a condition with `wait(predicate, {timeout, interval})` rather than treating a fixed sleep as proof of completion.
-- Desktop-level pointer methods (`computer.click`, `computer.move`, …) move the user's physical pointer; prefer window-scoped handles instead.
-- On Wayland, per-window native input and `.raise()` are unsupported; use AX, or desktop input after manually focusing the target window.
-- macOS `screenLocked` (reported by `capabilities()`, screenshot responses, or a leading `Note:`):
-  - Display captures return the lock screen and window captures return that window's previous frame.
-  - Keystrokes, takeover, and AX calls fail until unlocked, whereas background clicks still reach the app.
-  - Inform the user that the screen is locked instead of retrying keyboard calls.
-- A screenshot's `path` points to the delivered PNG (`width`×`height`, scaled down if required by capture limits) rather than a separate full-res file;
-  use `zoom` for closer inspection rather than cropping the PNG. Pass `{ silent: true }` inside polling loops.
+    only for a ref from a read of the whole window (never one cut short by `maxDepth` or a node limit).
+  - A relabelled-element refusal may instead name the one other candidate this read of the window found with the original role and label,
+    even if the read was cut short by `maxDepth` or a node limit; unseen matches may exist.
+  - Equal fields do not prove `eM` is the same control: check it before acting on it.
+{{#if ompTakeover}}
+- omp, never you, decides whether an input call takes over (real pointer and keyboard input, which the user's Escape stops), from the user's setting;
+  input helpers take no `takeover` option, and passing one throws with nothing sent. Never ask the user whether to take over.
+  - The user's setting takes over input to a window in front of them, or every window and element input call;
+    other input runs in the background without moving the user's pointer or activating the target.
+  - When a background route is unavailable, omp reruns that call in takeover, hands the keyboard back to the user's window and says what it did in the output
+    (`… ran in takeover because …; the input was delivered, and handed the keyboard back to …'s window`).
+  - When a screenshot proves background input to a window did nothing and AX cannot do it, tell the user the step needs that window in front of them.
+  - OS acceptance alone does not prove the application acted.
+{{else}}
+- Window input runs in the background without moving the user's pointer or activating the target, with or without acquired control.
+  Pass `takeover` only in the one case below.
+  - When a background route is unavailable, the tool decides:
+    - it reruns that call in takeover, hands the keyboard back to the user's window and says what it did in the output
+      (`… ran in takeover because …; the input was delivered, and handed the keyboard back to …'s window`), or,
+    - when the user's setting refuses, throws `BackgroundUnavailable` with nothing taken over; then use AX or another route.
+  - Only when a screenshot proves a background call did nothing and AX cannot do it, repeat that call with `{ takeover: true }`.
+  - OS acceptance alone does not prove the application acted.
+{{/if}}
+- When the user's setting refuses takeover, it also refuses the calls below before anything is sent.
+  Stay in the background: use AX, `win.menu` or another window route, or tell the user the step needs their screen.
+  - {{#unless ompTakeover}}`takeover: true`, {{/unless}}`raise()`, `apps.open(…, { activate: true })`, `apps.open(…, { reveal: true })`, `control.acquire`, desktop-root input
+  - off macOS `el.focus()`
+  - on macOS `perform("AXOpen")`, which can bring an Open panel's app forward
+  - on macOS every call that opens a menu or names a `menu` item (right-click, Control-click, `perform("AXShowMenu")`, `menu:`,
+    `press()` or a click, hold or drag on a popup button or menu button, `setValue` on a popup button), since an open menu takes the user's keyboard
+    Space/Up/Down keys on those controls are still sent; a menu they open is closed before the call returns.
+- `raise()` and `apps.open(…, { activate: true })` bring the app forward and take the user's keyboard.
+  NEVER call them to make input work; launching, reopening and window input work in the background.
+- macOS background routes cover left-button drags and `holdMouse` that start on a slider, scroll bar, splitter or stepper,
+  middle-button drags, modified clicks, right-clicks and scrolls.
+  - A background `win.move` gives the app no hover, and a takeover move's hover ends before it returns. On a web page a plain click
+    often reaches a control shown only on hover; otherwise {{#if ompTakeover}}press it through AX, or tell the user the step needs that window in front of them{{else}}click it with `{ takeover: true }`{{/if}}.
+  - A plain left drag across the text of one native text element (TextEdit, other AppKit text views and fields)
+    becomes an AX selection with no mouse input: `drag` returns `{start, length, text}`,
+    or throws `AxFailed`/`AxUnconfirmed` as `selectText` does (check the selection before retrying).
+  - A left-button drag or `holdMouse` anywhere else (files, rows, font tiles, links, selected text, right-to-left text, web pages including their text)
+    could start a drag and drop that macOS finishes at the user's real pointer, so it has no background route.
+    - To select web page text in the background, click where it starts and shift-click where it ends, or double- or triple-click it.
+    - Prefer the app's menu command (Font Book: File ▸ New Collection from Selection) or AX.
+  - An open menu takes the user's keyboard, so a background right-click or Control-click,
+    or a click, `press()`, `perform("AXShowMenu")`, Space or an up or down arrow key on a menu button or popup button, never leaves its menu open.
+    - To use a menu item, name its path in the same call: `win.click(x, y, {button: "right", menu: ["Add to", "Fonts"]})`,
+      `el.click({button: "right", menu: […]})`, `el.press({menu: ["New Folder"]})`; labels match like `win.menu.select`.
+    - Without `menu` the menu closes and the call throws a partial-delivery `InputFailed` listing its items; inspect, then repeat with `menu`.
+      Keys take no `menu`: press or click the control with it instead, unless takeover is refused;
+      then use `win.menu.select` if the menu bar has the command, or tell the user the step needs their screen.
+  - A right-button or Control drag, `holdMouse` or multi-click has no background route,
+    nor does a drag, `holdMouse` or multi-click on a menu button or popup button: click it once with `menu` instead.
+- Partial-delivery or restoration error? Inspect the target before retrying; input may already have landed. NEVER blindly repeat it.
+- When the user's setting refuses takeover, `perform("open")`, `perform("showMenu")`
+  and every other spelling `perform()` takes for `AXOpen` and `AXShowMenu` are refused too.
+- On macOS, `AxUnconfirmed` means an AX action may already have taken effect.
+  Inspect fresh AX or a screenshot before repeating it; NEVER retry blindly.
+- `UserIntervened` (macOS or X11): the user kept typing or clicking until the takeover's admission deadline, so no takeover started;
+  on macOS they also came to that app, or typed or clicked in it; on X11 they pressed a key or button during takeover.
+  Nothing more was sent, and the tool never reruns it in takeover.
+  - The user's edits stand: NEVER undo or retype over them.
+  - Read that window again (`win.ax()`, `win.observe()` or `win.screenshot()`) and continue the task from what it shows.
+- After changing the UI, verify the expected state with fresh AX evidence or a screenshot.
+  In a run, use `wait(predicate, {timeout, interval})` for a specific state rather than assuming a fixed sleep means success.
+- Desktop-root pointer helpers (`computer.click`, `computer.move`, …) drive the user's real pointer; act through window handles.
+- Wayland: per-window native input and `.raise()` are unavailable; use AX, or desktop input after focusing the target yourself.
+- macOS `screenLocked` (in `capabilities()`, a screenshot result, or a run's leading `Note:`):
+  - A display capture shows the lock screen and a window capture that window's last frame.
+  - Keystrokes, takeover and AX fail until someone unlocks, while background clicks still reach the app.
+  - Report the lock rather than retrying keys.
 - Windows `covered` (a screenshot result, or a tree's closing `… covered:` line): the window appeared fully covered around the read and Chromium can stop drawing it,
   so its screenshot and tree may be stale; while it stays covered, do not wait and read it again by any route (screenshot, `ax()`, `find`), and never report a change as verified from it.
   For a current view: the browser tool if it is connected to that app, else `raise()` (it takes the user's keyboard, and Windows refuses it while they use another window) and read again, checking for the expected state rather than trusting the first unmarked read, else tell the user what you could not confirm.

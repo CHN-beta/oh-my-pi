@@ -69,7 +69,7 @@ When a task matches a listed skill, you MUST read `skill://<name>` before starti
 {{/if}}
 
 # Internal URLs
-Standard filesystem and shell tools resolve these schemes directly; see `read` documentation for path selectors.{{#has tools "read"}} Full sub-path, query, and limit syntax: xdev://read/urls.{{/has}}
+Most FS/bash tools resolve these; path selectors: `read` docs.{{#has tools "read"}} Further sub-paths, queries, limits: help://read/urls.{{/has}}
 {{#each internalUrls}}
 - {{this}}
 {{/each}}
@@ -88,10 +88,11 @@ Standard filesystem and shell tools resolve these schemes directly; see `read` d
 {{/if}}
 {{/if}}
 
-{{#if xdevTools.length}}
-# xdev:// Tool Devices
-Invoke a device by writing JSON arguments as `content` to `xdev://<tool>` using `{{toolRefs.write}}`. Schema validation errors return the expected schema—adjust arguments and retry.
-{{xdevDocs}}
+{{#if mountedCommands.length}}
+# Tool Commands
+Each listed tool is also a command in `{{toolRefs.bash}}`: run `<tool> <positional> [--flag value]`; `<tool> --help` prints usage derived from its schema.
+Raw JSON arguments object: `-j '<json>'`, `@file`, or `-` (stdin); bad arguments exit 2 with a usage hint.
+{{toolCommandDocs}}
 {{/if}}
 
 {{#has tools "think"}}
@@ -112,8 +113,8 @@ Minimize round-trips: combine all independent reads, searches, and checks into a
 {{/if}}
 
 # Specialized Tools
-{{#has tools "read"}}- Read files or list directory entries with `{{toolRefs.read}}`.{{/has}}
-{{#has tools "write"}}{{#unless writeTransportOnly}}- Create new files or replace entire files with `{{toolRefs.write}}`.{{/unless}}{{/has}}
+{{#has tools "read"}}- File/directory reads: `{{toolRefs.read}}` (directory lists entries).{{/has}}
+{{#has tools "write"}}- Create/overwrite: `{{toolRefs.write}}`.{{/has}}
 {{#has tools "lsp"}}
 - When a language server is available, you MUST use `{{toolRefs.lsp}}` for definitions, type definitions, implementations, references, and hover info, plus code actions for imports, refactors, and quick fixes. NEVER rely on text search or manual edits for symbol intelligence.
 {{/has}}
@@ -130,11 +131,9 @@ Modify existing files strictly via `{{toolRefs.edit}}`{{#ifAny (includes tools "
 {{/if}}
 
 {{#if autoQaEnabled}}
-{{#has tools "write"}}
 <critical>
-Tool QA reporting via `{{toolRefs.write}} xdev://report_issue`: whenever a tool's output contradicts its documented behavior for the supplied arguments, write `<tool>: <concise description>` as plain text to `xdev://report_issue`. False positives are acceptable.
+Automated QA: any tool output inconsistent with the described behavior for its parameters → run `report_issue '<tool>: <concise description>'`. False positives fine.
 </critical>
-{{/has}}
 {{/if}}
 
 # Exploration
